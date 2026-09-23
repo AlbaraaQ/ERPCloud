@@ -1,0 +1,23 @@
+import { Module } from '@nestjs/common';
+
+import { DatabaseModule } from '../../database/database.module.js';
+import { AccountingModule } from '../accounting/accounting.module.js';
+import { CatalogModule } from '../organization/catalog/catalog.module.js';
+import { OrganizationModule } from '../organization/organization.module.js';
+import { PlatformServicesModule } from '../platform-services/index.js';
+import { DeveloperModule } from '../developer/developer.module.js';
+
+import { InventoryController } from './inventory.controller.js';
+import { InventoryService } from './inventory.service.js';
+import { ProductionOrdersController } from './production-orders.controller.js';
+import { ProductionOrdersService } from './production-orders.service.js';
+import { WarehouseDocumentsController } from './warehouse-documents.controller.js';
+import { WarehouseDocumentsService } from './warehouse-documents.service.js';
+
+@Module({
+  imports: [DatabaseModule, PlatformServicesModule, AccountingModule, OrganizationModule, CatalogModule, DeveloperModule],
+  controllers: [InventoryController, WarehouseDocumentsController, ProductionOrdersController],
+  providers: [InventoryService, WarehouseDocumentsService, ProductionOrdersService],
+  exports: [InventoryService, WarehouseDocumentsService, ProductionOrdersService],
+})
+export class InventoryModule {}

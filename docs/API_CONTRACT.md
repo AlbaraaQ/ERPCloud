@@ -1,0 +1,360 @@
+# API_CONTRACT
+
+> **Level B — NORMATIVE.** Every endpoint added by any phase MUST appear here first
+> (or in the same PR/turn) with DTOs in `packages/contracts`. Formats: JSON; UUID ids;
+> money as decimal strings; ISO-8601 datetimes; enums as lowercase_snake text.
+
+## 0. Envelope & Errors
+
+```jsonc
+// list   → { "data": [ ... ], "meta": { "total": 120, "limit": 50, "offset": 0 } }
+// single → { "data": { ... } }
+// error  → 4xx/5xx, application/problem+json:
+{ "type": "about:blank", "title": "Forbidden", "status": 403,
+  "code": "FORBIDDEN", "detail": "permission sales.invoice.post required",
+  "traceId": "01J…" }
+```
+
+Stable error codes (seed registry, extend only): `UNAUTHENTICATED, FORBIDDEN,
+TENANT_SUSPENDED, TENANT_CONTEXT_MISSING, VALIDATION_FAILED, FILTER_NOT_ALLOWED,
+NOT_FOUND, VERSION_CONFLICT, IDEMPOTENCY_REPLAY, ACCOUNT_NOT_POSTABLE,
+ACCOUNT_PROFILE_MISSING, JOURNAL_UNBALANCED,
+ACCOUNTING_PERIOD_CLOSED, ACCOUNTING_PERIOD_LOCKED_MODULE, DOCUMENT_ALREADY_POSTED,
+DOCUMENT_NOT_DRAFT, PARTY_CREDIT_LIMIT_EXCEEDED, STOCK_INSUFFICIENT, SEQUENCE_EXHAUSTED,
+EINVOICE_REJECTED, MIGRATION_CONFLICT, RATE_LIMITED, INTERNAL`.
+**R6 (2026-09-21)** أضاف ثلاثة: `INVALID_ID` — معرّفٌ لا صيغة UUID له في الرابط أو الجسم أو
+الاستعلام ⇒ **400** باسم المعامل في `errors[0].field` (وقد كان يبلغ القاعدة فيردّ **500**) ·
+و`ACCOUNT_NOT_FOUND` و`PARTY_NOT_FOUND` — معرّفٌ صحيح لا وجود له ⇒ **404** بدل 500 وبدل
+«200 بجسمٍ فارغ» على الترتيب.
+**R7 (2026-09-21)** أضاف واحداً: `STORAGE_NOT_CONFIGURED` — طُلب تحويلُ بايتاتٍ (رفعٌ أو
+تنزيل) والتخزين الكائني غير مُهيّأ على هذا الخادم ⇒ **503** بدل **500** الذي كان يخرج من
+`assertObjectStorageEnv` (وهو حالٌ سليمٌ في تركيبٍ لا يستعمل الملفات، لا عطل). والتفصيل يسمّي
+متغيّرات البيئة **الناقصة** في `details.missing` — أسماءً بلا قيم.
+
+Standard query params: `limit, offset, sort, q, filter[...]`, `include=...` allow-listed.
+Headers: `Authorization: Bearer`, `X-Branch-Id?`, `Idempotency-Key?`, `X-Request-Id?`.
+
+## 1. Auth & Identity (`/api/v1`)
+
+| Method & Path | Body → Response | Perm |
+|---|---|---|
+| POST `/auth/login` | `{email,password,tenantCode, mfaCode?}` → `{data:{accessToken, refreshToken, user, memberships}}` — `memberships` holds **only** the membership in the authenticated tenant (CR-003: returning the others would enumerate tenants). Wrong password, unknown e-mail and unknown tenant all return the same opaque 401. When the user has TOTP enabled, a missing code returns 401 `MFA_REQUIRED` and a wrong code counts as a failed login. | public |
+| POST `/auth/refresh` | `{refreshToken}` → rotated pair | public |
+| POST `/auth/logout` | `{}` → 204 | auth |
+| GET `/me` | → user+membership+`permissions[]`+branch scope | auth |
+| POST `/auth/change-password` | `{current,new}` → 204 | auth |
+| GET `/auth/mfa` | → `{data:{enabled,enrolled,recoveryCodesLeft}}` | auth |
+| POST `/auth/mfa/enroll` | → 201 `{data:{secretBase32,otpauthUrl,issuer}}` — stores the AES-GCM-sealed secret; login unaffected until `enable` | auth |
+| POST `/auth/mfa/enable` | `{code}` → `{data:{recoveryCodes[]}}` (8 one-time codes, shown once) | auth |
+| POST `/auth/mfa/disable` | `{password}` → 204 | auth |
+| GET `/permissions` | → registry list | auth |
+
+## 2. Tenancy & Access
+
+| Path | Notes | Perm |
+|---|---|---|
+| GET/PATCH `/tenant` | read/update own tenant; `GET` needs `platform.tenant.view`, `PATCH` needs `platform.tenant.manage`; bulk `settings` are validated key-by-key | `platform.tenant.view` / `platform.tenant.manage` |
+| GET/POST `/memberships`, GET/PATCH/DELETE `/memberships/{id}` | invite users, branch scope, status. `GET /{id}` added by CR-002 (required by the isolation harness); a foreign id is a 404, not a 403. | `platform.membership.manage` |
+| GET/POST `/roles`, GET/PUT `/roles/{id}`, POST `/roles/{id}/permissions` | RBAC mgmt. `GET /{id}` added by CR-002. System role names are immutable (422). | `platform.role.manage` |
+| GET `/audit-log` | filter `entity/entityId/action/actorUserId/from/to`; newest first; read-only (UPDATE/DELETE revoked from the API role) | `platform.audit.view` |
+| POST `/files/presign` `{name,mime,sizeBytes,entity?,entityId?}` → `{fileId, uploadUrl, objectKey, requiredHeaders, expiresAt}` | `platform.file.upload` |
+| GET `/files`, GET `/files/{id}`, POST `/files/{id}/finalize`, GET `/files/{id}/download` | CR-005. `finalize` flips `pending→ready` and validates the attachment target; `download` mints a short-lived app-signed URL | `platform.file.upload` |
+| DELETE `/files/{id}` | R7 · **soft in the row, hard in storage**: marks `status='deleted'` + `deletedAt` (so who deleted what and when stays on the record), then asks the object store to drop the bytes *after* the transaction commits; answers `{id,name,deleted:true,objectRemoved}` — `false` means the bytes survived and the orphan collector will retry. A second DELETE (or a foreign, or an unknown id) is **404**: a deleted row no longer resolves, and "deleted", "unknown" and "another tenant" stay indistinguishable (MULTI_TENANCY §7.1). Audit writes two lines: the interceptor's, then the service's `ready→deleted` diff. | `tenant.file.manage` |
+| GET `/files/{id}/content?tenant&expires&signature` | **public by design** — a browser download cannot send a bearer token; the HMAC signature is the capability and carries the tenant. 302 to object storage, 401 on a bad/expired signature | none |
+| GET `/notifications`, GET `/notifications/{id}`, POST `/notifications/{id}/read` | membership inbox (never user-wide); `meta.unread` on the list; mark-read is idempotent | `platform.notification.view` |
+| POST `/notifications` `{membershipId?,type,payload?}` | CR-005; unknown membership in this tenant → 422 | `platform.notification.manage` |
+| GET `/jobs/outbox`, GET `/jobs/health` | CR-005; read-only view of the transactional outbox and the queue driver | `platform.job.view` |
+| PUT `/settings/{key}` / GET `/settings` | typed tenant settings; an unknown key is **400 `VALIDATION_FAILED`** (CR-004), a bad value is 400 | `platform.settings.manage` |
+
+## 3. Organization
+
+`GET/POST/PATCH/DELETE /branches` · `/warehouses` · `/cash-locations` · `/price-lists`
+(+ `/{id}/items`) · `GET/POST/PATCH /currencies` (keyed by ISO code; deactivated, never
+deleted) · `GET/POST/PATCH/DELETE /fx-rates` · `GET/POST/DELETE
+/branch-posting-profiles` (POST upserts on `(branchId, docType)`) ·
+`/company-profile` (GET/PUT, 1:1 per tenant).
+Perms: `organization.{entity}.manage|view`.
+
+`DELETE` is a **soft delete** on master data and a hard delete on `fx_rates`,
+`price_list_items` and `branch_posting_profiles` (CR-008). Activate/default toggles are
+PATCH fields (`isActive`, `isDefault`), not routes; every PATCH/PUT accepts an optional
+`version` and answers `409 VERSION_CONFLICT` when it is stale.
+
+Read-only resolution surfaces (CR-008):
+
+| Path | Answer |
+|---|---|
+| `GET /cash-locations/{id}/balances` | one row per currency; `0` until PHASE_12 writes them |
+| `GET /fx-rates/resolve?from&to&date` | `{rate, source: identity\|direct\|inverse\|triangulated, effectiveFrom, via}` |
+| `GET /branch-posting-profiles/resolve?branchId&docType` | the winning mapping + which rung matched; `422 ACCOUNT_PROFILE_MISSING` when nothing does |
+
+Lists honour the membership's `branch_scope`; a row outside it is `404`, never `403`.
+Bank IBANs are masked in list responses and returned in full only on the detail read.
+
+
+## 4. Catalog
+
+`GET/POST/PATCH/DELETE(soft) /items` · `/items/{id}/units` · `/items/{id}/barcodes`
+· `/items/{id}/components` · `/item-categories` · `/units-of-measure` · `/tax-groups`
+· POST `/items/import` (CSV async) · GET `/items/{id}/price-history`.
+Perms `catalog.{entity}.manage|view`. Item DTO key fields: `sku,name_ar,name_en,
+category_id, base_unit_id, kind, sale_price, tax_group_id, track_lot, track_serial`.
+
+## 5. Accounting
+
+| Path | Notes | Perm |
+|---|---|---|
+| `/accounts` CRUD + tree `?flat=false` | parent/code rules | `accounting.account.*` |
+| `/fiscal-years`, `/fiscal-periods`; POST `/fiscal-periods/{id}/close` `/reopen` `{reason}` | close checklist | `accounting.period.*` |
+| `/journal-entries` GET/POST(draft); POST `/{id}/post`, `/{id}/reverse {date,reason}` | posted immutable | `accounting.journal.create/post/reverse` |
+| `/cost-centers` CRUD | | `accounting.costcenter.*` |
+| `/opening-balances` POST bulk draft + POST `/opening-balances/post` | one batch/year | `accounting.opening.manage` |
+| GET `/statements/trial-balance` (date range, tree), `/statements/general-ledger?account_id&from&to&from_time&to_time&kind&…`, `/statements/cost-center/:id?from&to&from_time&to_time&kind&…`, `/statements/account-statement` | prev-balance row + time cut (`from_time/to_time`) | `accounting.reports.view` |
+
+Journal DTO: `{ date, branch_id, description, lines:[{account_id, debit?, credit?,
+cost_center_id?, party_id?, currency_amount?, currency_code?, description?}] }`.
+
+## 6. Parties & AR/AP
+
+`/parties` CRUD, `filter[kind]=customer|supplier` · `/parties/{id}/contacts` ·
+GET `/parties/{id}/balance` → `{receivable,payable,open_invoices[]}` ·
+GET `/parties/{id}/statement` · POST `/allocations` `{voucher_id, invoice_id, amount}`.
+Perms `parties.{manage,view,allocate}`.
+
+## 7. Inventory
+
+GET `/inventory/levels?warehouse_id&item_id` · GET `/inventory/movements?…` ·
+`/stock-adjustments` CRUD + POST `/{id}/approve` (posts ledger+journal) ·
+`/stock-transfers` CRUD + `/{id}/send` `/{id}/receive {lines:[{received_qty}]}` ·
+GET `/item-lots`, `/item-serials`. Perms `inventory.{adjust,transfer,view}`.
+
+**R8 — أرقام سطر الفاتورة**: `GET /inventory/serials/lookup?serialNo=SN-1` (صلاحية
+`inventory.view`) ⇒ `{found:false,serialNo}` أو
+`{found:true,status:available|reserved|sold,warehouseId,item,documents:[{docType,docId,docNo,direction,at}]}` —
+وهو ما تجيب به خانة «🔢 التسلسلي:» في شاشة الفاتورة. حسم الأرقام يقع **عند الترحيل لا عند
+الحفظ**: مسودّة الفاتورة تحفظها على السطر (`202`)، و`/{id}/post` هو ما يُنشئ `item_serials`
+(شراء) أو يصرفها (بيع) أو يُعيدها (مرتجع). ورمزا الرفض `SERIAL_NOT_FOUND` و
+`SERIAL_COUNT_MISMATCH` (422) و`SERIAL_NOT_RETURNABLE` (422) و`LOT_NOT_TRACKED` (422)
+معلَنان في `packages/contracts/src/errors.ts`.
+
+## 8. Sales & Purchases
+
+Sales: `GET/POST /sales-invoices` (draft) · `GET /sales-invoices/{id}` · PATCH draft only
+· POST `/{id}/post` (idempotent; posts journal+stock; returns links) · POST `/{id}/void {reason}`
+· POST `/{id}/payments {method, cash_location_id?, amount}` · GET `/sales-invoices/{id}/print`
+(PDF later=artifact) · `/sales-adjustment-notes` · `/offers`.
+Create DTO essentials: `{ branch_id, warehouse_id, kind, party_id?|cash_customer?,
+price_includes_vat, currency_code?, lines:[{item_id, unit_id, qty, unit_price,
+discount_amount?, tax_group_id?|tax_rate?, description?, serial_nos?, batch_no?,
+production_date?, expiry_date?, lot_id?}], invoice_discount?,
+pay_method?, payments?[...], reference_invoice_id? (returns) }`.
+حوافز سطر الفاتورة (R8) اختيارية وتُحفظ على السطر: `serial_nos` (يُفرَّد ويُسقَط الفراغ) و
+`batch_no`/`production_date`/`expiry_date` (تُحسم الدفعة عند الترحيل بحثاً أو إنشاءً)، و`lot_id`
+لاختيار عبوّةٍ مسجَّلة صراحةً — وشراءٌ بـ`batch_no` لصنفٍ `track_lot=false` ⇒ 422 `LOT_NOT_TRACKED`.
+
+**R16 — ⏰ من وقت/إلى وقت في كشف الحساب وكشف مركز الكلفة**: `GET /statements/general-ledger/:accountId?from_time=&to_time=` كان يطبّق الوقت في `accountStatement` (`at = date + coalesce(entry_time)` و`startAt/endAt`) لكن `costCenterStatement` كان يقطع بالتاريخ وحده و`GET /statements/cost-center/:id` لم يقبل `from_time/to_time`. فصار `CostCenterStatementQuery` يحمل `fromTime?/toTime?` و`costCenterStatement` يبني `at/startAt/endAt` كـ`accountStatement` (`before = at < startAt`)، والمسار يقبل `?from_time=&to_time=&kind=`؛ والشاشتان `/accounting/ledger` و`/accounting/cost-center-statement` اكتسبتا حقلي وقت (`type=time`) مع `disabled={fullPeriod || !from/to}` و`?from_time=&to_time=` وfooter يطبع الوقت. بلا ترحيل — `entry_time` موجود منذ `0046`.
+
+**R15 — محرر السند: في سندات القبض والصرف**: `GET /vouchers` و`GET /vouchers/:id` كانا
+`select().from(vouchers)` بلا `users` — العمود `vouchers.createdBy` في `baseAuditColumns` موجود
+لكن لا يُقرأ ولا يُكتب. فصارا `select({ ...vouchers, createdByName: users.fullName }).leftJoin(users, eq(users.id, vouchers.createdBy))`، و`POST /vouchers` يضبط `createdBy/updatedBy = tryGetAuthContext()?.userId`، و`PATCH /vouchers/:id` (مسودّة) يضبط `updatedBy`. والشاشة `/treasury/vouchers` اكتسبت عمود **محرر السند:** (`createdByName ?? '—'`). بلا ترحيل — العمود موجود.
+
+**R14 — 📋 نوع القيد في كشف الحساب وكشف مركز الكلفة**: `GET /statements/general-ledger/:accountId?kind=` و`GET /statements/cost-center/:centerId?kind=` كانا يطبّقان `STATEMENT_KINDS` (13 نوعاً) في `accounting.service.ts:320` — `opening`, `sales_invoice`, `pos_sale`, `return_sale`, `purchase_invoice`, `return_purchase`, `voucher_receipt`, `voucher_payment`, `inventory_adjust`, `shift_close`, `contract_invoice`, `manual`, `reversal` — و`رصيد سابق` يُحسب من النوع نفسه. الشاشتان `/accounting/ledger` و`/accounting/cost-center-statement` لم تُمرّراه، فاكتسبتا حقل **📋 نوع القيد** (قائمة الـ13 + «الكل» بتسميات عربية: قيد افتتاحي · فاتورة مبيعات · نقطة بيع · مرتجع مبيعات · فاتورة مشتريات · مرتجع مشتريات · سند قبض · سند صرف · تسوية جردية · إغلاق اليومية · فاتورة عقد · قيد يدوي · قيد عكسي). بلا ترحيل — الفلتر قراءة.
+
+**R13 — 🧾 قيود التحويل بين الخزائن: المال في الطريق له حساب**: `POST /cash-transfers/{id}/send`
+(صلاحية `treasury.transfer.manage`) و`POST /cash-transfers/{id}/receive` كانا يحرّكان
+`cash_location_balances` بلا قيد، وعمودا `sent_journal_entry_id` / `received_journal_entry_id`
+(الترحيل `0011`) بقيا فارغين. **فصار الإرسال والاستلام يقيّدان**:
+
+| الحدث | المدين | الدائن |
+|---|---|---|
+| 📤 اعتماد الإرسال | `1211003` نقد تحت التحويل | حساب خزنة المصدر |
+| 📥 تأكيد الاستلام | حساب خزنة الوصول | `1211003` نقد تحت التحويل |
+
+كلاهما داخل معاملةٍ واحدة مع حركة الرصيد وبمفتاحٍ مُعادٍ `cash-transfer:{id}:sent/received`
+يمنع التكرار، و`transfers()` تردّ `sentJournalEntryId` / `receivedJournalEntryId` و`fromName` /
+`toName` كما كانت. حساب الطريق يُحسم `cash_transfer.cashInTransitAccountId` في ملف الترحيل ←
+دليل `1211003` ← 422 `CASH_TRANSFER_TRANSIT_ACCOUNT_MISSING`، والخزنة بلا حساب ⇒ 422
+`CASH_ACCOUNT_REQUIRED`. والردّ: `POST …/send` ⇒ `{id, status:'sent', number, sentJournalEntryId,
+cashInTransitAccountId}` و`POST …/receive` ⇒ `{id, status:'received', receivedJournalEntryId}`.
+والشاشة `/treasury/transfers` اكتسبت عمود **📒 القيد** (📤/📥) ورأس الوثيقة صار يُظهر رقمي القيدين.
+ترحيل `0091_cash_in_transit_account.sql` يُكمل الدليل (عدّادٌ بلا خزائن لا يحتاجه)، وبذرة العرض
+صارت 116 حساباً.
+
+**R12 — 🧾 عهدة الإغلاق وقيدُ الإغلاق ثلاثيّ الأسطر**: `POST /shift-closes/{id}/post`
+(صلاحية `treasury.shift.post`) لم يعُد يكتب «📉 الفرق» وحده، بل الأسطر التي يكتبها الديسكتوب في كل
+إغلاق (`Class/EntryOper.cs:760–800` · `Form_WPF/ClosShiftAndroid.xaml.cs:1550–1650`):
+
+| السطر | المدين | الدائن |
+|---|---|---|
+| 🧾 `1211002` عهدة الإغلاق | `countedCash` | — |
+| 💵 حساب الصندوق (`shift_close.cashAccountId`) | — | `expectedCash` |
+| 📉 `3110004` فرق بالصندوق (`cashDifferenceAccountId`) | العجز `expected − counted` | الزيادة |
+
+والدرج **المطابق يُرحَّل** أيضاً (سطران، ولا سطر فروقات)، والرفض `422 SHIFT_BALANCED` لم يبق
+إلا للدرج الذي **لا معدودَ فيه ولا متوقَّع**؛ والسطر الصفري لا يُكتب أصلاً. وبيانات السطور عربية
+بنصّ الديسكتوب: «عهدة الإغلاق {الموظف}» · «نقدي في الصندوق {الموظف}» · «فرق بالصندوق {الموظف}».
+
+* حساب العهدة يُحسم بترتيبٍ صريح: مفتاح **`custodyAccountId`** الجديد في ملف ترحيل
+  `shift_close` (أُضيف إلى `POST_PROFILE_ACCOUNT_KEYS`، والمخطط `.strict()` يرفض ما ليس فيه)
+  ← ثمّ ثابتُ الديسكتوب `1211002` من الدليل ← ثمّ **422 `SHIFT_CUSTODY_ACCOUNT_MISSING`**
+  (`{field: 'custodyAccountId'}`). ولا يُخترع حساب.
+* بلا `cashDifferenceAccountId` في الملف **وفرقٌ فعليّ** ⇒ **422 `TREASURY_PROFILE_KEY_MISSING`**
+  كما كان (§14.4).
+* جسم الاستجابة: `{id, number, journalEntryId, postedAt, custodyAccountId, custodyAmount,
+  tillAmount, differenceAmount}` — والأربعة تُدمج في `shift_closes.summary` بـ`||` (JSONB)
+  فلا تُمحى بنود الملخّص السابقة.
+* `GET /shift-closes/day-closes` (صلاحية `treasury.view`) يضيف لكل صف `custodyAccountId`
+  · `custodyAccountCode` · `custodyAccountName` · `custodyAmount`، و**`postable`** =
+  `status = 'closed'` ونبضُ قيدٍ غائب و(`diff ≠ 0` **أو** `counted ≠ 0` **أو** `expected ≠ 0`).
+* تنظيف العهدة يبقى سنداً: `POST /vouchers` بـ`kind: 'receipt'` و`counterAccountId` هو حساب
+  العهدة — ولذلك تُكتب على الإغلاق لتبنيها الشاشة من الرأس لا من رقمٍ محفوظ.
+
+**R11 — الشاشات الثلاث الأخيرة والنهايات التي كانت تنقصها**: `GET /projects/stage-templates`
+(صلاحية `projects.view`) — وهذا المسار **معلَنٌ قبل `@Get(':id')`** لأن Nest يطابق بترتيب
+الإعلان: قبله كان الطلب يبلغ `:id` فيردّ **400 `INVALID_ID`** (مسارٌ يبدو موجوداً وهو يقرأ
+معرّفاً). و`PATCH /projects/stages/{stageId}` (الاسم و/أو الترتيب — «💾 حفظ» في `frmStagePM.xaml`)
+و`DELETE /projects/stages/{stageId}` («🗑️ حذف») — والحذف **يعيد ترقيم ما بقي داخل معاملةٍ واحدة**
+(تزحيفٌ بمقدار `+1000000` قبل الكتابة النهائية) فلا تبقى فجوةٌ ولا يصطدم الفهرس الفريد
+`project_stages_order_key(project_id, stage_order)`؛ مرحلةٌ لا تخصّ المستأجر ⇒ **404
+`PROJECT_STAGE_NOT_FOUND`**. و`POST /projects/{id}/stages` بلا ترتيب يضعه في الذيل
+(`max(stage_order) + 1`، كما في `frmProjectStagesPM.xaml.cs:236`). و`PATCH /projects/boq/{termId}`
+و`DELETE /projects/boq/{termId}` للبند: الرقم المكرّر ⇒ **409 `BOQ_TERM_CODE_TAKEN`**، وبندٌ سبق
+فوترته في مستخلص **لا يُحذف** ⇒ **409 `BOQ_TERM_BILLED`** (سطرُ المستخلص يشير إليه بـ`RESTRICT`)،
+ومجهول ⇒ **404 `BOQ_TERM_NOT_FOUND`**. وحرّاسٌ بدل الـ500: `POST /projects` بلا `code`/`name`/`partyId`
+⇒ **422 `PROJECT_FIELDS_REQUIRED`**، ومرحلةٌ بلا اسم ⇒ **422 `PROJECT_STAGE_NAME_REQUIRED`**، وبندٌ
+بلا رقم/اسم/سعر ⇒ **422 `BOQ_TERMS_REQUIRED`** بنصّ النافذة نفسه («من فضلك أدخل رقم البند» ·
+«من فضلك أدخل اسم البند»)، وقالبٌ بلا اسم أو بلا مرحلة ⇒ **422 `PROJECT_STAGE_TEMPLATE_REQUIRED`**.
+وأنواع التفصيل: `GET/POST /tailoring/types` و`PATCH/DELETE /tailoring/types/:id` كانت قائمةً
+بالفعل، و`DELETE` حذفٌ ناعم (`deleted_at` + `active=false`) والاسم/الرمز المكرّر ⇒ **409**،
+والمجموعة الخالية من النوع الأسماء ⇒ **422 `TAILORING_TYPE_NAME_REQUIRED`**.
+
+**R10 — ⏮ ◀ ▶ ⏭ تنقّل القيود**: `GET /journal-entries/{id}/neighbours` (صلاحية
+`accounting.reports.view`) ⇒ `{first,previous,next,last,position,total}` — كلٌّ من الأربعة
+صفٌّ مختصر (`id` · `number` · `date` · `description` · `status`) أو `null`. والنطاق هو نطاق
+السجل نفسه (`from` · `to` · `branchId` · `fiscalPeriodId` · `status`)، والترتيب **ترتيب
+الإنشاء** بمعرّف القيد (UUIDv7 المرتّب زمنياً)، «السابق» أقدم و«التالي» أحدث، و`position`
+عَدٌّ من الأقدم. قيدٌ مجهول ⇒ **404 `NOT_FOUND`**، ومعرّفٌ بلا صيغة ⇒ **400 `INVALID_ID`**
+(معالج R6 يسري على المسار الجديد). وقيدٌ **خارج النطاق** (يُفتح بمعرّفه المباشر) يردّ
+`position = 0` و`total` = عدد قيود النطاق — فلا رقمٌ يحسبه ترتيبُ المعرّفات كأنّه من النطاق
+وليس فيه — مع `previous`/`next` **عاملَين** يدلّان على آخر قيدٍ قبله وأوّل قيدٍ بعده فيه.
+
+**R9 — 📊 مركز التكلفة**: يقبله **رأسُ** فاتورة البيع والشراء (`cost_center_id`) و**سطرُهما**
+(`lines[].cost_center_id`)، ويُعاد في ردّ الإنشاء/القراءة. والسطر الصامت يُخزَّن `null` ويأخذ مركز
+الرأس **عند بناء القيد** (مركز السطر يسبق، ثم الرأس — `InvoiceOper.cs:2432` ثم `:2461`). وعند
+الترحيل تُقسم رجل الإيراد والتكلفة والمخزون على مراكز السطور بنصيب كل سطر، وآخر مجموعة تحمل فرق
+التقريب؛ و**الفاتورة التي لا تسمّي مركزاً لا يتغيّر قيدها بحرف**. ولا تُوسم رجل الذمة ولا
+الصندوق/البنك ولا الضريبة — الذمة ليست مركز تكلفة. `POST /{id}/void` يعكس بالأبعاد كلها
+(`cost_center_id` و`salesman_id` و`branch_id` والعملة والمعدّل)، ومركزٌ لا يخصّ المستأجر ⇒
+**404 `COST_CENTER_NOT_FOUND`** معلَن في `packages/contracts/src/errors.ts`.
+Purchases mirror: `/purchase-invoices`, `/{id}/post` (computes landed cost),
+`/{id}/payments`, `/purchase-invoices/{id}/costs`, and
+`POST /purchase-invoices/preview-landed-cost`. Perms `sales.invoice.*`,
+`purchase.invoice.*` (create/post/void/pay/view), `purchase.cost.manage`.
+
+## 9. Treasury
+
+`/vouchers?filter[kind]=receipt` CRUD(draft) + `post/void` + `POST /vouchers/{id}/cheque`
+transitions (`clear|bounce|collect`) + allocations on post · `/cash-transfers` create/send/receive ·
+`/expense-types` create/list · `/shift-closes` open/current/history/close `{counts:[{denomination,count}]}` ·
+GET `/shift-closes/{id}/print-data` · GET `/cash-locations/{id}/balance` ·
+POST `/cash-locations/{id}/recalc-balance`. Perms `treasury.view`,
+`treasury.voucher.{create,post,void}`, `treasury.cheque.clear`,
+`treasury.transfer.manage`, `treasury.expensetype.manage`, `treasury.shift.close`.
+
+## 10. E-Invoicing
+
+`/einvoice/credentials` PUT/GET (masked) · GET `/einvoice/submissions?status=`
+· POST `/einvoice/submissions/{id}/retry` · POST `/sales-invoices/{id}/einvoice/submit`
+(queued/submission-ledger) · GET `/einvoice/health`. Perms `einvoice.{manage,submit,view}` and `einvoice.credentials.manage`.
+
+## 11. Reporting (P14)
+
+`GET /reports` catalog · `GET /reports/{reportKey}` with documented param sets per key:
+`sales-by-day, sales-by-category, sales-by-item, sales-by-payment, sales-by-ordertype,
+monthly-sales, inventory-valuation, item-movement, expiry-report, stock-limits, ar-aging, ap-aging,
+vat-return, trial-balance, general-ledger, profit-loss, balance-sheet, cashier-shift,
+party-statement, serial-tracking, batch-tracking`. Async: POST `/reports/{key}/export
+{format:csv|xlsx|pdf}` → reports-export token → file download when worker renders. Perm `reporting.view`, later refined to `reporting.{key}.view`.
+
+## 12. Migration & Compat
+
+`/migration/runs` POST `{mode:analyze|dry_run|import|reconcile|rollback, source:{label?,kind?,...}}`
+(starts job and returns run status), GET `/migration/runs`, GET `/migration/runs/{id}` status,
+GET `/migration/runs/{id}/issues`, GET `/migration/runs/{id}/reconciliation`. Perms
+`migration.view`, `migration.run.execute`, `migration.run.import` ·
+Compat (P16): admin `POST/GET /compat/devices`, `PATCH /compat/devices/{id}/revoke`;
+public device `POST /compat/auth/device`; scoped token endpoints `GET /compat/master/items?since=`,
+`GET /compat/master/parties?since=`, `GET /compat/master/accounts?since=`,
+`GET /compat/master/tax-groups?since=`, `POST /compat/docs/sales-invoice`,
+`POST /compat/docs/voucher`, `GET/POST /compat/sync/cursor`,
+`GET /compat/docs/status?legacyId=`. Device-key auth, per-tenant, per-branch. Perms
+`compat.manage`, `compat.sync`.
+
+## 13. Admin-plane (platform owner)
+
+Separate guard `is_platform_admin`: `/platform/tenants` CRUD + `suspend/activate`,
+`/platform/users`, `/platform/stats`, `/platform/migrations`. Never mixed with tenant routes.
+
+
+## 14. Restaurant POS Pack (P19)
+
+Feature flag `pack.pos`; disabled tenants receive 404 for `/pos/*`.
+
+`GET/POST /pos/categories` · `GET/POST /pos/tables` ·
+`POST /pos/tables/{id}/open` · `POST /pos/tables/{id}/items` ·
+`POST /pos/events/{id}/void {reason}` · `POST /pos/tables/{id}/send-to-invoice` ·
+`POST /pos/tables/{id}/close` · `POST /pos/tables/{sourceId}/merge/{targetId}` ·
+`POST /pos/tables/{id}/split`.
+
+Perms: `pos.view`, `pos.operate`, `pos.priceoverride`, `pos.tables.manage`,
+`pos.config.manage`. Order events are append-only lifecycle facts; send-to-invoice creates
+a normal sales invoice with `order_type`, `table_no`, and daily branch-scoped
+`pos_order:YYYY-MM-DD` numbering.
+
+
+## 15. HRM & Payroll Pack (P20)
+
+Feature flag `pack.hrm`; disabled tenants receive 404 for `/hrm/*`.
+
+`GET/POST /hrm/departments` · `GET/POST /hrm/jobs` · `GET/POST /hrm/employees`
+(bank fields masked in list output) · `POST /hrm/attendance/import {csv}` for
+`machine,enroll,datetime,inout` · `GET /hrm/attendance/summary?enroll&from&to`
+(naïve in/out pairing only) · `POST /hrm/adjustments` ·
+`POST /hrm/adjustments/{id}/approve` · `POST /hrm/payroll/preview` ·
+`GET/POST /hrm/payroll/runs` · `GET /hrm/payroll/runs/{id}` ·
+`POST /hrm/payroll/runs/{id}/post` · `POST /hrm/payroll/runs/{id}/pay` ·
+`POST /hrm/payroll/runs/{id}/reverse {reason}`.
+
+Perms: `hrm.view`, `hrm.manage`, `hrm.payroll.post`, `hrm.adjust.approve`. Posted runs
+are immutable; correction is reversal plus a new run. Pay creates a treasury voucher with
+subtype `salary`.
+
+## 16. Installments and Contracting/Projects Packs (P21)
+
+Feature flags: `pack.installments` and `pack.projects`; disabled tenants receive 404 for the pack routes.
+
+Installments endpoints: `GET/POST /installments/contracts`, `GET /installments/contracts/{id}`, `GET /installments/overdue?asOf=YYYY-MM-DD`, `POST /installments/contracts/{id}/collect`.
+
+Projects endpoints: `GET/POST /projects`, `GET /projects/{id}`, `GET/POST /projects/stage-templates`, `POST /projects/{id}/stages`, `PATCH /projects/stages/{stageId}`, `DELETE /projects/stages/{stageId}`, `POST /projects/stages/{stageId}/move`, `POST /projects/stages/{stageId}/accredit`, `POST /projects/{id}/boq`, `PATCH /projects/boq/{termId}`, `DELETE /projects/boq/{termId}`, `POST /projects/{id}/progress-bills`, `GET /projects/progress-bills/{billId}`, `POST /projects/progress-bills/{billId}/post`, `POST /projects/progress-bills/{billId}/release-retention`, `POST /projects/requirements`.
+
+Perms: `installments.view`, `installments.manage`, `installments.collect`, `projects.view`, `projects.manage`, `projects.bill.post`, `projects.stage.accredit`.
+
+## 17. Niche Verticals and Salla Integration (P22)
+
+Feature flags: `pack.optics`, `pack.tailoring`, `pack.marina`, `pack.fitment`, `integration.salla`; disabled tenants receive 404 for the respective routes.
+
+Optics: `GET/POST /optics/prescriptions`, `GET /optics/invoice-lines/{lineId}/print-section`.
+Tailoring: `GET /tailoring/parties/{partyId}/measurements`, `GET /tailoring/parties/{partyId}/measurements/latest`, `POST /tailoring/measurements`.
+Marina: `GET /marina`, `POST /marina/groups`, `POST /marina/groups/{id}/pricing`, `POST /marina/vessels`, `POST /marina/vessels/{id}/owners`, `POST /marina/bookings`, `POST /marina/bookings/{id}/additions`, `POST /marina/bookings/{id}/rental-invoice`, `POST /marina/violations`, `POST /marina/operation-plans`.
+Fitment: `POST /fitment/makes`, `POST /fitment/makes/{makeId}/models`, `POST /fitment/items`, `GET /fitment/items-for-vehicle`, `GET /fitment/items/{itemId}/vehicles`.
+Salla: `GET /integrations/salla/oauth/authorize`, `POST /integrations/salla/connections`, `POST /integrations/salla/branch-mappings`, `POST /integrations/salla/export-queue`, `POST /integrations/salla/export-next`, `GET /integrations/salla/export-log`, `POST /integrations/salla/webhooks/{storeId}/orders`.
+
+Perms: `optics.view/manage`, `tailoring.view/manage`, `marina.view/manage/invoice`, `fitment.view/manage`, `salla.integration.view/manage`.
+
+## 18. Operations endpoints (P23)
+
+Ops endpoints are outside `/api/v1` and public for infrastructure probes/scrapers:
+
+- `GET /health/live`: process liveness only.
+- `GET /health/ready`: deep readiness with database, process, memory and uptime fields.
+- `GET /metrics`: Prometheus text exposition for request counts, latency buckets, queue depth placeholder, e-invoice failures and migration throughput.
