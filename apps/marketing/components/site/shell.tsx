@@ -14,6 +14,7 @@ import { siteFooterLinks, siteNavLinks } from '../../lib/navigation';
 import { NewsletterForm } from '../newsletter-form';
 
 import { ConsentStatusLine } from './consent-banner';
+import { HeaderScroll } from './header-scroll';
 import { LocaleSwitch } from './locale-switch';
 
 function menuItems(items: MenuItem[], locale: Locale) {
@@ -178,7 +179,9 @@ export function SiteShellLayout({
 }) {
   return (
     <>
-      <SiteHeader shell={shell} locale={locale} />
+      <HeaderScroll>
+        <SiteHeader shell={shell} locale={locale} />
+      </HeaderScroll>
       {shell.maintenance ? <MaintenanceNotice locale={locale} /> : <SiteBanner shell={shell} locale={locale} />}
       <main id="main" className="wrap site-main">
         {children}

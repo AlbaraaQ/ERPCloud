@@ -1,6 +1,13 @@
 'use client';
 
+import { AlertTriangle, Database, Gauge, HardDrive, Mail, RefreshCw, Server, Timer } from 'lucide-react';
+
 import { Screen } from '../../components/screen';
+import { Badge } from '../../components/ui/badge';
+import { Button } from '../../components/ui/button';
+import { EmptyState } from '../../components/ui/empty-state';
+import { MetricCard } from '../../components/ui/metric-card';
+import { SkeletonRows } from '../../components/ui/skeleton';
 import { apiBaseUrl, apiData } from '../../lib/api';
 import { useQuery } from '../../lib/use-query';
 
@@ -41,6 +48,15 @@ const PROBE_LABEL: Record<string, string> = {
   worker: 'العامل',
 };
 
+const PROBE_ICON: Record<string, React.ReactNode> = {
+  database: <Database size={16} />,
+  redis: <Server size={16} />,
+  storage: <HardDrive size={16} />,
+  email: <Mail size={16} />,
+  queue: <Gauge size={16} />,
+  worker: <Timer size={16} />,
+};
+
 const STATUS_LABEL: Record<string, string> = {
   up: 'سليم',
   degraded: 'متدهوّر',
@@ -48,17 +64,10 @@ const STATUS_LABEL: Record<string, string> = {
   not_configured: 'غير مهيّأ',
 };
 
-const STATUS_CLASS: Record<string, string> = {
-  up: 'active',
-  degraded: 'pending',
-  down: 'failed',
-  not_configured: 'pending',
-};
-
-const OVERALL: Record<string, { label: string; className: string }> = {
-  ok: { label: 'الخدمة سليمة', className: 'active' },
-  degraded: { label: 'الخدمة متدهوّرة', className: 'pending' },
-  down: { label: 'الخدمة متوقّفة', className: 'failed' },
+const OVERALL: Record<string, { label: string; cls: string }> = {
+  ok: { label: 'الخدمة سليمة', cls: 'text-emerald-700' },
+  degraded: { label: 'الخدمة متدهوّرة', cls: 'text-amber-700' },
+  down: { label: 'الخدمة متوقّفة', cls: 'text-red-700' },
 };
 
 export default function HealthPage() {
@@ -71,128 +80,180 @@ export default function HealthPage() {
       subtitle="مجسّاتٌ تُقاس على الخادم لحظة الطلب، ومعها عدّادات الطلبات وحجم الطابور. «غير مهيّأ» ليس عطلاً — العطل أن يكون شيءٌ مهيّأً ومتوقّفاً."
       crumbs={['المنصة', 'التشغيل']}
       actions={
-        <button className="btn" type="button" onClick={health.reload}>
+        <Button variant="secondary" icon={<RefreshCw size={14} />} onClick={health.reload}>
           إعادة الفحص
-        </button>
+        </Button>
       }
     >
-      {health.status === 'loading' && <div className="card">جارٍ الفحص…</div>}
-      {health.status === 'forbidden' && <div className="card">لا تملك `console.health.view`.</div>}
-      {health.status === 'error' && (
-        <div className="card">
-          <strong>تعذّر الفحص.</strong> <span className="muted">{health.error}</span>
+      {health.status === 'loading' ? (
+        <div className="rounded-[10px] border border-slate-200 bg-white p-4 shadow-1">
+          <SkeletonRows rows={5} />
         </div>
-      )}
+      ) : health.status === 'forbidden' ? (
+        <div className="rounded-[10px] border border-slate-200 bg-white p-4 shadow-1">لا تملك console.health.view.</div>
+      ) : health.status === 'error' ? (
+        <EmptyState tone="red" icon={<AlertTriangle size={26} strokeWidth={1.5} />} title="تعذّر الفحص" description={health.error} />
+      ) : null}
 
       {health.status === 'success' && data && (
         <>
           {data.incident.active && (
-            <div className="alert danger">
-              <strong>حادثة معلَنة:</strong> {data.incident.message ?? 'صيانة جارية'}
-              <div className="muted small" style={{ marginTop: 4 }}>
-                اللافتة من `platform.maintenance*` في إعدادات المنصة — لا نصٌّ في هذه الشاشة.
+            <div className="flex items-start gap-3 rounded-[10px] border-2 border-red-300 bg-red-50 px-4 py-3">
+              <span className="relative mt-1 flex size-3 flex-none">
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-red-400 opacity-70" />
+                <span className="relative inline-flex size-3 rounded-full bg-red-500" />
+              </span>
+              <div>
+                <p className="m-0 text-[14px] font-extrabold text-red-800">
+                  حادثة معلَنة: {data.incident.message ?? 'صيانة جارية'}
+                </p>
+                <p className="m-0 mt-1 text-[12px] text-red-600/80">
+                  اللافتة من platform.maintenance* في إعدادات المنصة — لا نصٌّ في هذه الشاشة.
+                </p>
               </div>
             </div>
           )}
 
-          <div className="card tight">
-            <div className="row" style={{ alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-              <span className={`badge ${OVERALL[data.status]?.className ?? 'pending'}`}>
+          {/* overall strip */}
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[10px] border border-slate-200 bg-white px-4 py-3 shadow-1">
+            <span className="flex items-center gap-2.5">
+              <span className="relative flex size-3">
+                {data.status !== 'down' && (
+                  <span className={`absolute inline-flex size-full animate-ping rounded-full opacity-50 ${data.status === 'ok' ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+                )}
+                <span className={`relative inline-flex size-3 rounded-full ${data.status === 'ok' ? 'bg-emerald-500' : data.status === 'degraded' ? 'bg-amber-500' : 'bg-red-500'}`} />
+              </span>
+              <span className={`text-[15px] font-extrabold ${OVERALL[data.status]?.cls ?? 'text-slate-600'}`}>
                 {OVERALL[data.status]?.label ?? data.status}
               </span>
-              <span className="muted small">
-                مُقلعة منذ {formatDuration(data.uptimeSeconds)} · آخر فحص{' '}
-                {new Date(data.checkedAt).toLocaleTimeString('ar-SA')}
-              </span>
-            </div>
+            </span>
+            <span className="font-mono text-[12px] text-slate-500" dir="ltr">
+              uptime {formatDuration(data.uptimeSeconds)}
+            </span>
+            <span className="text-[12px] text-slate-400">آخر فحص {new Date(data.checkedAt).toLocaleTimeString('ar-SA')}</span>
+            <span className="ms-auto flex flex-wrap gap-2">
+              <Badge tone={data.backlog.dead > 0 ? 'red' : 'neutral'} dot>ميتة: {data.backlog.dead}</Badge>
+              <Badge tone={data.requests.errorRate > 0.01 ? 'amber' : 'green'} dot>
+                أخطاء {(data.requests.errorRate * 100).toFixed(2)}٪
+              </Badge>
+            </span>
           </div>
 
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>المجسّ</th>
-                  <th>الحالة</th>
-                  <th className="num">زمن الاستجابة</th>
-                  <th>التفصيل</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.probes.map((probe) => (
-                  <tr key={probe.name}>
-                    <td>{PROBE_LABEL[probe.name] ?? probe.name}</td>
-                    <td>
-                      <span className={`badge ${STATUS_CLASS[probe.status] ?? 'pending'}`}>
+          {/* probes grid */}
+          <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3">
+            {data.probes.map((probe, index) => {
+              const up = probe.status === 'up';
+              const down = probe.status === 'down';
+              return (
+                <div
+                  key={probe.name}
+                  className="rounded-[10px] border border-slate-200 bg-white p-3.5 shadow-1 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-2"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span
+                      className={`grid size-9 flex-none place-items-center rounded-lg ${
+                        up ? 'bg-emerald-50 text-emerald-600' : down ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'
+                      }`}
+                    >
+                      {PROBE_ICON[probe.name] ?? <Gauge size={16} />}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[13.5px] font-bold text-slate-800">{PROBE_LABEL[probe.name] ?? probe.name}</span>
+                      <span
+                        className={`inline-flex items-center gap-1.5 text-[11.5px] font-bold ${
+                          up ? 'text-emerald-600' : down ? 'text-red-600' : 'text-amber-600'
+                        }`}
+                      >
+                        {up || down ? (
+                          <span className="relative flex size-1.5">
+                            <span className={`absolute inline-flex size-full animate-ping rounded-full opacity-60 ${up ? 'bg-emerald-400' : 'bg-red-400'}`} />
+                            <span className={`relative inline-flex size-1.5 rounded-full ${up ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                          </span>
+                        ) : (
+                          <span className="size-1.5 rounded-full bg-amber-400" />
+                        )}
                         {STATUS_LABEL[probe.status] ?? probe.status}
                       </span>
-                    </td>
-                    <td className="num">{probe.latencyMs === null ? '—' : `${probe.latencyMs} ms`}</td>
-                    <td className="small">{probe.detail}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </span>
+                    <span className="flex-none font-mono text-[12px] font-bold text-slate-500" dir="ltr">
+                      {probe.latencyMs === null ? '—' : `${probe.latencyMs}ms`}
+                    </span>
+                  </div>
+                  <p className="m-0 mt-2 truncate text-[11.5px] text-slate-400" title={probe.detail}>
+                    {probe.detail}
+                  </p>
+                </div>
+              );
+            })}
           </div>
 
-          <div className="grid two">
-            <div className="card">
-              <h3 style={{ marginTop: 0 }}>الطلبات</h3>
-              <dl className="kv">
-                <dt>العدد الكلي</dt>
-                <dd className="num">{data.requests.count.toLocaleString('ar-SA')}</dd>
-                <dt>أخطاء 5xx</dt>
-                <dd className="num">{data.requests.errors.toLocaleString('ar-SA')}</dd>
-                <dt>نسبة الخطأ</dt>
-                <dd className="num">{(data.requests.errorRate * 100).toFixed(2)}٪</dd>
-                <dt>p95</dt>
-                <dd className="num">{data.requests.p95Ms.toLocaleString('ar-SA')} ms</dd>
-              </dl>
-              <p className="muted small">
-                الأرقام من عدّاد العملية ودلائها (تُجمع من كل مسار) — لا من تخزينٍ ثانٍ ولا من تقدير. p95 هي
-                أقلّ دلوٍّ يغطّي 95٪ من الطلبات.
+          {/* requests + backlog */}
+          <div className="mt-3 grid gap-3 xl:grid-cols-2">
+            <section className="rounded-[10px] border border-slate-200 bg-white p-4 shadow-1">
+              <h3 className="m-0 mb-3 text-[15px] font-bold text-slate-900">الطلبات</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <MetricCard label="العدد الكلي" value={data.requests.count} tone="violet" delay={0} />
+                <MetricCard label="أخطاء 5xx" value={data.requests.errors} tone={data.requests.errors > 0 ? 'red' : 'green'} delay={0.04} />
+                <MetricCard
+                  label="نسبة الخطأ"
+                  value={Number((data.requests.errorRate * 100).toFixed(2))}
+                  suffix="٪"
+                  tone={data.requests.errorRate > 0.01 ? 'amber' : 'green'}
+                  delay={0.08}
+                />
+                <MetricCard label="p95" value={data.requests.p95Ms} suffix="ms" tone="sky" delay={0.12} />
+              </div>
+              <p className="m-0 mt-3 text-[11.5px] text-slate-400 leading-relaxed">
+                الأرقام من عدّاد العملية ودلائها (تُجمع من كل مسار) — لا من تخزينٍ ثانٍ ولا من تقدير. p95 هي أقلّ
+                دلوٍّ يغطّي 95٪ من الطلبات.
               </p>
-            </div>
+            </section>
 
-            <div className="card">
-              <h3 style={{ marginTop: 0 }}>الطابور</h3>
-              <dl className="kv">
-                <dt>بانتظار النشر</dt>
-                <dd className="num">{data.backlog.pending.toLocaleString('ar-SA')}</dd>
-                <dt>نُشرت</dt>
-                <dd className="num">{data.backlog.published.toLocaleString('ar-SA')}</dd>
-                <dt>ميتة</dt>
-                <dd className="num">{data.backlog.dead.toLocaleString('ar-SA')}</dd>
-                <dt>أقدم معلَّقة</dt>
-                <dd>
-                  {data.backlog.oldestPendingAgeSeconds === null
-                    ? 'لا شيء'
-                    : formatDuration(data.backlog.oldestPendingAgeSeconds)}
+            <section className="rounded-[10px] border border-slate-200 bg-white p-4 shadow-1">
+              <h3 className="m-0 mb-3 text-[15px] font-bold text-slate-900">الطابور</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <MetricCard
+                  label="بانتظار النشر"
+                  value={data.backlog.pending}
+                  tone={data.backlog.pending > 50 ? 'amber' : 'violet'}
+                  delay={0.04}
+                />
+                <MetricCard label="نُشرت" value={data.backlog.published} tone="sky" delay={0.08} />
+                <MetricCard label="ميتة" value={data.backlog.dead} tone={data.backlog.dead > 0 ? 'red' : 'green'} delay={0.12} />
+                <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-3">
+                  <p className="m-0 text-[11.5px] font-bold text-slate-400">أقدم معلَّقة</p>
+                  <p className="m-0 mt-1 font-mono text-[18px] font-bold text-slate-700" dir="ltr">
+                    {data.backlog.oldestPendingAgeSeconds === null ? 'لا شيء' : formatDuration(data.backlog.oldestPendingAgeSeconds)}
+                  </p>
+                </div>
+              </div>
+              <p className="m-0 mt-3 text-[11.5px] text-slate-400 leading-relaxed">
+                الفعل على هذه الصفوف في <a className="font-bold text-brand-600 underline" href="/jobs">المهام والطوابير</a> — هذه الشاشة تقيس ولا تعالج.
+              </p>
+            </section>
+          </div>
+
+          {/* local API note */}
+          <section className="mt-3 rounded-[10px] border border-slate-200 bg-white p-4 shadow-1">
+            <dl className="m-0 grid gap-2 md:grid-cols-2">
+              <div>
+                <dt className="text-[12px] font-bold text-slate-400 m-0">عنوان الـ API المستخدم</dt>
+                <dd className="m-0 mt-0.5 font-mono text-[12.5px] text-slate-700" dir="ltr">{apiBaseUrl}</dd>
+              </div>
+              <div>
+                <dt className="text-[12px] font-bold text-slate-400 m-0">وضع الاتصال</dt>
+                <dd className="m-0 mt-0.5 text-[12.5px] text-slate-600">
+                  {apiBaseUrl.startsWith('/') ? 'نفس المصدر عبر وسيط Next.js (موصى به)' : 'مصدر خارجي — يتطلب ضبط CORS'}
                 </dd>
-              </dl>
-              <p className="muted small">
-                الفعل على هذه الصفوف في <a href="/jobs">المهام والطوابير</a> — هذه الشاشة تقيس ولا تعالج.
-              </p>
-            </div>
-          </div>
+              </div>
+            </dl>
+            <p className="m-0 mt-3 text-[11.5px] text-slate-400">
+              هذه الصفحة تقرأ من الـAPI نفسه، فوصولها دليلٌ على أن الجلسة والوسيط سليمان — أما المجسّات أعلاه فهي
+              التي تُجيب «هل الخدمة بخير؟».
+            </p>
+          </section>
         </>
       )}
-
-      <div className="card tight">
-        <dl className="kv">
-          <dt>عنوان الـ API المستخدم</dt>
-          <dd dir="ltr">{apiBaseUrl}</dd>
-          <dt>وضع الاتصال</dt>
-          <dd>
-            {apiBaseUrl.startsWith('/')
-              ? 'نفس المصدر عبر وسيط Next.js (موصى به)'
-              : 'مصدر خارجي — يتطلب ضبط CORS'}
-          </dd>
-        </dl>
-        <p className="muted small" style={{ marginBottom: 0 }}>
-          هذه الصفحة تقرأ من الـAPI نفسه، فوصولها دليلٌ على أن الجلسة والوسيط سليمان — أما المجسّات أعلاه فهي
-          التي تُجيب «هل الخدمة بخير؟».
-        </p>
-      </div>
     </Screen>
   );
 }

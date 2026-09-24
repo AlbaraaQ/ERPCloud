@@ -1,10 +1,26 @@
 'use client';
 
+import { KeyRound } from 'lucide-react';
 import { useState } from 'react';
 
 import { Empty, ErrorBox, Loading, Screen } from '../../components/screen';
+import { Badge } from '../../components/ui/badge';
+import { Button } from '../../components/ui/button';
+import { Select } from '../../components/ui/input';
+import { Table } from '../../components/ui/table';
 import { ApiError, apiData, apiPost } from '../../lib/api';
 import { useQuery } from '../../lib/use-query';
+
+const SUB_STATUS_TONE: Record<Status, 'blue' | 'purple' | 'green' | 'amber' | 'red' | 'neutral'> = {
+  pending: 'amber',
+  trialing: 'blue',
+  active: 'green',
+  past_due: 'amber',
+  paused: 'amber',
+  canceled: 'neutral',
+  expired: 'red',
+  incomplete: 'neutral',
+};
 
 /**
  * الاشتراكات والتراخيص — P-C4: **دورة حياة** الترخيص لا صفًّا يُقرأ.
@@ -114,17 +130,19 @@ export default function SubscriptionsPage() {
       crumbs={['المنصة', 'العملاء والتراخيص']}
       actions={
         <>
-          <select className="input" style={{ maxWidth: 180 }} value={status} onChange={(event) => setStatus(event.target.value)}>
-            <option value="">كل الحالات</option>
-            {(Object.keys(STATUS_LABEL) as Status[]).map((key) => (
-              <option key={key} value={key}>
-                {STATUS_LABEL[key]}
-              </option>
-            ))}
-          </select>
-          <button className="btn primary" type="button" onClick={() => setGranting(!granting)}>
+          <div style={{ width: 180 }}>
+            <Select label="الحالة" value={status} onChange={(e) => setStatus(e.target.value)}>
+              <option value="">كل الحالات</option>
+              {(Object.keys(STATUS_LABEL) as Status[]).map((key) => (
+                <option key={key} value={key}>
+                  {STATUS_LABEL[key]}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <Button variant="primary" icon={<KeyRound size={14} />} onClick={() => setGranting(!granting)}>
             {granting ? 'إغلاق' : 'ترخيص جديد'}
-          </button>
+          </Button>
         </>
       }
     >
@@ -171,7 +189,15 @@ export default function SubscriptionsPage() {
           onCancel={() => setActionTarget(undefined)}
         />
       )}
-      {message && <p className={`alert ${message.kind}`}>{message.text}</p>}
+      {message && (
+        <div
+          className={`mb-4 flex items-center gap-2 rounded-[10px] border px-4 py-2.5 text-[13px] font-semibold ${
+            message.kind === 'ok' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-700'
+          }`}
+        >
+          {message.text}
+        </div>
+      )}
 
       {subscriptions.status === 'loading' && <Loading />}
       {subscriptions.status === 'error' && <ErrorBox message={subscriptions.error} onRetry={subscriptions.reload} />}
@@ -179,98 +205,99 @@ export default function SubscriptionsPage() {
         (rows.length === 0 ? (
           <Empty title="لا توجد تراخيص" detail="أصدر ترخيصاً من هنا أو من صفحة العملاء." />
         ) : (
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>العميل</th>
-                  <th>الباقة</th>
-                  <th className="num">القيمة</th>
-                  <th>المصدر</th>
-                  <th>الحالة</th>
-                  <th>يبدأ</th>
-                  <th>ينتهي</th>
-                  <th className="num">فواتير مستحقّة</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => (
-                  <tr key={row.id}>
-                    <td>
-                      <strong>{row.tenantName}</strong>
-                      <div className="muted small" dir="ltr">
-                        {row.tenantCode}
-                      </div>
-                    </td>
-                    <td>
-                      {row.planName}
-                      <div className="muted small" dir="ltr">
-                        {row.planCode}
-                      </div>
-                    </td>
-                    <td className="num">
-                      {Number(row.amount).toLocaleString('ar-SA', { minimumFractionDigits: 2 })} {row.currency}
-                      <div className="muted small">
+          <div className="overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-1">
+            <Table
+              rows={rows}
+              rowKey={(row) => row.id}
+              dense
+              columns={[
+                {
+                  key: 'tenant',
+                  header: 'العميل',
+                  grow: true,
+                  cell: (row) => (
+                    <span className="block">
+                      <span className="block text-[13px] font-bold text-slate-800">{row.tenantName}</span>
+                      <span className="block font-mono text-[11px] text-slate-400" dir="ltr">{row.tenantCode}</span>
+                    </span>
+                  ),
+                },
+                {
+                  key: 'plan',
+                  header: 'الباقة',
+                  cell: (row) => (
+                    <span className="block">
+                      <span className="block text-[12.5px] font-semibold text-slate-700">{row.planName}</span>
+                      <span className="block font-mono text-[11px] text-slate-400" dir="ltr">{row.planCode}</span>
+                    </span>
+                  ),
+                },
+                {
+                  key: 'amount',
+                  header: 'القيمة',
+                  numeric: true,
+                  ltr: true,
+                  cell: (row) => (
+                    <span className="block">
+                      <span className="block font-mono text-[12px] font-bold">
+                        {Number(row.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })} {row.currency}
+                      </span>
+                      <span className="block text-[11px] text-slate-400">
                         {row.interval === 'year' ? 'سنوي' : 'شهري'} · {row.monthlyAmount} شهرياً
-                      </div>
-                    </td>
-                    <td>{row.provider === 'stripe' ? 'Stripe' : 'يدوي'}</td>
-                    <td>
-                      <span className={`badge ${row.status}`}>{STATUS_LABEL[row.status]}</span>
-                      {row.cancelAtPeriodEnd && <div className="muted small">يُنتهي بانتهاء المدة</div>}
+                      </span>
+                    </span>
+                  ),
+                },
+                {
+                  key: 'provider',
+                  header: 'المصدر',
+                  cell: (row) =>
+                    row.provider === 'stripe' ? (
+                      <Badge tone="purple" dot>Stripe</Badge>
+                    ) : (
+                      <Badge tone="neutral" dot>يدوي</Badge>
+                    ),
+                },
+                {
+                  key: 'status',
+                  header: 'الحالة',
+                  cell: (row) => (
+                    <span className="block">
+                      <Badge tone={SUB_STATUS_TONE[row.status]} dot>{STATUS_LABEL[row.status]}</Badge>
+                      {row.cancelAtPeriodEnd && <span className="mt-0.5 block text-[11px] font-semibold text-amber-600">يُنتهي بانتهاء المدة</span>}
                       {row.status === 'trialing' && row.trialEndsAt && (
-                        <div className="muted small">تنتهي التجربة {dateText(row.trialEndsAt)}</div>
+                        <span className="mt-0.5 block text-[11px] text-slate-400">تنتهي التجربة {dateText(row.trialEndsAt)}</span>
                       )}
                       {row.status === 'paused' && row.pausedAt && (
-                        <div className="muted small">موقوف منذ {dateText(row.pausedAt)}</div>
+                        <span className="mt-0.5 block text-[11px] text-slate-400">موقوف منذ {dateText(row.pausedAt)}</span>
                       )}
-                    </td>
-                    <td dir="ltr">{dateText(row.currentPeriodStart)}</td>
-                    <td dir="ltr">{dateText(row.currentPeriodEnd)}</td>
-                    <td className="num">{row.dueInvoiceCount}</td>
-                    <td>
-                      <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
-                        {LIVE.includes(row.status) && (
-                          <>
-                            <button className="btn sm" type="button" onClick={() => setChangeTarget(row)}>
-                              ترقية/تخفيض
-                            </button>
-                            {row.status === 'paused' ? (
-                              <button
-                                className="btn sm"
-                                type="button"
-                                onClick={() => setActionTarget({ subscription: row, kind: 'resume' })}
-                              >
-                                استئناف
-                              </button>
-                            ) : (
-                              <button
-                                className="btn sm"
-                                type="button"
-                                onClick={() => setActionTarget({ subscription: row, kind: 'pause' })}
-                              >
-                                إيقاف مؤقّت
-                              </button>
-                            )}
-                            <button
-                              className="btn sm danger"
-                              type="button"
-                              onClick={() => setActionTarget({ subscription: row, kind: 'cancel' })}
-                            >
-                              إلغاء
-                            </button>
-                          </>
+                    </span>
+                  ),
+                },
+                { key: 'start', header: 'يبدأ', ltr: true, cell: (row) => <span className="font-mono text-[11.5px] text-slate-500">{dateText(row.currentPeriodStart)}</span> },
+                { key: 'end', header: 'ينتهي', ltr: true, cell: (row) => <span className="font-mono text-[11.5px] text-slate-500">{dateText(row.currentPeriodEnd)}</span> },
+                { key: 'due', header: 'فواتير', numeric: true, ltr: true, cell: (row) => <span className={`font-mono text-[12px] font-bold ${row.dueInvoiceCount > 0 ? 'text-red-600' : 'text-slate-400'}`}>{row.dueInvoiceCount}</span> },
+                {
+                  key: 'actions',
+                  header: '',
+                  numeric: true,
+                  cell: (row) =>
+                    LIVE.includes(row.status) ? (
+                      <span className="flex flex-wrap items-center justify-end gap-1.5">
+                        <Button variant="secondary" size="sm" onClick={() => setChangeTarget(row)}>ترقية/تخفيض</Button>
+                        {row.status === 'paused' ? (
+                          <Button variant="secondary" size="sm" onClick={() => setActionTarget({ subscription: row, kind: 'resume' })}>استئناف</Button>
+                        ) : (
+                          <Button variant="secondary" size="sm" onClick={() => setActionTarget({ subscription: row, kind: 'pause' })}>إيقاف</Button>
                         )}
-                        {row.status === 'canceled' && row.canceledReason && (
-                          <span className="muted small">{row.canceledReason}</span>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        <Button variant="danger" size="sm" onClick={() => setActionTarget({ subscription: row, kind: 'cancel' })}>إلغاء</Button>
+                      </span>
+                    ) : row.status === 'canceled' && row.canceledReason ? (
+                      <span className="block max-w-[220px] truncate text-left text-[11px] text-slate-400" title={row.canceledReason}>{row.canceledReason}</span>
+                    ) : null,
+                },
+              ]}
+            />
           </div>
         ))}
     </Screen>

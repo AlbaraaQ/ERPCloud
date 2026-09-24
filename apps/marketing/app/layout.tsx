@@ -1,3 +1,8 @@
+import '@fontsource/tajawal/400.css';
+import '@fontsource/tajawal/500.css';
+import '@fontsource/tajawal/700.css';
+import '@fontsource-variable/inter';
+
 import './globals.css';
 
 import type { Metadata } from 'next';

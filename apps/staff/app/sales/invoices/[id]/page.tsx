@@ -2,11 +2,30 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import {
+  ArrowRight,
+  Banknote,
+  CheckCircle2,
+  MessageCircle,
+  Minus,
+  Package,
+  Plus,
+  Printer,
+  Trash2,
+  Wallet,
+} from 'lucide-react';
 import { useState } from 'react';
 
-import { DataTable, Notice } from '../../../../components/data-view';
-import { ErrorBox, Loading, Screen } from '../../../../components/screen';
-import { ApiError, apiData, apiFetch, apiList, apiPost } from '../../../../lib/api';
+import { Badge } from '../../../../components/ui/badge';
+import { Button } from '../../../../components/ui/button';
+import { DonutCardChart } from '../../../../components/ui/chart';
+import { Reveal } from '../../../../components/ui/count-up';
+import { EmptyState } from '../../../../components/ui/empty-state';
+import { Input, Labeled } from '../../../../components/ui/input';
+import { Modal } from '../../../../components/ui/modal';
+import { SkeletonCard } from '../../../../components/ui/skeleton';
+import { Table } from '../../../../components/ui/table';
+import { ApiError, apiData, apiPatch, apiPost } from '../../../../lib/api';
 import {
   arabicName,
   cashLocationLabel,
@@ -21,7 +40,6 @@ import {
   partyLabel,
   quantity,
   shortDate,
-  statusLabel,
   type CashLocation,
   type CostCenter,
   type Item,
@@ -45,16 +63,13 @@ type InvoiceLine = {
   description: string | null;
   quantity: string;
   unitPrice: string;
-  /** مبلغ خصم السطر كما خزّنه المحرّك (`ItemDiscount` في الديسكتوب). */
   discountAmount?: string | null;
   net: string;
   tax: string;
   total: string;
-  /** R8 — «📁 رقم الدفعة» و«🔢 التسلسلي» كما كُتبا على السطر (تُملأ الدفعة عند الترحيل). */
   batchNo?: string | null;
   serialNos?: string[] | null;
   lotId?: string | null;
-  /** R9 — 📊 مركز تكلفة السطر (والفراغ يعني مركز الفاتورة). */
   costCenterId?: string | null;
 };
 type Payment = { id: string; method: string; amount: string; reference: string | null; createdAt: string };
@@ -66,11 +81,8 @@ type Invoice = {
   branchId: string;
   warehouseId: string | null;
   partyId: string | null;
-  /** «🔖 رقم المرجع» — فاتورة المبيعات التي يشير إليها المرتجع (`frmInvSale.xaml` L405). */
   referenceInvoiceId?: string | null;
-  /** «🔻 الخصم» على مستوى الفاتورة (`txtInvDiscVal` · `frmInvSale.xaml.cs` L1424). */
   invoiceDiscount?: string | null;
-  /** R9 — 📊 مركز التكلفة على رأس الفاتورة (والسطر يرثه إن لم يذكر مركزاً). */
   costCenterId?: string | null;
   cashCustomerName: string | null;
   cashCustomerMobile: string | null;
@@ -86,19 +98,56 @@ type Invoice = {
   payments: Payment[];
 };
 
+/** شريط التقدم: مسودة ← مرحّلة ← مدفوعة. */
+function PaymentProgress({ doc }: { doc: Invoice }) {
+  const steps = [
+    { label: 'مسودة', done: true, current: doc.status === 'draft' },
+    { label: 'مرحّلة', done: doc.status !== 'draft', current: doc.status === 'posted' && doc.paymentStatus !== 'paid' },
+    { label: 'مدفوعة', done: doc.paymentStatus === 'paid', current: false },
+  ];
+  return (
+    <div className="flex items-center gap-0" dir="rtl">
+      {steps.map((step, i) => {
+        const next = steps[i + 1];
+        return (
+        <div key={step.label} className="flex items-center">
+          <div className="flex flex-col items-center gap-1.5 min-w-16">
+            <span
+              className={`grid place-items-center size-7 rounded-full text-[11px] font-bold border-2 transition-all duration-300 ${
+                step.done
+                  ? 'bg-emerald-500 border-emerald-500 text-white'
+                  : step.current
+                    ? 'bg-blue-600 border-blue-600 text-white shadow-[0_0_0_4px_rgb(37_99_235/0.15)]'
+                    : 'bg-white border-slate-300 text-slate-400'
+              }`}
+            >
+              {step.done ? <CheckCircle2 size={14} /> : i + 1}
+            </span>
+            <span className={`text-[11.5px] font-bold ${step.done || step.current ? 'text-slate-800' : 'text-slate-400'}`}>
+              {step.label}
+            </span>
+          </div>
+          {next ? (
+            <span className={`h-0.5 w-10 sm:w-16 -mt-5 rounded-full transition-colors duration-300 ${next.done || next.current ? 'bg-emerald-500' : 'bg-slate-200'}`} />
+          ) : null}
+        </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function SalesInvoiceDetailPage() {
   const params = useParams<{ id: string }>();
   const invoiceId = String(params.id);
   const { can } = useSession();
+
   const invoice = useQuery<Invoice>(() => apiData<Invoice>(`/sales/invoices/${invoiceId}`), [invoiceId]);
   const items = useQuery<Item[]>(() => listItems(), []);
   const parties = useQuery<Party[]>(() => listParties('customer'), []);
   const cashLocations = useQuery<CashLocation[]>(() => listCashLocations(), []);
   const units = useQuery<Unit[]>(() => listUnits(), []);
-  /** R9 — أسماء مراكز التكلفة لتُعرض الفاتورة باسم المركز لا بمعرّفه. */
   const costCenters = useQuery<CostCenter[]>(() => listCostCenters(), []);
-  // «🔖 رقم المرجع» يحمل المعرّف لا الرقم، فنقرأ دليل الفواتير مرةً واحدة لحلّه.
-  const invoices = useQuery<Array<{ id: string; number: string | null }>>(() => apiList('/sales/invoices'), []);
 
   const [settlement, setSettlement] = useState<'credit' | 'cash' | 'bank'>('credit');
   const [settleLocationId, setSettleLocationId] = useState('');
@@ -108,100 +157,100 @@ export default function SalesInvoiceDetailPage() {
   const [payMethod, setPayMethod] = useState('cash');
   const [payLocationId, setPayLocationId] = useState('');
   const [voidReason, setVoidReason] = useState('');
-
-  // 📱 «💬 واتساب» — `Form_WPF/frmInvSale.xaml` L1190, handled at L3130-L3195.
+  const [voidOpen, setVoidOpen] = useState(false);
   const [waMessage, setWaMessage] = useState('');
   const [waAttach, setWaAttach] = useState(true);
   const [waBusy, setWaBusy] = useState(false);
+  const [glassesLine, setGlassesLine] = useState<InvoiceLine | null>(null);
   const sent = useQuery<WhatsappMessageRow[]>(
     () => whatsappMessages({ invoiceId, limit: 20 }).then((view) => view.messages),
     [invoiceId],
   );
 
-  // 👓 بيانات النظارات — `frmInvSale.glassesOptions` L2503–2530 (Alt+G) يفتحها للصنف تحت المؤشر.
-  // هنا تُعرض إن وجدت، مع تسمياتها من `optics_field_labels`، وزر «👁️ عرض» يفتح بطاقتها.
-  const glasses = useQuery<Array<{ lineId: string; section: { title: string; right: Record<string, string>; left: Record<string, string>; labels: { right: Array<{ key: string; label: string }>; left: Array<{ key: string; label: string }> }; rows: unknown[] } | null }>>(
-    async () => {
-      const results = await Promise.all(
-        (invoice.data?.lines ?? []).map(async (line) => {
-          try {
-            const body = await apiFetch<{ data: { title: string; right: Record<string, string>; left: Record<string, string>; labels: { right: Array<{ key: string; label: string }>; left: Array<{ key: string; label: string }> }; rows: unknown[] } }>(
-              `/optics/invoice-lines/${line.id}/print-section`,
-            );
-            const hasData = body.data && (Object.keys(body.data.right ?? {}).length > 0 || Object.keys(body.data.left ?? {}).length > 0 || (body.data.rows as unknown[]).length > 0);
-            return { lineId: line.id, section: hasData ? body.data : null };
-          } catch {
-            return { lineId: line.id, section: null };
-          }
-        }),
-      );
-      return results.filter((r) => r.section !== null) as Array<{ lineId: string; section: { title: string; right: Record<string, string>; left: Record<string, string>; labels: { right: Array<{ key: string; label: string }>; left: Array<{ key: string; label: string }> }; rows: unknown[] } }>;
-    },
-    [invoice.data?.lines],
-  );
+  // بيانات النظارات: يُسأل كل سطر عن قسمه الطباعة؛ يُعرض زر على السطر إن وجد.
+  const glasses = useQuery<Record<string, boolean>>(async () => {
+    const map: Record<string, boolean> = {};
+    for (const line of invoice.data?.lines ?? []) {
+      try {
+        const d = await apiData<{ right?: Record<string, string>; left?: Record<string, string>; rows?: unknown[] }>(
+          `/optics/invoice-lines/${line.id}/print-section`,
+        );
+        map[line.id] = Boolean(
+          (d.right && Object.keys(d.right).length > 0) || (d.left && Object.keys(d.left).length > 0) || (d.rows?.length ?? 0) > 0,
+        );
+      } catch {
+        map[line.id] = false;
+      }
+    }
+    return map;
+  }, [invoice.data?.lines]);
 
-  if (invoice.status === 'loading') return <Loading />;
+  if (invoice.status === 'loading') {
+    return (
+      <div className="grid gap-4">
+        <SkeletonCard lines={2} />
+        <div className="grid gap-4 xl:grid-cols-2">
+          <SkeletonCard lines={6} />
+          <SkeletonCard lines={6} />
+        </div>
+      </div>
+    );
+  }
+
   if (invoice.status !== 'success' || !invoice.data) {
     return (
-      <Screen title="🧾 فاتورة مبيعات" crumbs={['المبيعات']}>
-        <ErrorBox message={invoice.error ?? 'تعذّر تحميل الفاتورة'} onRetry={invoice.reload} />
-      </Screen>
+      <EmptyState
+        tone="red"
+        icon={<Package size={30} strokeWidth={1.5} />}
+        title="تعذر تحميل الفاتورة"
+        description={invoice.error ?? 'خطأ غير معروف'}
+        action={<Button variant="primary" onClick={invoice.reload}>إعادة المحاولة</Button>}
+      />
     );
   }
 
   const doc = invoice.data;
   const invoiceCenter = (costCenters.data ?? []).find((row) => row.id === doc.costCenterId);
   const costCenterLabel = invoiceCenter ? `${invoiceCenter.code} — ${arabicName(invoiceCenter)}` : '';
-  const centerName = (id: string | null | undefined): string => {
-    const row = (costCenters.data ?? []).find((center) => center.id === id);
-    return row ? `${row.code} — ${arabicName(row)}` : '—';
-  };
-  const partyName = doc.cashCustomerName
-    ? `${doc.cashCustomerName} (نقدي)`
-    : partyLabel((parties.data ?? []).find((row) => row.id === doc.partyId) ?? { id: '', name: '—' });
-  const dueValue = Number(doc.total) - Number(doc.paidTotal);
-  // نفس أرقام `frmInvSale.xaml.cs` L1420–1432: المجموع = Σ إجمالي السطور (الكمية × السعر)،
-  // والخصم = خصم السطور + خصم الرأس، والإجمالي = `subtotal` (الصافي قبل الضريبة).
-  const grossTotal = doc.lines.reduce((sum, row) => sum + Number(row.quantity) * Number(row.unitPrice), 0);
-  const discountTotal = doc.lines.reduce((sum, row) => sum + Number(row.discountAmount ?? '0'), 0) + Number(doc.invoiceDiscount ?? '0');
-  const unitOf = (row: InvoiceLine): string => {
-    const item = (items.data ?? []).find((entry) => entry.id === row.itemId);
-    const unit = (units.data ?? []).find((entry) => entry.id === (item?.baseUnitId ?? item?.base_unit_id));
-    return unit ? (unit.nameAr ?? unit.name_ar ?? unit.code) : '—';
-  };
-  const referenceNumber = doc.referenceInvoiceId
-    ? ((invoices.data ?? []).find((row) => row.id === doc.referenceInvoiceId)?.number ?? '—')
-    : null;
-  // 📱 «💬 واتساب» — the number the server will dial: `parties.phone`, or
-  // `salesInvoices.cashCustomerMobile` for a cash sale (`frmInvSale.xaml.cs` L3150-L3165),
-  // normalised the way `WhatsAppSender.SendInvoiceAsync` did it (L113-L116).
-  const mobile = doc.cashCustomerMobile ?? (parties.data ?? []).find((row) => row.id === doc.partyId)?.phone ?? '';
-  const digits = mobile.replace(/\D+/g, '');
-  const previewPhone = digits ? (digits.startsWith('966') ? digits : `966${digits.replace(/^0+/, '')}`) : '';
+  const party = (parties.data ?? []).find((row) => row.id === doc.partyId);
+  const partyName = party ? partyLabel(party) : (doc.cashCustomerName ?? '—');
+  const referenceNumber = (doc as { customerReference?: string | null }).customerReference ?? null;
+  const invoiceDiscountValue = Number(doc.invoiceDiscount ?? 0) || 0;
+  const grossTotal = Number(doc.subtotal) + invoiceDiscountValue;
+  const discountTotal = invoiceDiscountValue;
+  const dueValue = Math.max(0, Number(doc.total) - Number(doc.paidTotal));
+  const previewPhone = doc.cashCustomerMobile ?? party?.phone ?? '';
 
-  async function run(action: () => Promise<unknown>, okText: string) {
+  function unitOf(row: InvoiceLine): string {
+    const item = (items.data ?? []).find((entry) => entry.id === row.itemId);
+    const unitId = item?.baseUnitId ?? item?.base_unit_id;
+    const unit = (units.data ?? []).find((entry) => entry.id === unitId);
+    return unit ? arabicName(unit) : '—';
+  }
+
+  async function run(action: () => Promise<unknown>, success: string) {
     setBusy(true);
     setNotice(undefined);
     try {
       await action();
-      setNotice({ kind: 'ok', text: okText });
+      setNotice({ kind: 'ok', text: success });
       invoice.reload();
-    } catch (error) {
-      setNotice({ kind: 'danger', text: error instanceof ApiError ? error.message : String(error) });
+    } catch (err) {
+      setNotice({ kind: 'danger', text: err instanceof Error ? err.message : 'حدث خطأ غير متوقع.' });
     } finally {
       setBusy(false);
     }
   }
 
   async function post() {
-    // The posting engine builds the journal from the branch's posting profile,
-    // relieves the warehouse at average cost, and stamps each line's cost — all
-    // in one transaction. The screen only declares how the invoice settles.
     if (settlement !== 'credit' && !settleLocationId) {
       throw new ApiError(422, 'VALIDATION_FAILED', 'اختر الصندوق أو البنك الذي استلم المبلغ.');
     }
     const location = (cashLocations.data ?? []).find((row) => row.id === settleLocationId);
-    const settlementAccountId = location?.accountId ?? location?.account_id ?? undefined;
+    const settlementAccountId =
+      (location as { accountId?: string; account_id?: string } | undefined)?.accountId ??
+      (location as { accountId?: string; account_id?: string } | undefined)?.account_id ??
+      undefined;
     if (settlement !== 'credit' && !settlementAccountId) {
       throw new ApiError(422, 'VALIDATION_FAILED', 'الموقع المختار غير مربوط بحساب محاسبي.');
     }
@@ -212,393 +261,547 @@ export default function SalesInvoiceDetailPage() {
     });
   }
 
+  /** تعديل كمية سطر في المسودة عبر PATCH (المحرّك يعيد احتساب الإجماليات). */
+  function nudgeQty(line: InvoiceLine, delta: number) {
+    const next = Math.max(0, Number(line.quantity) + delta);
+    void run(
+      () =>
+        apiPatch(`/sales/invoices/${doc.id}`, {
+          lines: doc.lines.map((l) => (l.id === line.id ? { ...l, quantity: String(next) } : l)),
+        }),
+      'تم تحديث الكميات.',
+    );
+  }
+
+  const timeline = [
+    { label: 'إنشاء الفاتورة', at: doc.createdAt, done: true },
+    ...(doc.postedAt ? [{ label: 'الترحيل المحاسبي والمخزني', at: doc.postedAt, done: true }] : []),
+    ...(doc.payments ?? [])
+      .map((payment) => ({
+        label: `دفعة ${money(payment.amount, doc.currency)} (${payment.method === 'cash' ? 'نقداً' : payment.method === 'card' ? 'شبكة' : 'بنك'})`,
+        at: payment.createdAt,
+        done: true,
+      })),
+  ];
+
   return (
-    <Screen
-      title={`🧾 فاتورة مبيعات ${doc.number ?? '(مسودة)'}`}
-      subtitle={`${partyName} — ${statusLabel(doc.status)}`}
-      crumbs={['المبيعات', 'العمليات']}
-      actions={
-        <>
-          {/* «🖨️ طباعة» — `frmInvSale.xaml` L1254. */}
-          <Link className="btn primary" href={`/print/sales-invoice/${doc.id}`}>
-            🖨️ طباعة
-          </Link>
-          <Link className="btn" href="/sales/invoices">
-            كل الفواتير
-          </Link>
-        </>
-      }
-    >
-      <div className="grid cols-2">
-        <div className="card">
-          <h2>بيانات الفاتورة</h2>
-          <dl className="kv">
-            <dt>📋 الحالة</dt>
-            <dd>{statusLabel(doc.status)}</dd>
-            {referenceNumber !== null && (
-              <>
-                {/* «🔖 رقم المرجع:» — `frmInvSale.xaml` L405 (رقم الفاتورة الأصلية للمرتجع). */}
-                <dt>🔖 رقم المرجع</dt>
-                <dd>{referenceNumber}</dd>
-              </>
-            )}
-            <dt>التاريخ</dt>
-            <dd>{shortDate(doc.createdAt)}</dd>
-            {/*
-              «📊 مركز التكلفة» — يُطبع في الديسكتوب باسمه لا بمعرّفه
-              (`Print.cs` L772–774: `invoiceData.costCenter = Common.GetCostCenterName(...)`).
-              وهنا يُقرأ الاسم من قائمة المراكز نفسها، ويظهر الصفّ حين يكون للفاتورة مركز.
-            */}
-            {costCenterLabel && (
-              <>
-                <dt>📊 مركز التكلفة</dt>
-                <dd>{costCenterLabel}</dd>
-              </>
-            )}
-            <dt>الترحيل</dt>
-            <dd>{doc.postedAt ? dateTime(doc.postedAt) : '—'}</dd>
-            {/* نفس ترتيب لوحة الديسكتوب `frmInvSale.xaml` L942–1023 ومعانيها من
-                `frmInvSale.xaml.cs` L1420–1432: المجموع = `SumPrice` (إجمالي السطور)،
-                الخصم = خصم السطور + خصم الرأس، الإجمالي = الصافي قبل الضريبة،
-                الصافي = الإجمالي بعد الضريبة. */}
-            <dt>📊 المجموع</dt>
-            <dd>{money(grossTotal, doc.currency)}</dd>
-            <dt>🔻 الخصم</dt>
-            <dd>{money(discountTotal, doc.currency)}</dd>
-            <dt>💵 الإجمالي</dt>
-            <dd>{money(doc.subtotal, doc.currency)}</dd>
-            <dt>🧾 الضريبة</dt>
-            <dd>{money(doc.taxTotal, doc.currency)}</dd>
-            <dt>✅ الصافي</dt>
-            <dd>
-              <strong>{money(doc.total, doc.currency)}</strong>
-            </dd>
-            <dt>💚 المدفوع</dt>
-            <dd>{money(doc.paidTotal, doc.currency)}</dd>
-            <dt>🔴 المتبقي</dt>
-            <dd>{money(dueValue, doc.currency)}</dd>
-          </dl>
-        </div>
-
-        <div className="card">
-          <h2>الإجراءات</h2>
-          <Notice notice={notice} />
-
-          {doc.status === 'draft' && can('sales.invoice.post') && (
-            <>
-              {/* «💳 طريقة الدفع:» — `frmInvSale.xaml` L414، وخياراتها «آجلة»/«نقدية»/«بنك» L418–L420. */}
-              <label className="field">
-                <span>💳 طريقة الدفع</span>
-                <select className="input" value={settlement} onChange={(event) => setSettlement(event.target.value as 'credit' | 'cash' | 'bank')}>
-                  <option value="credit">آجلة</option>
-                  <option value="cash">نقدية</option>
-                  <option value="bank">بنك</option>
-                </select>
-              </label>
-              {settlement !== 'credit' && (
-                <label className="field">
-                  {/* «🏦 الصندوق:» L476 أو «🏛️ البنك:» L488 — بحسب طريقة الدفع المختارة. */}
-                  <span>{settlement === 'bank' ? '🏛️ البنك' : '🏦 الصندوق'} *</span>
-                  <select className="input" value={settleLocationId} onChange={(event) => setSettleLocationId(event.target.value)}>
-                    <option value="">— اختر —</option>
-                    {(cashLocations.data ?? []).map((row) => (
-                      <option key={row.id} value={row.id}>
-                        {cashLocationLabel(row)}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="muted small">يُقيَّد المبلغ على حساب هذا الموقع وتُسجَّل دفعة بنفس القيمة.</span>
-                </label>
-              )}
-              <button className="btn primary" type="button" disabled={busy} onClick={() => run(post, 'تم ترحيل الفاتورة وقيدها المحاسبي وحركتها المخزنية.')}>
-                {busy ? 'جارٍ الترحيل…' : 'ترحيل الفاتورة'}
-              </button>
-            </>
-          )}
-
-          {doc.status === 'posted' && can('sales.invoice.pay') && dueValue > 0 && (
-            <>
-              {/* «💰 تسديد» — `frmInvSale.xaml` L1197. */}
-              <h3>💰 تسديد</h3>
-              <div className="form-grid">
-                <label className="field">
-                  <span>المبلغ</span>
-                  <input className="input" dir="ltr" inputMode="decimal" value={payAmountText} onChange={(event) => setPayAmountText(event.target.value)} />
-                </label>
-                <label className="field">
-                  <span>الطريقة</span>
-                  <select className="input" value={payMethod} onChange={(event) => setPayMethod(event.target.value)}>
-                    <option value="cash">نقداً</option>
-                    <option value="card">شبكة</option>
-                    <option value="bank">تحويل بنكي</option>
-                  </select>
-                </label>
-                <label className="field">
-                  <span>الصندوق / البنك</span>
-                  <select className="input" value={payLocationId} onChange={(event) => setPayLocationId(event.target.value)}>
-                    <option value="">— اختر —</option>
-                    {(cashLocations.data ?? []).map((row) => (
-                      <option key={row.id} value={row.id}>
-                        {cashLocationLabel(row)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+    <div className="grid gap-4">
+      {/* ------------------------------------------------ header card */}
+      <Reveal>
+        <section className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-1">
+          <div
+            aria-hidden
+            className="absolute inset-0 pointer-events-none opacity-60"
+            style={{
+              backgroundImage:
+                'radial-gradient(90rem 26rem at 110% -30%, rgb(37 99 235 / 0.08), transparent 55%), radial-gradient(circle, #e2e8f0 1px, transparent 1px)',
+              backgroundSize: 'auto, 16px 16px',
+            }}
+          />
+          <div className="relative">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="min-w-0">
+                <Link href="/sales/invoices" className="inline-flex items-center gap-1 text-[12.5px] font-bold text-slate-400 hover:text-brand-600 transition-colors">
+                  <ArrowRight size={13} /> كل الفواتير
+                </Link>
+                <div className="flex flex-wrap items-center gap-3 mt-1.5">
+                  <h1 className="m-0 text-[30px] font-bold text-slate-900 tracking-tight leading-none" dir="ltr">
+                    {doc.number ?? 'مسودة'}
+                  </h1>
+                  <Badge tone={doc.kind === 'quotation' ? 'purple' : 'blue'} dot>
+                    {doc.kind === 'quotation' ? 'عرض أسعار' : 'فاتورة مبيعات'}
+                  </Badge>
+                  <Badge tone={doc.status === 'posted' ? 'green' : doc.status === 'voided' ? 'red' : 'amber'} dot>
+                    {doc.status === 'posted' ? 'مرحّلة' : doc.status === 'voided' ? 'ملغاة' : 'مسودة'}
+                  </Badge>
+                  {doc.status === 'posted' ? (
+                    <Badge tone={doc.paymentStatus === 'paid' ? 'blue' : 'amber'}>
+                      {doc.paymentStatus === 'paid' ? 'مسدّدة' : 'غير مسدّدة'}
+                    </Badge>
+                  ) : null}
+                </div>
+                <p className="m-0 mt-2 text-[13px] text-slate-500">
+                  {partyName} · {shortDate(doc.createdAt)}
+                  {referenceNumber ? <span className="text-slate-400"> · مرجع: <span dir="ltr">{referenceNumber}</span></span> : null}
+                  {costCenterLabel ? <span className="text-slate-400"> · مركز التكلفة: {costCenterLabel}</span> : null}
+                </p>
               </div>
-              <button
-                className="btn"
-                type="button"
-                disabled={busy}
-                onClick={() =>
-                  run(
-                    () =>
-                      apiPost(`/sales/invoices/${doc.id}/payments`, {
-                        method: payMethod,
-                        amount: payAmountText,
-                        cashLocationId: payLocationId || undefined,
-                        idempotencyKey: crypto.randomUUID(),
-                      }),
-                    'تم تسجيل الدفعة.',
-                  )
-                }
-              >
-                💰 تسديد
-              </button>
-            </>
-          )}
-
-          {doc.status === 'posted' && can('sales.invoice.void') && (
-            <>
-              {/* «🗑️ حذف» L1260 — والسحابة تعكسها إلغاءً (`DeleteInvoice` حذفٌ ناعم:
-                  `Inv.IS_Deleted=1` و`Entry.IS_Deleted=1, state=2` — `InvoiceOper.cs` L4419). */}
-              <h3>🗑️ إلغاء الفاتورة (حذفٌ ناعم كما في الديسكتوب)</h3>
-              <label className="field">
-                <span>سبب الإلغاء</span>
-                <input className="input" value={voidReason} onChange={(event) => setVoidReason(event.target.value)} />
-              </label>
-              <button
-                className="btn danger"
-                type="button"
-                disabled={busy || !voidReason.trim()}
-                onClick={() => run(() => apiPost(`/sales/invoices/${doc.id}/void`, { reason: voidReason.trim() }), 'تم إلغاء الفاتورة.')}
-              >
-                🗑️ إلغاء الفاتورة
-              </button>
-            </>
-          )}
-
-          {doc.status === 'voided' && <p className="alert warn">هذه الفاتورة ملغاة.</p>}
-        </div>
-      </div>
-
-      <div className="card">
-        <div className="toolbar">
-          <h2>💬 واتساب</h2>
-          <span className="chip">يُرسل إلى {previewPhone ? <span dir="ltr">{previewPhone}</span> : '— لا رقم —'}</span>
-        </div>
-        {doc.status !== 'posted' ? (
-          // «لا يمكن إرسال الفاتورة قبل الحفظ» — `frmInvSale.xaml.cs` L3137.
-          <p className="alert warn">لا يمكن إرسال الفاتورة قبل الحفظ.</p>
-        ) : !previewPhone ? (
-          // «❌ لا يوجد رقم جوال للعميل» — `frmInvSale.xaml.cs` L3160.
-          <p className="alert warn">❌ لا يوجد رقم جوال للعميل — أضف رقم الجوال في بطاقة العميل، أو أضفه في الفاتورة النقدية.</p>
-        ) : can('sales.view') ? (
-          <>
-            <div className="form-grid">
-              <label className="field wide">
-                <span>نص الرسالة</span>
-                <input
-                  className="input"
-                  value={waMessage}
-                  onChange={(event) => setWaMessage(event.target.value)}
-                  placeholder={`🧾 مرحباً ${doc.cashCustomerName ?? partyName}، هذه فاتورتك رقم INV${doc.number ?? ''} من …`}
-                />
-                <small className="muted">إن تُرك فارغاً كُتبت التحية نفسها التي كانت تكتبها النسخة المكتبية.</small>
-              </label>
-              <div className="field">
-                <span>المرفق</span>
-                <label className="check">
-                  <input type="checkbox" checked={waAttach} onChange={(event) => setWaAttach(event.target.checked)} />
-                  <span>📎 إرفاق الفاتورة</span>
-                </label>
+              <div className="flex flex-wrap gap-2">
+                <Link href={`/print/sales-invoice/${doc.id}`}>
+                  <Button variant="primary" icon={<Printer size={15} />}>
+                    طباعة
+                  </Button>
+                </Link>
+                {can('sales.invoice.void') && doc.status === 'posted' ? (
+                  <Button variant="danger" icon={<Trash2 size={15} />} onClick={() => setVoidOpen(true)}>
+                    إلغاء الفاتورة
+                  </Button>
+                ) : null}
               </div>
             </div>
-            <button
-              className="btn primary"
-              type="button"
-              disabled={waBusy}
+            <div className="mt-5">
+              <PaymentProgress doc={doc} />
+            </div>
+          </div>
+        </section>
+      </Reveal>
+
+      {notice ? (
+        <div
+          className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-[13px] font-semibold ${
+            notice.kind === 'ok'
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+              : notice.kind === 'danger'
+                ? 'border-red-200 bg-red-50 text-red-700'
+                : 'border-amber-200 bg-amber-50 text-amber-800'
+          }`}
+        >
+          {notice.text}
+        </div>
+      ) : null}
+
+      {/* ------------------------------------------------ two columns */}
+      <div className="grid gap-4 grid-cols-1 xl:grid-cols-5 items-start">
+        {/* lines */}
+        <Reveal delay={0.1} className="xl:col-span-3">
+          <section className="rounded-xl border border-slate-200 bg-white shadow-1">
+            <header className="flex items-center justify-between px-4 pt-4 pb-2">
+              <h3 className="m-0 text-[15px] font-bold text-slate-900">الأصناف ({doc.lines.length})</h3>
+              {doc.status === 'draft' && can('sales.invoice.create') ? (
+                <span className="text-[11.5px] text-slate-400 font-semibold">± تعديل الكمية (مسودة)</span>
+              ) : null}
+            </header>
+            <Table
+              rows={doc.lines}
+              rowKey={(row) => row.id}
+              dense
+              columns={[
+                { key: 'no', header: '#', numeric: true, cell: (row) => row.lineNo, width: 44 },
+                {
+                  key: 'item',
+                  header: 'الصنف',
+                  cell: (row) => {
+                    const item = (items.data ?? []).find((entry) => entry.id === row.itemId);
+                    return (
+                      <span className="flex items-center gap-2 min-w-0">
+                        <span className="font-bold text-slate-800 truncate">{item ? itemLabel(item) : (row.description ?? '—')}</span>
+                        {glasses.data?.[row.id] ? (
+                          <button
+                            type="button"
+                            onClick={() => setGlassesLine(row)}
+                            className="text-[10.5px] font-bold text-violet-600 bg-violet-50 border border-violet-100 rounded-full px-2 py-0.5 hover:bg-violet-100 transition-colors flex-none"
+                          >
+                            👓 بيانات
+                          </button>
+                        ) : null}
+                      </span>
+                    );
+                  },
+                },
+                {
+                  key: 'qty',
+                  header: 'الكمية',
+                  numeric: true,
+                  cell: (row) =>
+                    doc.status === 'draft' && can('sales.invoice.create') ? (
+                      <span className="inline-flex items-center gap-1.5" dir="ltr">
+                        <button
+                          type="button"
+                          onClick={() => nudgeQty(row, -1)}
+                          className="grid place-items-center size-6 rounded-md border border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors"
+                          aria-label="إنقاص"
+                        >
+                          <Minus size={12} />
+                        </button>
+                        <span className="min-w-8 text-center font-bold">{quantity(row.quantity)}</span>
+                        <button
+                          type="button"
+                          onClick={() => nudgeQty(row, 1)}
+                          className="grid place-items-center size-6 rounded-md border border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors"
+                          aria-label="زيادة"
+                        >
+                          <Plus size={12} />
+                        </button>
+                      </span>
+                    ) : (
+                      quantity(row.quantity)
+                    ),
+                },
+                { key: 'unit', header: 'الوحدة', cell: (row) => unitOf(row), width: 80 },
+                { key: 'price', header: 'السعر', numeric: true, cell: (row) => money(row.unitPrice) },
+                {
+                  key: 'discount',
+                  header: 'الخصم',
+                  numeric: true,
+                  cell: (row) => (Number(row.discountAmount ?? '0') > 0 ? money(row.discountAmount ?? '0') : '—'),
+                },
+                { key: 'total', header: 'الصافي', numeric: true, cell: (row) => <b>{money(row.total)}</b> },
+              ]}
+            />
+          </section>
+        </Reveal>
+
+        {/* financials */}
+        <Reveal delay={0.18} className="xl:col-span-2">
+          <div className="grid gap-4">
+            <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-1">
+              <h3 className="m-0 text-[15px] font-bold text-slate-900 mb-3">الملخص المالي</h3>
+              <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5 m-0 text-[13px]">
+                <div className="grid gap-0.5">
+                  <dt className="text-slate-400 font-semibold text-[11.5px]">المجموع (قبل الخصم)</dt>
+                  <dd className="m-0 font-bold text-slate-800" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                    {money(grossTotal, doc.currency)}
+                  </dd>
+                </div>
+                <div className="grid gap-0.5">
+                  <dt className="text-slate-400 font-semibold text-[11.5px]">الخصم</dt>
+                  <dd className="m-0 font-bold text-slate-800" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                    {money(discountTotal, doc.currency)}
+                  </dd>
+                </div>
+                <div className="grid gap-0.5">
+                  <dt className="text-slate-400 font-semibold text-[11.5px]">الإجمالي (قبل الضريبة)</dt>
+                  <dd className="m-0 font-bold text-slate-800" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                    {money(doc.subtotal, doc.currency)}
+                  </dd>
+                </div>
+                <div className="grid gap-0.5">
+                  <dt className="text-slate-400 font-semibold text-[11.5px]">ضريبة القيمة المضافة</dt>
+                  <dd className="m-0 font-bold text-slate-800" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                    {money(doc.taxTotal, doc.currency)}
+                  </dd>
+                </div>
+                <div className="grid gap-0.5">
+                  <dt className="text-slate-400 font-semibold text-[11.5px]">المدفوع</dt>
+                  <dd className="m-0 font-bold text-emerald-600" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                    {money(doc.paidTotal, doc.currency)}
+                  </dd>
+                </div>
+                <div className="grid gap-0.5">
+                  <dt className="text-slate-400 font-semibold text-[11.5px]">المتبقي</dt>
+                  <dd className={`m-0 font-bold ${dueValue > 0 ? 'text-amber-600' : 'text-emerald-600'}`} style={{ fontVariantNumeric: 'tabular-nums' }}>
+                    {money(dueValue, doc.currency)}
+                  </dd>
+                </div>
+              </dl>
+              <div className="mt-4 pt-3 border-t border-dashed border-slate-200 flex items-center justify-between">
+                <span className="text-[13px] font-bold text-slate-500">الصافي</span>
+                <span className="text-[28px] font-bold text-slate-900 tracking-tight" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                  {money(doc.total, doc.currency)}
+                </span>
+              </div>
+
+              {Number(doc.taxTotal) > 0 || Number(doc.subtotal) > 0 ? (
+                <div className="mt-4">
+                  <p className="m-0 mb-1 text-[11.5px] font-bold text-slate-400">توزيع الضريبة</p>
+                  <DonutCardChart
+                    data={[
+                      { name: 'قبل الضريبة', value: Number(doc.subtotal) },
+                      { name: 'الضريبة', value: Number(doc.taxTotal), color: '#f59e0b' },
+                    ]}
+                    height={150}
+                    formatter={(v) => money(v)}
+                    centerValue={money(doc.total)}
+                    centerLabel="الصافي"
+                  />
+                </div>
+              ) : null}
+            </section>
+
+            {/* actions */}
+            <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-1 grid gap-3">
+              <h3 className="m-0 text-[15px] font-bold text-slate-900">الإجراءات</h3>
+
+              {doc.status === 'draft' && can('sales.invoice.post') ? (
+                <>
+                  <Labeled label="طريقة الدفع">
+                    <select
+                      value={settlement}
+                      onChange={(e) => setSettlement(e.target.value as 'credit' | 'cash' | 'bank')}
+                      className="w-full h-10 px-3 rounded-[10px] border border-slate-300 bg-white text-[13.5px] focus:outline-none focus:border-brand-600 focus:shadow-[0_0_0_3px_rgb(37_99_235/0.15)] transition-all duration-150"
+                    >
+                      <option value="credit">آجلة (ذمم)</option>
+                      <option value="cash">نقدية</option>
+                      <option value="bank">بنك</option>
+                    </select>
+                  </Labeled>
+                  {settlement !== 'credit' ? (
+                    <Labeled label={settlement === 'bank' ? 'البنك' : 'الصندوق'} hint="يُقيَّد المبلغ على حساب هذا الموقع وتُسجَّل دفعة بنفس القيمة.">
+                      <select
+                        value={settleLocationId}
+                        onChange={(e) => setSettleLocationId(e.target.value)}
+                        className="w-full h-10 px-3 rounded-[10px] border border-slate-300 bg-white text-[13.5px] focus:outline-none focus:border-brand-600 focus:shadow-[0_0_0_3px_rgb(37_99_235/0.15)] transition-all duration-150"
+                      >
+                        <option value="">— اختر —</option>
+                        {(cashLocations.data ?? []).map((row) => (
+                          <option key={row.id} value={row.id}>
+                            {cashLocationLabel(row)}
+                          </option>
+                        ))}
+                      </select>
+                    </Labeled>
+                  ) : null}
+                  <Button variant="primary" block loading={busy} onClick={() => void run(post, 'تم ترحيل الفاتورة وقيدها المحاسبي وحركتها المخزنية.')} icon={<CheckCircle2 size={16} />}>
+                    ترحيل الفاتورة
+                  </Button>
+                </>
+              ) : null}
+
+              {doc.status === 'posted' && can('sales.invoice.pay') && dueValue > 0 ? (
+                <>
+                  <h4 className="m-0 text-[13px] font-bold text-slate-700 flex items-center gap-1.5">
+                    <Banknote size={14} className="text-brand-600" /> تسجيل دفعة
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <Labeled label="المبلغ">
+                      <input
+                        dir="ltr"
+                        inputMode="decimal"
+                        value={payAmountText}
+                        onChange={(e) => setPayAmountText(e.target.value)}
+                        placeholder={String(dueValue)}
+                        className="w-full h-10 px-3 rounded-[10px] border border-slate-300 bg-white text-[13.5px] focus:outline-none focus:border-brand-600 focus:shadow-[0_0_0_3px_rgb(37_99_235/0.15)] transition-all duration-150"
+                      />
+                    </Labeled>
+                    <Labeled label="الطريقة">
+                      <select
+                        value={payMethod}
+                        onChange={(e) => setPayMethod(e.target.value)}
+                        className="w-full h-10 px-3 rounded-[10px] border border-slate-300 bg-white text-[13.5px] focus:outline-none focus:border-brand-600 focus:shadow-[0_0_0_3px_rgb(37_99_235/0.15)] transition-all duration-150"
+                      >
+                        <option value="cash">نقداً</option>
+                        <option value="card">شبكة</option>
+                        <option value="bank">تحويل بنكي</option>
+                      </select>
+                    </Labeled>
+                  </div>
+                  <Labeled label="الصندوق / البنك">
+                    <select
+                      value={payLocationId}
+                      onChange={(e) => setPayLocationId(e.target.value)}
+                      className="w-full h-10 px-3 rounded-[10px] border border-slate-300 bg-white text-[13.5px] focus:outline-none focus:border-brand-600 focus:shadow-[0_0_0_3px_rgb(37_99_235/0.15)] transition-all duration-150"
+                    >
+                      <option value="">— اختر —</option>
+                      {(cashLocations.data ?? []).map((row) => (
+                        <option key={row.id} value={row.id}>
+                          {cashLocationLabel(row)}
+                        </option>
+                      ))}
+                    </select>
+                  </Labeled>
+                  <Button
+                    block
+                    loading={busy}
+                    icon={<Wallet size={16} />}
+                    onClick={() =>
+                      void run(
+                        () =>
+                          apiPost(`/sales/invoices/${doc.id}/payments`, {
+                            method: payMethod,
+                            amount: payAmountText,
+                            cashLocationId: payLocationId || undefined,
+                            idempotencyKey: crypto.randomUUID(),
+                          }),
+                        'تم تسجيل الدفعة.',
+                      )
+                    }
+                  >
+                    تسديد
+                  </Button>
+                </>
+              ) : null}
+
+              {doc.status === 'voided' ? <p className="m-0 alert warn">هذه الفاتورة ملغاة.</p> : null}
+            </section>
+
+            {/* timeline */}
+            <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-1">
+              <h3 className="m-0 text-[15px] font-bold text-slate-900 mb-3">الخط الزمني</h3>
+              <ol className="m-0 p-0 list-none grid gap-0">
+                {timeline.map((entry, i) => (
+                  <li key={i} className="flex gap-3">
+                    <div className="flex flex-col items-center">
+                      <span className={`grid place-items-center size-6 rounded-full flex-none ${entry.done ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
+                        <CheckCircle2 size={13} />
+                      </span>
+                      {i < timeline.length - 1 ? <span className="w-px flex-1 bg-slate-200 my-1" /> : null}
+                    </div>
+                    <div className="pb-4 min-w-0">
+                      <p className="m-0 text-[13px] font-bold text-slate-700">{entry.label}</p>
+                      <p className="m-0 text-[11.5px] text-slate-400">{dateTime(entry.at)}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          </div>
+        </Reveal>
+      </div>
+
+      {/* ------------------------------------------------ whatsapp */}
+      <Reveal delay={0.2}>
+        <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-1">
+          <div className="flex flex-wrap items-center gap-3 mb-3">
+            <h3 className="m-0 text-[15px] font-bold text-slate-900 flex items-center gap-1.5">
+              <MessageCircle size={16} className="text-emerald-500" /> واتساب
+            </h3>
+            <span className="text-[12px] font-semibold text-slate-500 bg-slate-100 rounded-full px-3 py-1">
+              يُرسل إلى {previewPhone ? <span dir="ltr">{previewPhone}</span> : '— لا رقم —'}
+            </span>
+          </div>
+          {doc.status !== 'posted' ? (
+            <p className="m-0 alert warn">لا يمكن إرسال الفاتورة قبل الترحيل.</p>
+          ) : !previewPhone ? (
+            <p className="m-0 alert warn">لا يوجد رقم جوال للعميل — أضف رقم الجوال في بطاقة العميل، أو أضفه في الفاتورة النقدية.</p>
+          ) : can('sales.view') ? (
+            <>
+              <div className="grid gap-3 md:grid-cols-3 items-end">
+                <div className="md:col-span-2">
+                  <Labeled label="نص الرسالة" hint="إن تُرك فارغاً كُتبت التحية الافتراضية.">
+                    <input
+                      value={waMessage}
+                      onChange={(e) => setWaMessage(e.target.value)}
+                      placeholder={`مرحباً ${doc.cashCustomerName ?? partyName}، هذه فاتورتك رقم ${doc.number ?? ''} من …`}
+                      className="w-full h-10 px-3 rounded-[10px] border border-slate-300 bg-white text-[13.5px] focus:outline-none focus:border-brand-600 focus:shadow-[0_0_0_3px_rgb(37_99_235/0.15)] transition-all duration-150"
+                    />
+                  </Labeled>
+                </div>
+                <div className="flex items-center gap-4">
+                  <label className="flex items-center gap-2 text-[13px] font-semibold text-slate-600 cursor-pointer">
+                    <input type="checkbox" checked={waAttach} onChange={(e) => setWaAttach(e.target.checked)} className="size-4 accent-brand-600" />
+                    إرفاق الفاتورة
+                  </label>
+                  <Button variant="primary" loading={waBusy} onClick={() => {
+                    setWaBusy(true);
+                    setNotice(undefined);
+                    void sendWhatsapp({
+                      invoiceId: doc.id,
+                      attach: waAttach,
+                      ...(waMessage.trim() ? { message: waMessage.trim() } : {}),
+                    })
+                      .then((result) => {
+                        setNotice({
+                          kind: result.message.status === 'sent' ? 'ok' : 'warn',
+                          text: `${WHATSAPP_STATUS_LABELS[result.message.status] ?? result.message.status} — ${result.message.phone}${result.attachment === 'sent' ? ` · ${ATTACHMENT_STATUS_LABELS.sent}` : ''}${result.message.error ? ` · ${result.message.error}` : ''}`,
+                        });
+                        void sent.reload();
+                      })
+                      .catch((error: unknown) => setNotice({ kind: 'danger', text: error instanceof ApiError ? error.message : String(error) }))
+                      .finally(() => setWaBusy(false));
+                  }} icon={<MessageCircle size={15} />}>
+                    إرسال واتساب
+                  </Button>
+                </div>
+              </div>
+              {sent.data && sent.data.length > 0 ? (
+                <div className="mt-4">
+                  <p className="m-0 mb-2 text-[12px] font-bold text-slate-400">سجل الإرسال</p>
+                  <Table
+                    rows={sent.data}
+                    rowKey={(row) => row.id}
+                    dense
+                    columns={[
+                      { key: 'at', header: 'التاريخ', ltr: true, cell: (row) => (row.createdAt ? dateTime(row.createdAt) : '—') },
+                      { key: 'phone', header: 'الرقم', ltr: true, cell: (row) => row.phone },
+                      { key: 'status', header: 'الحالة', cell: (row) => WHATSAPP_STATUS_LABELS[row.status] ?? row.status },
+                      { key: 'attach', header: 'المرفق', cell: (row) => ATTACHMENT_STATUS_LABELS[row.attachmentStatus] ?? row.attachmentStatus },
+                      { key: 'message', header: 'الرسالة', cell: (row) => <span className="block max-w-56 truncate" title={row.message}>{row.message}</span> },
+                      { key: 'sim', header: 'النوع', cell: (row) => (row.simulation ? 'محاكاة' : 'فعلي') },
+                    ]}
+                  />
+                </div>
+              ) : null}
+            </>
+          ) : (
+            <p className="m-0 text-[13px] text-slate-400">لا تملك صلاحية إرسال الفاتورة.</p>
+          )}
+        </section>
+      </Reveal>
+
+      {/* ------------------------------------------------ void dialog */}
+      <Modal
+        open={voidOpen}
+        onClose={() => setVoidOpen(false)}
+        title="إلغاء الفاتورة"
+        description="حذفٌ ناعم: تبقى الفاتورة في السجل بحالة «ملغاة» ولا يمكن ترحيلها مجدداً."
+        footer={
+          <>
+            <Button
+              variant="danger"
+              loading={busy}
+              disabled={!voidReason.trim()}
               onClick={() => {
-                setWaBusy(true);
-                setNotice(undefined);
-                void sendWhatsapp({
-                  invoiceId: doc.id,
-                  attach: waAttach,
-                  ...(waMessage.trim() ? { message: waMessage.trim() } : {}),
-                })
-                  .then((result) => {
-                    setNotice({
-                      kind: result.message.status === 'sent' ? 'ok' : 'warn',
-                      text: `${WHATSAPP_STATUS_LABELS[result.message.status] ?? result.message.status} — ${result.message.phone}${result.attachment === 'sent' ? ` · ${ATTACHMENT_STATUS_LABELS.sent}` : ''}${result.message.error ? ` · ${result.message.error}` : ''}`,
-                    });
-                    void sent.reload();
-                  })
-                  .catch((error: unknown) => setNotice({ kind: 'danger', text: error instanceof ApiError ? error.message : String(error) }))
-                  .finally(() => setWaBusy(false));
+                void run(() => apiPost(`/sales/invoices/${doc.id}/void`, { reason: voidReason.trim() }), 'تم إلغاء الفاتورة.');
+                setVoidOpen(false);
               }}
             >
-              {waBusy ? 'جارٍ الإرسال…' : '💬 واتساب'}
-            </button>
-
-            <h3>📜 سجل الإرسال</h3>
-            {sent.status === 'loading' ? (
-              <p className="muted">جارٍ التحميل…</p>
-            ) : (sent.data ?? []).length === 0 ? (
-              <p className="muted">لم تُرسل هذه الفاتورة بعد.</p>
-            ) : (
-              <DataTable
-                rows={sent.data ?? []}
-                rowKey={(row) => row.id}
-                columns={[
-                  { key: 'at', header: 'التاريخ', align: 'ltr', cell: (row) => (row.createdAt ? dateTime(row.createdAt) : '—') },
-                  { key: 'phone', header: 'الرقم', align: 'ltr', cell: (row) => row.phone },
-                  { key: 'status', header: 'الحالة', cell: (row) => WHATSAPP_STATUS_LABELS[row.status] ?? row.status },
-                  { key: 'attach', header: 'المرفق', cell: (row) => ATTACHMENT_STATUS_LABELS[row.attachmentStatus] ?? row.attachmentStatus },
-                  { key: 'message', header: 'الرسالة', cell: (row) => row.message },
-                  { key: 'error', header: 'الخطأ', cell: (row) => row.error ?? '—' },
-                  { key: 'sim', header: '🧪', cell: (row) => (row.simulation ? 'محاكاة' : 'فعلي') },
-                ]}
-              />
-            )}
+              تأكيد الإلغاء
+            </Button>
+            <Button variant="ghost" onClick={() => setVoidOpen(false)}>
+              تراجع
+            </Button>
           </>
-        ) : (
-          <p className="muted">لا تملك صلاحية إرسال الفاتورة.</p>
-        )}
-      </div>
+        }
+      >
+        <Input label="سبب الإلغاء" value={voidReason} onChange={(e) => setVoidReason(e.target.value)} placeholder="مثال: خطأ في إدخال الأصناف" />
+      </Modal>
 
-      <div className="card">
-        <h2>الأصناف</h2>
-        <p className="muted small" style={{ marginTop: 0 }}>
-          اضغط Alt+G على سطر الفاتورة لفتح «👓 بيانات النظارات» — كما في <code>frmInvSale.glassesOptions</code> L2505.
-        </p>
-        <DataTable
-          rows={doc.lines}
-          rowKey={(row) => row.id}
-          columns={[
-            // أعمدة الشبكة المكتبية `frmInvSale.xaml` L695–L831: الصنف · الوحدة · الكمية ·
-            // السعر · المجموع · الخصم · الضريبة · الإجمالي · الصافي (الإجمالي = قبل الضريبة).
-            { key: 'no', header: '#', align: 'num', cell: (row) => row.lineNo },
-            {
-              key: 'item',
-              header: '📦 الصنف',
-              cell: (row) => {
-                const item = (items.data ?? []).find((entry) => entry.id === row.itemId);
-                return item ? itemLabel(item) : (row.description ?? '—');
-              },
-            },
-            { key: 'unit', header: 'الوحدة', cell: (row) => unitOf(row) },
-            { key: 'qty', header: 'الكمية', align: 'num', cell: (row) => quantity(row.quantity) },
-            { key: 'price', header: 'السعر', align: 'num', cell: (row) => money(row.unitPrice) },
-            { key: 'gross', header: 'المجموع', align: 'num', cell: (row) => money(Number(row.quantity) * Number(row.unitPrice)) },
-            { key: 'discount', header: 'الخصم', align: 'num', cell: (row) => money(row.discountAmount ?? '0') },
-            { key: 'net', header: 'الإجمالي', align: 'num', cell: (row) => money(row.net) },
-            { key: 'tax', header: 'الضريبة', align: 'num', cell: (row) => money(row.tax) },
-            { key: 'total', header: 'الصافي', align: 'num', cell: (row) => money(row.total) },
-            /**
-             * R8 — «📁 رقم الدفعة» و«🔢 التسلسلي» على بطاقة الفاتورة: الديسكتوب يقرؤهما
-             * عائدةً عند فتح المستند (`Class/InvoiceOper.cs` L3885–L3888)، وهي هنا مُخزَّنة
-             * على السطر نفسه لا مشتقّةً من الدفعة.
-             */
-            { key: 'batch', header: '📁 رقم الدفعة', align: 'ltr', cell: (row) => row.batchNo ?? '—' },
-            { key: 'costCenter', header: '📊 مركز التكلفة', cell: (row) => centerName(row.costCenterId ?? doc.costCenterId) },
-            {
-              key: 'serials',
-              header: '🔢 التسلسلي',
-              align: 'ltr',
-              cell: (row) => ((row.serialNos ?? []) as string[]).join(' · ') || '—',
-            },
-            {
-              key: 'glasses',
-              header: '👓 النظارات',
-              cell: (row) => {
-                const found = (glasses.data ?? []).find((g) => g.lineId === row.id);
-                return found ? (
-                  <Link className="btn sm" href={`/optics/prescriptions?lineId=${row.id}`}>
-                    👁️ عرض
-                  </Link>
-                ) : (
-                  <span className="muted">—</span>
-                );
-              },
-            },
-          ]}
-        />
-      </div>
+      {/* ------------------------------------------------ glasses modal */}
+      <GlassesModal line={glassesLine} onClose={() => setGlassesLine(null)} />
+    </div>
+  );
+}
 
-      {(glasses.data ?? []).length > 0 && (
-        <div className="card">
-          <h2>👓 بيانات النظارات — سطور الفاتورة</h2>
-          <p className="muted small">من `frmGlasses` — كل سطرٍ يحمل قياسات العينين إن وجدت (Alt+G في الفاتورة).</p>
-          <div className="grid" style={{ gap: 12 }}>
-            {(glasses.data ?? []).map(({ lineId, section }) => {
-              if (!section) return null;
-              const line = doc.lines.find((l) => l.id === lineId);
-              const item = (items.data ?? []).find((e) => e.id === line?.itemId);
-              return (
-                <div key={lineId} className="card tight">
-                  <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                    <strong>
-                      سطر #{line?.lineNo ?? '—'} — {item ? itemLabel(item) : line?.description ?? '—'}
-                    </strong>
-                    <Link className="btn sm" href={`/optics/prescriptions?lineId=${lineId}`}>
-                      👁️ عرض كامل
-                    </Link>
+/** 📢 بيانات النظارات — قسم الطباعة الخاص بالسطر (يُجلب من /optics/invoice-lines/:id/print-section). */
+function GlassesModal({ line, onClose }: { line: InvoiceLine | null; onClose: () => void }) {
+  const section = useQuery(
+    async () => {
+      if (!line) return null;
+      return await apiData<{ title: string; right: Record<string, string>; left: Record<string, string>; labels: { right: Array<{ key: string; label: string }>; left: Array<{ key: string; label: string }> }; rows: unknown[] }>(
+        `/optics/invoice-lines/${line.id}/print-section`,
+      );
+    },
+    [line?.id],
+  );
+
+  return (
+    <Modal
+      open={line !== null}
+      onClose={onClose}
+      title={section.data?.title ?? '👓 بيانات النظارات'}
+      size="lg"
+      footer={<Button variant="ghost" onClick={onClose}>إغلاق</Button>}
+    >
+      {section.status === 'loading' ? (
+        <p className="m-0 text-slate-400 text-[13px]">جارٍ التحميل…</p>
+      ) : section.data ? (
+        <div className="grid gap-4 md:grid-cols-2">
+          {(
+            [
+              { side: 'right', values: section.data.right, labels: section.data.labels.right },
+              { side: 'left', values: section.data.left, labels: section.data.labels.left },
+            ] as const
+          ).map((pane) => (
+            <div key={pane.side} className="rounded-xl border border-slate-200 overflow-hidden">
+              <p className="m-0 bg-slate-50 px-3 py-2 text-[12px] font-bold text-slate-500 border-b border-slate-100">
+                {pane.side === 'right' ? 'العين اليمنى' : 'العين اليسرى'}
+              </p>
+              <dl className="m-0 p-3 grid gap-2">
+                {pane.labels.map((field) => (
+                  <div key={field.key} className="flex items-center justify-between gap-3 text-[13px]">
+                    <dt className="text-slate-500 font-semibold m-0">{field.label}</dt>
+                    <dd className="m-0 font-bold text-slate-800" dir="ltr">
+                      {pane.values[field.key] ?? '—'}
+                    </dd>
                   </div>
-                  <div className="grid cols-2" style={{ marginTop: 8 }}>
-                    <div>
-                      <h4>🔴 العين اليمنى (RE)</h4>
-                      <dl className="kv">
-                        {(section.labels?.right ?? []).map((lbl) => (
-                          <div key={lbl.key} style={{ display: 'contents' }}>
-                            <dt>{lbl.label}</dt>
-                            <dd>{(section.right as Record<string, string>)?.[lbl.key] ?? '—'}</dd>
-                          </div>
-                        ))}
-                      </dl>
-                    </div>
-                    <div>
-                      <h4>🟢 العين اليسرى (LE)</h4>
-                      <dl className="kv">
-                        {(section.labels?.left ?? []).map((lbl) => (
-                          <div key={lbl.key} style={{ display: 'contents' }}>
-                            <dt>{lbl.label}</dt>
-                            <dd>{(section.left as Record<string, string>)?.[lbl.key] ?? '—'}</dd>
-                          </div>
-                        ))}
-                      </dl>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                ))}
+              </dl>
+            </div>
+          ))}
         </div>
+      ) : (
+        <p className="m-0 text-slate-400 text-[13px]">لا توجد بيانات نظارات لهذا السطر.</p>
       )}
-
-      {doc.payments.length > 0 && (
-        <div className="card">
-          <h2>الدفعات</h2>
-          <DataTable
-            rows={doc.payments}
-            rowKey={(row) => row.id}
-            columns={[
-              { key: 'at', header: 'التاريخ', align: 'ltr', cell: (row) => dateTime(row.createdAt) },
-              { key: 'method', header: 'الطريقة', cell: (row) => row.method },
-              { key: 'amount', header: 'المبلغ', align: 'num', cell: (row) => money(row.amount) },
-              { key: 'ref', header: 'المرجع', cell: (row) => row.reference ?? '—' },
-            ]}
-          />
-        </div>
-      )}
-    </Screen>
+    </Modal>
   );
 }

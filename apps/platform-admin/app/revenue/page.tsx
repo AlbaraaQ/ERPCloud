@@ -1,6 +1,25 @@
 'use client';
 
-import { Empty, ErrorBox, Loading, Screen } from '../../components/screen';
+import {
+  AlertTriangle,
+  BadgeDollarSign,
+  CalendarClock,
+  CircleDollarSign,
+  RefreshCw,
+  Timer,
+  TrendingUp,
+  Wallet,
+} from 'lucide-react';
+
+import { Screen } from '../../components/screen';
+import { Badge } from '../../components/ui/badge';
+import { Button } from '../../components/ui/button';
+import { AreaCardChart } from '../../components/ui/chart';
+import { Reveal } from '../../components/ui/count-up';
+import { EmptyState } from '../../components/ui/empty-state';
+import { MetricCard } from '../../components/ui/metric-card';
+import { SkeletonRows } from '../../components/ui/skeleton';
+import { Table } from '../../components/ui/table';
 import { apiData } from '../../lib/api';
 import { useQuery } from '../../lib/use-query';
 
@@ -41,142 +60,184 @@ type Revenue = {
   }>;
 };
 
-function dateText(value: string | null): string {
-  return value ? new Date(value).toLocaleDateString('ar-SA') : '—';
-}
+type MrrSeries = Array<{ month: string; mrr: string }>;
+
+const gregDate = (value: string | null) =>
+  value ? new Date(value).toLocaleDateString('ar-SA-u-ca-gregory', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' }) : '—';
+
+const monthLabel = (iso: string) => {
+  const [y, m] = iso.split('-').map(Number);
+  const d = new Date(Date.UTC(y ?? 2026, (m ?? 1) - 1, 1));
+  return d.toLocaleDateString('ar-SA-u-ca-gregory', { month: 'short', year: '2-digit', timeZone: 'UTC' });
+};
+
+const num = (value: string) => Number(value) || 0;
 
 export default function RevenuePage() {
   const revenue = useQuery<Revenue>(() => apiData<Revenue>('/platform/revenue'), []);
-  // A `const` of the resolved value, not `revenue.data` in every cell: TypeScript keeps the
-  // narrowing inside the map callbacks only if the reference itself cannot change.
+  const series = useQuery<{ mrrSeries: MrrSeries }>(() => apiData<{ mrrSeries: MrrSeries }>('/platform/analytics/overview?months=12'), []);
+
   const data = revenue.data;
+  const currency = data?.currency ?? 'SAR';
+  const fmt = (value: number) => value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const upcomingRows = data?.upcoming ?? [];
 
   return (
     <Screen
       title="الإيراد"
-      subtitle="الإيراد المتكرّر والمتأخّر: أرقام شهرية واحدة، بتعريف مكتوب — لا رسوم بيانية بلا معنى."
+      subtitle="الإيراد المتكرّر والمتأخّر: أرقام شهرية واحدة، بتعريف مكتوب."
       crumbs={['المنصة', 'العملاء والتراخيص']}
       actions={
-        <button className="btn" type="button" onClick={revenue.reload}>
+        <Button variant="secondary" icon={<RefreshCw size={14} />} onClick={() => { revenue.reload(); series.reload(); }}>
           تحديث
-        </button>
+        </Button>
       }
     >
-      {revenue.status === 'loading' && <Loading />}
-      {revenue.status === 'error' && <ErrorBox message={revenue.error} onRetry={revenue.reload} />}
-      {revenue.status === 'success' && data && (
+      {revenue.status === 'loading' ? (
+        <div className="rounded-[10px] border border-slate-200 bg-white p-4 shadow-1">
+          <SkeletonRows rows={6} />
+        </div>
+      ) : revenue.status === 'error' ? (
+        <EmptyState tone="red" icon={<Wallet size={26} strokeWidth={1.5} />} title="تعذر تحميل الإيراد" description={revenue.error} />
+      ) : data ? (
         <>
-          <section className="card">
-            <h2>الإيراد المتكرّر</h2>
-            <div className="grid cols-2">
-              <div>
-                <p className="muted small" style={{ margin: 0 }}>
-                  MRR — الإيراد الشهري المتكرّر
+          {/* top metrics */}
+          <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+            <MetricCard
+              label="MRR — شهري متكرر"
+              value={num(data.mrr)}
+              suffix={currency}
+              tone="violet"
+              icon={<CircleDollarSign size={16} />}
+              hint="الفعّال + المتأخّر (ما زال متعاقداً)"
+            />
+            <MetricCard
+              label="ARR — سنوي متكرر"
+              value={num(data.arr)}
+              suffix={currency}
+              tone="sky"
+              icon={<TrendingUp size={16} />}
+              hint="MRR × 12"
+              delay={0.05}
+            />
+            <MetricCard
+              label="المتأخّر"
+              value={num(data.overdue)}
+              suffix={currency}
+              tone={num(data.overdue) > 0 ? 'red' : 'green'}
+              icon={<Timer size={16} />}
+              hint={data.overdueCount > 0 ? `${data.overdueCount} فاتورة متجاوزة الاستحقاق` : 'لا متأخّر حالياً'}
+              delay={0.1}
+            />
+            <MetricCard
+              label="المحصَّل هذا الشهر"
+              value={num(data.collectedThisMonth)}
+              suffix={currency}
+              tone="green"
+              icon={<BadgeDollarSign size={16} />}
+              hint={`غير المسدَّد كله: ${fmt(num(data.outstanding))} ${currency}`}
+              delay={0.15}
+            />
+          </div>
+
+          {/* big MRR chart */}
+          <Reveal delay={0.1}>
+            <section className="rounded-[10px] border border-slate-200 bg-white p-4 shadow-1">
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h3 className="m-0 text-[15px] font-bold text-slate-900">منحنى MRR — 12 شهراً</h3>
+                  <p className="m-0 mt-0.5 text-[12px] text-slate-400">الإيراد الشهري المتكرر كما حُسب في العقود (بلا رسومٍ بلا معنى).</p>
+                </div>
+                {data.mixedCurrency ? (
+                  <Badge tone="amber" dot>
+                    <AlertTriangle size={12} /> عملات مختلطة — الأرقام بعملة العرض وحدها
+                  </Badge>
+                ) : null}
+              </div>
+              {(series.data?.mrrSeries ?? []).length > 0 ? (
+                <AreaCardChart
+                  data={(series.data?.mrrSeries ?? []).map((p) => ({ month: monthLabel(p.month), mrr: num(p.mrr) }))}
+                  xKey="month"
+                  dataKey="mrr"
+                  name="MRR"
+                  height={300}
+                  color="#7c3aed"
+                  formatter={(v) => `${fmt(v)} ${currency}`}
+                />
+              ) : (
+                <EmptyState icon={<TrendingUp size={24} strokeWidth={1.5} />} title="لا بيانات سلسلة إيراد" />
+              )}
+            </section>
+          </Reveal>
+
+          <div className="grid gap-4 xl:grid-cols-3 items-start">
+            {/* licence mix */}
+            <Reveal delay={0.15}>
+              <section className="rounded-[10px] border border-slate-200 bg-white p-4 shadow-1">
+                <h3 className="m-0 text-[15px] font-bold text-slate-900 mb-3">التراخيص</h3>
+                <dl className="m-0 grid gap-2.5">
+                  {[
+                    { label: 'فعّالة', value: data.counts.active, cls: 'text-emerald-600' },
+                    { label: 'متأخّرة', value: data.counts.pastDue, cls: 'text-red-600' },
+                    { label: 'تجربة', value: data.counts.trialing, cls: 'text-sky-600' },
+                    { label: 'موقوفة مؤقتاً', value: data.counts.paused, cls: 'text-amber-600' },
+                    { label: 'ملغاة', value: data.counts.canceled, cls: 'text-slate-400' },
+                  ].map((row) => (
+                    <div key={row.label} className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2">
+                      <dt className="text-[12.5px] font-bold text-slate-500 m-0">{row.label}</dt>
+                      <dd className={`m-0 font-mono text-[15px] font-bold ${row.cls}`} dir="ltr">{row.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <p className="m-0 mt-3 text-[11.5px] text-slate-400 leading-relaxed">
+                  MRR يعدّ «فعّالة» و«متأخّرة» فقط: من تأخّر في السداد ما زال متعاقداً، ومن يُجرّب لم يشترِ بعد.
                 </p>
-                <h1 style={{ margin: 0 }}>
-                  {Number(data.mrr).toLocaleString('ar-SA', { minimumFractionDigits: 2 })}{' '}
-                  <span className="muted small">{data.currency}</span>
-                </h1>
-              </div>
-              <div>
-                <p className="muted small" style={{ margin: 0 }}>
-                  ARR — الإيراد السنوي المتكرّر (×12)
-                </p>
-                <h1 style={{ margin: 0 }}>
-                  {Number(data.arr).toLocaleString('ar-SA', { minimumFractionDigits: 2 })}{' '}
-                  <span className="muted small">{data.currency}</span>
-                </h1>
-              </div>
-            </div>
-            {data.mixedCurrency && (
-              <p className="alert warn">الباقات تحمل أكثر من عملة: الأرقام أعلاه بعملة العرض وحدها.</p>
-            )}
-          </section>
+              </section>
+            </Reveal>
 
-          <section className="card">
-            <h2>المتأخّر والتحصيل</h2>
-            <dl className="kv">
-              <dt>المتأخّر</dt>
-              <dd>
-                {Number(data.overdue).toLocaleString('ar-SA', { minimumFractionDigits: 2 })} {data.currency}
-                {data.overdueCount > 0 && ` · ${data.overdueCount} فاتورة`}
-              </dd>
-              <dt>كل ما لم يُسدَّد</dt>
-              <dd>
-                {Number(data.outstanding).toLocaleString('ar-SA', { minimumFractionDigits: 2 })} {data.currency}
-              </dd>
-              <dt>المحصَّل هذا الشهر</dt>
-              <dd>
-                {Number(data.collectedThisMonth).toLocaleString('ar-SA', { minimumFractionDigits: 2 })}{' '}
-                {data.currency}
-              </dd>
-            </dl>
-          </section>
-
-          <section className="card">
-            <h2>التراخيص</h2>
-            <dl className="kv">
-              <dt>فعّالة</dt>
-              <dd>{data.counts.active}</dd>
-              <dt>متأخّرة</dt>
-              <dd>{data.counts.pastDue}</dd>
-              <dt>تجربة</dt>
-              <dd>{data.counts.trialing}</dd>
-              <dt>موقوفة مؤقتاً</dt>
-              <dd>{data.counts.paused}</dd>
-              <dt>ملغاة</dt>
-              <dd>{data.counts.canceled}</dd>
-            </dl>
-            <p className="muted small" style={{ marginBottom: 0 }}>
-              MRR يعدّ «فعّالة» و«متأخّرة» فقط: من تأخّر في السداد ما زال متعاقداً، ومن يُجرّب لم يشترِ بعد.
-            </p>
-          </section>
-
-          <section className="card">
-            <h2>فواتير قادمة</h2>
-            {data.upcoming.length === 0 ? (
-              <Empty title="لا فواتير قائمة" detail="لا فاتورة صادرة غير مدفوعة في هذه اللحظة." />
-            ) : (
-              <div className="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>الفاتورة</th>
-                      <th>العميل</th>
-                      <th>الاستحقاق</th>
-                      <th className="num">الإجمالي</th>
-                      <th className="num">المتبقّي</th>
-                      <th>الحالة</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.upcoming.map((row) => (
-                      <tr key={row.invoiceId}>
-                        <td dir="ltr">{row.number ?? '—'}</td>
-                        <td>{row.tenantName}</td>
-                        <td dir="ltr">{dateText(row.dueDate)}</td>
-                        <td className="num">
-                          {Number(row.total).toLocaleString('ar-SA', { minimumFractionDigits: 2 })} {data.currency}
-                        </td>
-                        <td className="num">
-                          {Number(row.remaining).toLocaleString('ar-SA', { minimumFractionDigits: 2 })} {data.currency}
-                        </td>
-                        <td>
-                          {row.daysOverdue > 0 ? (
-                            <span className="badge failed">متأخّرة {row.daysOverdue} يوماً</span>
-                          ) : (
-                            <span className="badge pending">تنتظر السداد</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
+            {/* upcoming invoices */}
+            <Reveal delay={0.2} className="xl:col-span-2">
+              <section className="rounded-[10px] border border-slate-200 bg-white shadow-1 overflow-hidden">
+                <header className="px-4 pt-4 pb-1 flex items-center gap-2">
+                  <CalendarClock size={15} className="text-slate-400" />
+                  <h3 className="m-0 text-[15px] font-bold text-slate-900">فواتير قائمة ({upcomingRows.length})</h3>
+                </header>
+                {upcomingRows.length === 0 ? (
+                  <div className="px-4 pb-5">
+                    <EmptyState icon={<CalendarClock size={22} strokeWidth={1.5} />} title="لا فواتير قائمة" description="لا فاتورة صادرة غير مدفوعة في هذه اللحظة." />
+                  </div>
+                ) : (
+                  <div className="px-1 pb-1">
+                    <Table
+                      rows={upcomingRows}
+                      rowKey={(row) => row.invoiceId}
+                      dense
+                      columns={[
+                        { key: 'number', header: 'الفاتورة', ltr: true, cell: (row) => <span className="font-mono text-[12px]">{row.number ?? '—'}</span> },
+                        { key: 'tenant', header: 'العميل', cell: (row) => <span className="font-bold text-slate-700">{row.tenantName}</span> },
+                        { key: 'due', header: 'الاستحقاق', ltr: true, cell: (row) => <span className="font-mono text-[12px] text-slate-500">{gregDate(row.dueDate)}</span> },
+                        { key: 'total', header: 'الإجمالي', numeric: true, ltr: true, cell: (row) => <span className="font-mono text-[12px] font-bold">{fmt(num(row.total))}</span> },
+                        { key: 'remaining', header: 'المتبقّي', numeric: true, ltr: true, cell: (row) => <span className="font-mono text-[12px] font-bold text-amber-700">{fmt(num(row.remaining))}</span> },
+                        {
+                          key: 'status',
+                          header: 'الحالة',
+                          cell: (row) =>
+                            row.daysOverdue > 0 ? (
+                              <Badge tone="red" dot>متأخّرة {row.daysOverdue} يوماً</Badge>
+                            ) : (
+                              <Badge tone="amber" dot>تنتظر السداد</Badge>
+                            ),
+                        },
+                      ]}
+                    />
+                  </div>
+                )}
+              </section>
+            </Reveal>
+          </div>
         </>
-      )}
+      ) : null}
     </Screen>
   );
 }

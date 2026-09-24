@@ -1,8 +1,14 @@
 'use client';
 
+import { FileSearch, RefreshCw, ScanLine, ShieldAlert } from 'lucide-react';
 import { useState } from 'react';
 
-import { Empty, ErrorBox, Forbidden, Loading, Screen } from '../../components/screen';
+import { Empty, ErrorBox, Forbidden, Screen } from '../../components/screen';
+import { Badge } from '../../components/ui/badge';
+import { Button } from '../../components/ui/button';
+import { Input, Select } from '../../components/ui/input';
+import { SkeletonRows } from '../../components/ui/skeleton';
+import { Table } from '../../components/ui/table';
 import { apiData } from '../../lib/api';
 import { useSession } from '../../lib/session';
 import { useQuery } from '../../lib/use-query';
@@ -56,10 +62,10 @@ const STATUS_LABEL: Record<string, string> = {
   deleted: 'محجور',
 };
 
-const STATUS_CLASS: Record<string, string> = {
-  pending: 'pending',
-  ready: 'active',
-  deleted: 'failed',
+const STATUS_TONE: Record<string, 'amber' | 'green' | 'red' | 'neutral'> = {
+  pending: 'amber',
+  ready: 'green',
+  deleted: 'red',
 };
 
 const SCAN_LABEL: Record<string, string> = {
@@ -68,10 +74,10 @@ const SCAN_LABEL: Record<string, string> = {
   skipped: 'لم يُفحص فعلياً',
 };
 
-const SCAN_CLASS: Record<string, string> = {
-  clean: 'active',
-  infected: 'failed',
-  skipped: 'pending',
+const SCAN_TONE: Record<string, 'green' | 'red' | 'amber' | 'neutral'> = {
+  clean: 'green',
+  infected: 'red',
+  skipped: 'amber',
 };
 
 export default function FilesPage() {
@@ -139,148 +145,182 @@ export default function FilesPage() {
       subtitle="مدير ملفات عبر كل العملاء: الحالة، والارتباط بكيان، وحكم آخر فحص — وحكم الفحص مقروءٌ من مسار التدقيق لا محسوبٌ في الشاشة."
       crumbs={['المنصة', 'التشغيل']}
       actions={
-        <button className="btn" type="button" onClick={files.reload}>
+        <Button variant="secondary" icon={<RefreshCw size={14} />} onClick={files.reload}>
           تحديث
-        </button>
+        </Button>
       }
     >
-      <div className="card tight no-print">
-        <div className="row" style={{ flexWrap: 'wrap' }}>
-          <label className="field" style={{ minWidth: 220, flex: 1 }}>
-            <span>بحث في الاسم</span>
-            <input
-              className="input"
-              value={term}
-              onChange={(event) => setTerm(event.target.value)}
-              placeholder="كشف"
-            />
-          </label>
-          <label className="field" style={{ minWidth: 180 }}>
-            <span>حالة الملف</span>
-            <select className="input" value={status} onChange={(event) => setStatus(event.target.value)}>
-              <option value="">الكل</option>
-              <option value="pending">بانتظار الرفع</option>
-              <option value="ready">جاهز</option>
-              <option value="deleted">محجور</option>
-            </select>
-          </label>
-          <label className="field" style={{ minWidth: 200 }}>
-            <span>حكم الفحص</span>
-            <select className="input" value={scan} onChange={(event) => setScan(event.target.value)}>
-              <option value="">الكل</option>
-              <option value="clean">نظيف</option>
-              <option value="infected">مُصاب</option>
-              <option value="skipped">لم يُفحص فعلياً</option>
-              <option value="none">لم يُفحص بعد</option>
-            </select>
-          </label>
-          <label className="field" style={{ minWidth: 300, flex: 1 }}>
-            <span>سبب الحجر (5 محارف على الأقل — يُسجَّل في التدقيق)</span>
-            <input
-              className="input"
-              value={reason}
-              onChange={(event) => setReason(event.target.value)}
-              placeholder="مثال: محتوى مشتبه به أبلغ عنه العميل"
-            />
-          </label>
+      {/* filter bar */}
+      <div className="rounded-[10px] border border-slate-200 bg-white p-3 shadow-1 no-print">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <Input label="بحث في الاسم" placeholder="كشف" value={term} onChange={(e) => setTerm(e.target.value)} />
+          <Select label="حالة الملف" value={status} onChange={(e) => setStatus(e.target.value)}>
+            <option value="">الكل</option>
+            <option value="pending">بانتظار الرفع</option>
+            <option value="ready">جاهز</option>
+            <option value="deleted">محجور</option>
+          </Select>
+          <Select label="حكم الفحص" value={scan} onChange={(e) => setScan(e.target.value)}>
+            <option value="">الكل</option>
+            <option value="clean">نظيف</option>
+            <option value="infected">مُصاب</option>
+            <option value="skipped">لم يُفحص فعلياً</option>
+            <option value="none">لم يُفحص بعد</option>
+          </Select>
+          <Input
+            label="سبب الحجر (5 محارف على الأقل — يُسجَّل في التدقيق)"
+            placeholder="مثال: محتوى مشتبه به أبلغ عنه العميل"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            error={canManage && reason.length > 0 && !reasonReady ? '5 محارف على الأقل' : undefined}
+          />
         </div>
-        <p className="muted small" style={{ margin: '6px 0 0' }}>
+        <p className="m-0 mt-2 text-[11.5px] text-slate-400">
           «لم يُفحص» و«لم يُفحص فعلياً» مختلفان: الأول ملفٌّ لم يمرّ على الماسح أصلاً (لا سطر تدقيق)، والثاني
           مرّ عليه فقال الماسح إنه لا يفحص (الماسح المُهيّأ هنا لا يفعل).
         </p>
       </div>
 
-      {notice && <div className={`alert ${notice.kind === 'ok' ? '' : 'danger'}`}>{notice.text}</div>}
+      {notice ? (
+        <div
+          className={`mt-3 flex items-center gap-2 rounded-[10px] border px-4 py-2.5 text-[13px] font-semibold ${
+            notice.kind === 'ok' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-700'
+          }`}
+        >
+          {notice.text}
+        </div>
+      ) : null}
 
-      {files.status === 'loading' && <Loading />}
-      {files.status === 'forbidden' && <Forbidden />}
-      {files.status === 'error' && <ErrorBox message={files.error} onRetry={files.reload} />}
-      {files.status === 'success' &&
-        (rows.length === 0 ? (
+      {files.status === 'loading' ? (
+        <div className="mt-3 rounded-[10px] border border-slate-200 bg-white p-4 shadow-1">
+          <SkeletonRows rows={6} />
+        </div>
+      ) : files.status === 'forbidden' ? (
+        <Forbidden />
+      ) : files.status === 'error' ? (
+        <ErrorBox message={files.error} onRetry={files.reload} />
+      ) : rows.length === 0 ? (
+        <div className="mt-3 rounded-[10px] border border-slate-200 bg-white p-8 shadow-1">
           <Empty title="لا ملفات بهذا المرشّح" detail="جرّب مرشّح «لم يُفحص بعد» — هو سؤال هذه الشاشة." />
-        ) : (
-          <>
-            <p className="muted small">
-              {rows.length} من {files.data?.meta.total ?? rows.length} ملفاً
-            </p>
-            <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>الملف</th>
-                    <th>العميل</th>
-                    <th>الحجم</th>
-                    <th>الحالة</th>
-                    <th>مربوط بـ</th>
-                    <th>حكم الفحص</th>
-                    <th>رُفع في</th>
-                    {canManage && <th className="no-print">إجراء</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row) => (
-                    <tr key={row.id}>
-                      <td>
-                        <div dir="ltr">{row.name}</div>
-                        <div className="muted small" dir="ltr">
+        </div>
+      ) : (
+        <>
+          <p className="mt-3 mb-2 text-[12px] font-semibold text-slate-400">
+            {rows.length} من {files.data?.meta.total ?? rows.length} ملفاً
+          </p>
+          <div className="overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-1">
+            <Table
+              rows={rows}
+              rowKey={(row) => row.id}
+              dense
+              columns={[
+                {
+                  key: 'name',
+                  header: 'الملف',
+                  grow: true,
+                  cell: (row) => (
+                    <span className="flex items-center gap-2 min-w-0">
+                      <span className="grid size-8 flex-none place-items-center rounded-lg bg-slate-100 text-slate-400">
+                        <FileSearch size={14} />
+                      </span>
+                      <span className="block min-w-0">
+                        <span className="block truncate font-mono text-[12px] font-semibold text-slate-800" dir="ltr">{row.name}</span>
+                        <span className="block truncate font-mono text-[10.5px] text-slate-400" dir="ltr">
                           {row.mime} · {row.uploadedByLabel ?? 'بلا رافع'}
-                        </div>
-                      </td>
-                      <td dir="ltr">{row.tenantCode ?? row.tenantId.slice(0, 8)}</td>
-                      <td className="num">{formatBytes(row.sizeBytes)}</td>
-                      <td>
-                        <span className={`badge ${STATUS_CLASS[row.status] ?? 'pending'}`}>
-                          {STATUS_LABEL[row.status] ?? row.status}
                         </span>
-                      </td>
-                      <td dir="ltr" className="small">
-                        {row.entity ? `${row.entity}/${row.entityId?.slice(0, 8) ?? ''}` : '—'}
-                      </td>
-                      <td>
-                        {row.scan ? (
-                          <>
-                            <span className={`badge ${SCAN_CLASS[row.scan.verdict] ?? 'pending'}`}>
-                              {SCAN_LABEL[row.scan.verdict] ?? row.scan.verdict}
-                            </span>
-                            <div className="muted small" dir="ltr">
-                              {row.scan.scanner} · {new Date(row.scan.recordedAt).toLocaleString('ar-SA')}
-                            </div>
-                          </>
-                        ) : (
-                          <span className="badge">لم يُفحص</span>
-                        )}
-                      </td>
-                      <td dir="ltr">{new Date(row.createdAt).toLocaleString('ar-SA')}</td>
-                      {canManage && (
-                        <td className="no-print">
-                          <div className="row" style={{ gap: 6 }}>
-                            <button
-                              className="btn small"
-                              type="button"
-                              disabled={busyId === row.id}
+                      </span>
+                    </span>
+                  ),
+                },
+                {
+                  key: 'tenant',
+                  header: 'العميل',
+                  cell: (row) => <span className="font-mono text-[12px] text-slate-600" dir="ltr">{row.tenantCode ?? row.tenantId.slice(0, 8)}</span>,
+                },
+                {
+                  key: 'size',
+                  header: 'الحجم',
+                  numeric: true,
+                  ltr: true,
+                  cell: (row) => <span className="font-mono text-[12px] text-slate-600">{formatBytes(row.sizeBytes)}</span>,
+                },
+                {
+                  key: 'status',
+                  header: 'الحالة',
+                  cell: (row) => <Badge tone={STATUS_TONE[row.status] ?? 'neutral'} dot>{STATUS_LABEL[row.status] ?? row.status}</Badge>,
+                },
+                {
+                  key: 'entity',
+                  header: 'مربوط بـ',
+                  cell: (row) =>
+                    row.entity ? (
+                      <span className="font-mono text-[11.5px] text-slate-500" dir="ltr">
+                        {row.entity}/{row.entityId?.slice(0, 8) ?? ''}
+                      </span>
+                    ) : (
+                      <span className="text-slate-300">—</span>
+                    ),
+                },
+                {
+                  key: 'scan',
+                  header: 'حكم الفحص',
+                  cell: (row) =>
+                    row.scan ? (
+                      <span className="block">
+                        <Badge tone={SCAN_TONE[row.scan.verdict] ?? 'neutral'} dot>
+                          <ScanLine size={11} /> {SCAN_LABEL[row.scan.verdict] ?? row.scan.verdict}
+                        </Badge>
+                        <span className="mt-0.5 block font-mono text-[10.5px] text-slate-400" dir="ltr">
+                          {row.scan.scanner} · {new Date(row.scan.recordedAt).toLocaleString('en-GB', { timeZone: 'UTC' })}
+                        </span>
+                      </span>
+                    ) : (
+                      <Badge tone="neutral">لم يُفحص</Badge>
+                    ),
+                },
+                {
+                  key: 'created',
+                  header: 'رُفع في',
+                  ltr: true,
+                  cell: (row) => <span className="font-mono text-[11.5px] text-slate-500">{new Date(row.createdAt).toLocaleString('en-GB', { timeZone: 'UTC' })} UTC</span>,
+                },
+                ...(canManage
+                  ? [
+                      {
+                        key: 'actions',
+                        header: 'إجراء',
+                        numeric: true as const,
+                        cell: (row: FileRow) => (
+                          <span className="flex items-center justify-end gap-1.5">
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              icon={<ScanLine size={12} />}
+                              loading={busyId === row.id}
                               onClick={() => void scanNow(row)}
                             >
                               افحص الآن
-                            </button>
-                            <button
-                              className="btn small danger"
-                              type="button"
-                              disabled={busyId === row.id || row.status === 'deleted' || !reasonReady}
+                            </Button>
+                            <Button
+                              variant="danger"
+                              size="sm"
+                              icon={<ShieldAlert size={12} />}
+                              disabled={row.status === 'deleted' || !reasonReady}
                               title={reasonReady ? 'حجر الملف' : 'اكتب السبب أولاً'}
                               onClick={() => void quarantine(row)}
                             >
                               حجر
-                            </button>
-                          </div>
-                        </td>
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        ))}
+                            </Button>
+                          </span>
+                        ),
+                      },
+                    ]
+                  : []),
+              ]}
+            />
+          </div>
+        </>
+      )}
     </Screen>
   );
 }
