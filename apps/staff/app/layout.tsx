@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 
 import { AuthGate } from '../components/auth-gate';
 import { TokenBridge } from '../components/token-bridge';
+import { ToastProvider } from '../components/ui/toast';
 import { LanguageProvider } from '../lib/i18n';
 import { SessionProvider } from '../lib/session';
 
@@ -22,7 +23,9 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
         <LanguageProvider>
           <SessionProvider>
             <TokenBridge />
-            <AuthGate>{children}</AuthGate>
+            <ToastProvider>
+              <AuthGate>{children}</AuthGate>
+            </ToastProvider>
           </SessionProvider>
         </LanguageProvider>
       </body>

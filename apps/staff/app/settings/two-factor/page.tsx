@@ -1,8 +1,20 @@
 'use client';
 
 import { useState } from 'react';
+import {
+  Copy,
+  Download,
+  KeyRound,
+  QrCode,
+  ShieldCheck,
+  ShieldOff,
+  Smartphone,
+} from 'lucide-react';
 
-import { Screen, Loading, ErrorBox } from '../../../components/screen';
+import { Screen } from '../../../components/screen';
+import { Badge } from '../../../components/ui/badge';
+import { Button } from '../../../components/ui/button';
+import { Input } from '../../../components/ui/input';
 import { ApiError, apiData, apiFetch } from '../../../lib/api';
 import { useQuery } from '../../../lib/use-query';
 
@@ -96,138 +108,221 @@ export default function TwoFactorPage() {
     URL.revokeObjectURL(url);
   }
 
+  const enabled = status.data?.enabled ?? false;
+  const enrolled = status.data?.enrolled ?? false;
+
   return (
     <Screen
       title="التحقق بخطوتين"
       subtitle="Two-factor authentication (TOTP)"
       crumbs={['الإعدادات', 'المستخدمون']}
     >
-      {status.status === 'loading' && <Loading rows={3} />}
-      {status.status === 'error' && <ErrorBox message={status.error} onRetry={status.reload} />}
-      {status.status === 'forbidden' && <ErrorBox message={status.error} />}
+      {status.status === 'loading' ? <SkeletonCard /> : null}
+      {status.status === 'error' ? <ErrorBox message={status.error} onRetry={status.reload} /> : null}
+      {status.status === 'forbidden' ? <ErrorBox message={status.error} /> : null}
 
       {status.status === 'success' && (
         <>
-          <section className="card">
-            <div className="row" style={{ alignItems: 'center', gap: 10 }}>
-              <span className={`badge ${status.data!.enabled ? 'ready' : 'planned'}`}>
-                {status.data!.enabled ? 'مفعَّل — الدخول يتطلب رمز التطبيق' : 'غير مفعَّل'}
+          {/* status card */}
+          <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-1">
+            <div className="flex flex-wrap items-center gap-3">
+              <span
+                className={`grid place-items-center size-12 rounded-2xl ${enabled ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}
+              >
+                <ShieldCheck size={22} />
               </span>
-              {status.data!.enabled && (
-                <span className="muted">رموز الاسترداد المتبقية: {status.data!.recoveryCodesLeft}</span>
-              )}
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="m-0 text-[16px] font-bold text-slate-900">حالة الحماية</h3>
+                  <Badge tone={enabled ? 'green' : 'amber'} dot>
+                    {enabled ? 'مفعَّل — الدخول يتطلب رمز التطبيق' : 'غير مفعَّل'}
+                  </Badge>
+                </div>
+                <p className="m-0 mt-1.5 text-[13px] text-slate-500 leading-relaxed">
+                  يضيف التحقق بخطوتين طبقة حماية فوق كلمة المرور: رمز متغيَّر كل 30 ثانية من تطبيق مصادقة
+                  (Google Authenticator أو Microsoft Authenticator أو غيرهما)، مع رموز استرداد تُستخدم مرة واحدة
+                  إذا فقدت جهازك.
+                </p>
+              </div>
+              {enabled ? (
+                <div className="text-center rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5">
+                  <p className="m-0 text-[24px] font-bold text-slate-900" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                    {status.data?.recoveryCodesLeft ?? 0}
+                  </p>
+                  <p className="m-0 text-[11.5px] font-bold text-slate-400">رموز استرداد متبقية</p>
+                </div>
+              ) : null}
             </div>
-            <p className="muted" style={{ marginTop: 8 }}>
-              يضيف التحقق بخطوتين طبقة حماية فوق كلمة المرور: رمز متغيَّر كل 30 ثانية من تطبيق مصادقة
-              (Google Authenticator أو Microsoft Authenticator أو غيرهما)، مع رموز استرداد تُستخدم مرة واحدة
-              إذا فقدت جهازك.
-            </p>
           </section>
 
-          {error && (
-            <section className="card">
-              <p className="alert danger">{error}</p>
-            </section>
-          )}
+          {error ? (
+            <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-[13px] font-semibold text-red-700">
+              {error}
+            </div>
+          ) : null}
 
           {/* Phase: not enrolled — offer to start. */}
-          {status.status === 'success' && !status.data!.enrolled && phase === 'idle' && (
-            <section className="card">
-              <button className="btn primary" type="button" onClick={() => void start()} disabled={busy}>
-                {busy ? 'جارٍ الإنشاء…' : 'بدء الإعداد'}
-              </button>
+          {!enrolled && phase === 'idle' ? (
+            <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-1 grid gap-3">
+              <div className="flex items-center gap-2">
+                <span className="grid place-items-center size-8 rounded-lg bg-brand-50 text-brand-600">
+                  <Smartphone size={16} />
+                </span>
+                <h3 className="m-0 text-[15px] font-bold text-slate-900">ابدأ الإعداد</h3>
+              </div>
+              <p className="m-0 text-[13px] text-slate-500">
+                سيُنشأ مفتاح خاص بحسابك، تضيفه إلى تطبيق المصادقة ثم تؤكد برمز حيّ لتفعيل الحماية.
+              </p>
+              <div>
+                <Button variant="primary" loading={busy} onClick={() => void start()} icon={<KeyRound size={15} />}>
+                  بدء الإعداد
+                </Button>
+              </div>
             </section>
-          )}
+          ) : null}
 
           {/* Phase: secret issued — scan/type, then confirm with a live code. */}
-          {phase === 'confirming' && enroll && (
-            <section className="card">
-              <strong>1) أضف الحساب إلى تطبيق المصادقة</strong>
-              <p className="muted">
-                امسح الرابط أدناه كرمز QR عبر أي مولّد رموز، أو أدخل المفتاح يدوياً في التطبيق.
-              </p>
-              <dl className="kv">
-                <dt>رابط التهيئة (otpauth)</dt>
-                <dd dir="ltr" style={{ wordBreak: 'break-all' }}>
-                  {enroll.otpauthUrl}
-                </dd>
-                <dt>المفتاح (إدخال يدوي)</dt>
-                <dd dir="ltr" style={{ letterSpacing: 2 }}>
-                  {enroll.secretBase32}
-                </dd>
-              </dl>
-              <div className="toolbar">
-                <button className="btn" type="button" onClick={() => copy(enroll.otpauthUrl, 'otpauth')}>
-                  {copied === 'otpauth' ? 'تم النسخ' : 'نسخ الرابط'}
-                </button>
-                <button className="btn" type="button" onClick={() => copy(enroll.secretBase32, 'secret')}>
-                  {copied === 'secret' ? 'تم النسخ' : 'نسخ المفتاح'}
-                </button>
+          {phase === 'confirming' && enroll ? (
+            <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-1 grid gap-5">
+              <div>
+                <h4 className="m-0 text-[14px] font-bold text-slate-800 flex items-center gap-2">
+                  <span className="grid place-items-center size-6 rounded-full bg-brand-600 text-white text-[12px]">1</span>
+                  أضف الحساب إلى تطبيق المصادقة
+                </h4>
+                <p className="m-0 mt-1.5 text-[12.5px] text-slate-500">
+                  امسح الرابط أدناه كرمز QR عبر أي مولّد رموز، أو أدخل المفتاح يدوياً في التطبيق.
+                </p>
+                <div className="mt-3 grid gap-3">
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      <span className="text-[11.5px] font-bold text-slate-500 flex items-center gap-1.5">
+                        <QrCode size={13} /> رابط التهيئة (otpauth)
+                      </span>
+                      <Button size="sm" variant="secondary" icon={<Copy size={13} />} onClick={() => copy(enroll.otpauthUrl, 'otpauth')}>
+                        {copied === 'otpauth' ? 'تم النسخ' : 'نسخ'}
+                      </Button>
+                    </div>
+                    <p className="m-0 text-[12px] text-slate-600 break-all" dir="ltr">
+                      {enroll.otpauthUrl}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      <span className="text-[11.5px] font-bold text-slate-500">المفتاح (إدخال يدوي)</span>
+                      <Button size="sm" variant="secondary" icon={<Copy size={13} />} onClick={() => copy(enroll.secretBase32, 'secret')}>
+                        {copied === 'secret' ? 'تم النسخ' : 'نسخ'}
+                      </Button>
+                    </div>
+                    <p className="m-0 text-[15px] font-bold text-slate-800 tracking-[0.2em]" dir="ltr">
+                      {enroll.secretBase32}
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              <strong style={{ display: 'block', marginTop: 14 }}>2) أكِّد برمز التطبيق</strong>
-              <div className="row" style={{ gap: 8, marginTop: 6 }}>
-                <input
-                  className="input"
-                  style={{ maxWidth: 160 }}
-                  value={code}
-                  onChange={(event) => setCode(event.target.value)}
-                  placeholder="000000"
-                  inputMode="numeric"
-                  dir="ltr"
-                />
-                <button className="btn primary" type="button" onClick={() => void confirm()} disabled={busy || code.trim().length !== 6}>
-                  {busy ? 'جارٍ التأكيد…' : 'تفعيل'}
-                </button>
+              <div className="border-t border-slate-100 pt-4">
+                <h4 className="m-0 text-[14px] font-bold text-slate-800 flex items-center gap-2">
+                  <span className="grid place-items-center size-6 rounded-full bg-brand-600 text-white text-[12px]">2</span>
+                  أكِّد برمز التطبيق
+                </h4>
+                <div className="mt-3 flex flex-wrap items-end gap-3">
+                  <div style={{ maxWidth: 180 }}>
+                    <Input label="الرمز" value={code} onChange={(e) => setCode(e.target.value)} placeholder="000000" hint="الرمز الست أرقام من التطبيق." />
+                  </div>
+                  <Button variant="primary" loading={busy} disabled={code.trim().length !== 6} onClick={() => void confirm()}>
+                    تفعيل
+                  </Button>
+                </div>
               </div>
             </section>
-          )}
+          ) : null}
 
           {/* Phase: just enabled — recovery codes are visible exactly once. */}
-          {phase === 'codes' && (
-            <section className="card">
-              <p className="alert">
-                تم تفعيل التحقق بخطوتين. هذه رموز الاسترداد — تُعرض مرة واحدة فقط ولن تظهر مجدداً.
-                احفظها في مكان آمن؛ كل رمز يعمل مرة واحدة.
-              </p>
-              <pre dir="ltr" style={{ letterSpacing: 2, lineHeight: 2 }}>
-                {recoveryCodes.join('\n')}
-              </pre>
-              <div className="toolbar">
-                <button className="btn" type="button" onClick={() => copy(recoveryCodes.join('\n'), 'codes')}>
+          {phase === 'codes' ? (
+            <section className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 shadow-1 grid gap-4">
+              <div className="flex items-start gap-3">
+                <span className="grid place-items-center size-10 rounded-xl bg-emerald-100 text-emerald-700 flex-none">
+                  <ShieldCheck size={20} />
+                </span>
+                <div>
+                  <h3 className="m-0 text-[15px] font-bold text-emerald-900">تم تفعيل التحقق بخطوتين</h3>
+                  <p className="m-0 mt-1 text-[13px] text-emerald-800">
+                    هذه رموز الاسترداد — تُعرض مرة واحدة فقط ولن تظهر مجدداً. احفظها في مكان آمن؛ كل رمز يعمل مرة واحدة.
+                  </p>
+                </div>
+              </div>
+              <div className="rounded-lg bg-white border border-emerald-200 p-4" dir="ltr">
+                <pre className="m-0 text-[14px] font-bold text-slate-800" style={{ letterSpacing: 2, lineHeight: 2 }}>
+                  {recoveryCodes.join('\n')}
+                </pre>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="primary" icon={<Copy size={15} />} onClick={() => copy(recoveryCodes.join('\n'), 'codes')}>
                   {copied === 'codes' ? 'تم النسخ' : 'نسخ الرموز'}
-                </button>
-                <button className="btn" type="button" onClick={downloadCodes}>
+                </Button>
+                <Button variant="secondary" icon={<Download size={15} />} onClick={downloadCodes}>
                   تنزيل ملف نصي
-                </button>
+                </Button>
               </div>
             </section>
-          )}
+          ) : null}
 
           {/* Phase: enabled — disable requires the account password. */}
-          {status.data!.enabled && phase !== 'codes' && (
-            <section className="card">
-              <strong>إيقاف التحقق بخطوتين</strong>
-              <p className="muted">يتطلب كلمة مرور الحساب. لا يُنصح بالإيقاف إلا عند فقدان تطبيق المصادقة.</p>
-              <div className="row" style={{ gap: 8, marginTop: 6 }}>
-                <input
-                  className="input"
-                  style={{ maxWidth: 280 }}
-                  type="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  autoComplete="current-password"
-                  placeholder="كلمة المرور"
-                  dir="ltr"
-                />
-                <button className="btn danger" type="button" onClick={() => void disable()} disabled={busy || !password}>
-                  {busy ? 'جارٍ الإيقاف…' : 'إيقاف التحقق بخطوتين'}
-                </button>
+          {enabled && phase !== 'codes' ? (
+            <section className="rounded-xl border border-red-200 bg-white p-4 shadow-1">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="grid place-items-center size-8 rounded-lg bg-red-50 text-red-600">
+                  <ShieldOff size={16} />
+                </span>
+                <h3 className="m-0 text-[15px] font-bold text-slate-900">إيقاف التحقق بخطوتين</h3>
+              </div>
+              <p className="m-0 text-[13px] text-slate-500 mb-3">
+                يتطلب كلمة مرور الحساب. لا يُنصح بالإيقاف إلا عند فقدان تطبيق المصادقة.
+              </p>
+              <div className="flex flex-wrap items-end gap-3">
+                <div style={{ maxWidth: 280 }}>
+                  <Input
+                    label="كلمة المرور"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="كلمة المرور"
+                    hint="تُتحقق من كلمة مرور حسابك الحالي."
+                  />
+                </div>
+                <Button variant="danger" loading={busy} disabled={!password} onClick={() => void disable()}>
+                  إيقاف التحقق بخطوتين
+                </Button>
               </div>
             </section>
-          )}
+          ) : null}
         </>
       )}
     </Screen>
+  );
+}
+
+function SkeletonCard() {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-1 grid gap-3" aria-busy="true">
+      <div className="h-4 w-1/3 rounded-md bg-slate-100 animate-pulse" />
+      <div className="h-9 rounded-md bg-slate-100 animate-pulse" style={{ width: '85%' }} />
+      <div className="h-9 rounded-md bg-slate-100 animate-pulse" style={{ width: '60%' }} />
+    </div>
+  );
+}
+
+function ErrorBox({ message, onRetry }: { message?: string; onRetry?: () => void }) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-1 grid gap-3">
+      <p className="m-0 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-[13px] font-semibold text-red-700">
+        {message ?? 'خطأ غير معروف'}
+      </p>
+      {onRetry ? (
+        <Button variant="primary" onClick={onRetry}>
+          إعادة المحاولة
+        </Button>
+      ) : null}
+    </div>
   );
 }

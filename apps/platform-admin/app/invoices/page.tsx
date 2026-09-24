@@ -1,11 +1,23 @@
 'use client';
 
 import Link from 'next/link';
+import { FilePlus2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { Empty, ErrorBox, Loading, Screen } from '../../components/screen';
+import { Badge } from '../../components/ui/badge';
+import { Button } from '../../components/ui/button';
+import { Select } from '../../components/ui/input';
+import { Table } from '../../components/ui/table';
 import { ApiError, apiData, apiPost } from '../../lib/api';
 import { useQuery } from '../../lib/use-query';
+
+const INVOICE_STATUS_TONE: Record<InvoiceStatus, 'blue' | 'purple' | 'green' | 'neutral'> = {
+  draft: 'blue',
+  issued: 'purple',
+  paid: 'green',
+  void: 'neutral',
+};
 
 /**
  * الفواتير والإشعارات الدائنة — شاشة جديدة يطلبها P-C4 («`/invoices`» في الخطة).
@@ -155,25 +167,29 @@ export default function InvoicesPage() {
       crumbs={['المنصة', 'العملاء والتراخيص']}
       actions={
         <>
-          <select className="input" style={{ maxWidth: 150 }} value={status} onChange={(event) => setStatus(event.target.value)}>
-            <option value="">كل الحالات</option>
-            {(Object.keys(STATUS_LABEL) as InvoiceStatus[]).map((key) => (
-              <option key={key} value={key}>
-                {STATUS_LABEL[key]}
-              </option>
-            ))}
-          </select>
-          <select className="input" style={{ maxWidth: 150 }} value={kind} onChange={(event) => setKind(event.target.value)}>
-            <option value="">النوعان</option>
-            {(Object.keys(KIND_LABEL) as InvoiceKind[]).map((key) => (
-              <option key={key} value={key}>
-                {KIND_LABEL[key]}
-              </option>
-            ))}
-          </select>
-          <button className="btn primary" type="button" onClick={() => setCreating(!creating)}>
+          <div style={{ width: 150 }}>
+            <Select label="الحالة" value={status} onChange={(e) => setStatus(e.target.value)}>
+              <option value="">كل الحالات</option>
+              {(Object.keys(STATUS_LABEL) as InvoiceStatus[]).map((key) => (
+                <option key={key} value={key}>
+                  {STATUS_LABEL[key]}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div style={{ width: 150 }}>
+            <Select label="النوع" value={kind} onChange={(e) => setKind(e.target.value)}>
+              <option value="">النوعان</option>
+              {(Object.keys(KIND_LABEL) as InvoiceKind[]).map((key) => (
+                <option key={key} value={key}>
+                  {KIND_LABEL[key]}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <Button variant="primary" icon={<FilePlus2 size={14} />} onClick={() => setCreating(!creating)}>
             {creating ? 'إغلاق' : 'فاتورة جديدة'}
-          </button>
+          </Button>
         </>
       }
     >
@@ -226,7 +242,15 @@ export default function InvoicesPage() {
           onCancel={() => setVoidTarget(undefined)}
         />
       )}
-      {message && <p className={`alert ${message.kind}`}>{message.text}</p>}
+      {message && (
+        <div
+          className={`mb-4 flex items-center gap-2 rounded-[10px] border px-4 py-2.5 text-[13px] font-semibold ${
+            message.kind === 'ok' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-700'
+          }`}
+        >
+          {message.text}
+        </div>
+      )}
 
       {invoices.status === 'loading' && <Loading />}
       {invoices.status === 'error' && <ErrorBox message={invoices.error} onRetry={invoices.reload} />}
@@ -235,85 +259,78 @@ export default function InvoicesPage() {
           <Empty title="لا فواتير بعد" detail="أصدر فاتورة من ترخيص قائم، أو من زر «فاتورة جديدة»." />
         ) : (
           <>
-            <div className="card">
-              <dl className="kv">
-                <dt>عدد المستندات</dt>
-                <dd>{rows.length}</dd>
-                <dt>المفوتر</dt>
-                <dd>{totals.billed.toLocaleString('ar-SA', { minimumFractionDigits: 2 })}</dd>
-                <dt>المحصَّل</dt>
-                <dd>{totals.paid.toLocaleString('ar-SA', { minimumFractionDigits: 2 })}</dd>
-                <dt>المتبقّي</dt>
-                <dd>{totals.remaining.toLocaleString('ar-SA', { minimumFractionDigits: 2 })}</dd>
-              </dl>
+            <div className="mb-4 grid grid-cols-2 gap-3 xl:grid-cols-4">
+              {[
+                { label: 'عدد المستندات', value: String(rows.length), cls: 'text-slate-900' },
+                { label: 'المفوتر', value: totals.billed.toLocaleString('en-US', { minimumFractionDigits: 2 }), cls: 'text-slate-900' },
+                { label: 'المحصَّل', value: totals.paid.toLocaleString('en-US', { minimumFractionDigits: 2 }), cls: 'text-emerald-600' },
+                { label: 'المتبقّي', value: totals.remaining.toLocaleString('en-US', { minimumFractionDigits: 2 }), cls: 'text-amber-600' },
+              ].map((stat) => (
+                <div key={stat.label} className="rounded-[10px] border border-slate-200 bg-white px-4 py-3 shadow-1">
+                  <p className="m-0 text-[12px] font-bold text-slate-400">{stat.label}</p>
+                  <p className={`m-0 mt-1 font-mono text-[19px] font-bold ${stat.cls}`} dir="ltr">{stat.value}</p>
+                </div>
+              ))}
             </div>
-            <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>الرقم</th>
-                    <th>العميل</th>
-                    <th>النوع</th>
-                    <th>الحالة</th>
-                    <th>الإصدار</th>
-                    <th>الاستحقاق</th>
-                    <th className="num">الإجمالي</th>
-                    <th className="num">المدفوع</th>
-                    <th className="num">المتبقّي</th>
-                    <th />
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row) => (
-                    <tr key={row.id}>
-                      <td dir="ltr">{row.number ?? '—'}</td>
-                      <td>
-                        <strong>{row.tenantName}</strong>
-                        <div className="muted small" dir="ltr">
-                          {row.tenantCode}
-                        </div>
-                      </td>
-                      <td>{KIND_LABEL[row.kind]}</td>
-                      <td>
-                        <span className={`badge ${row.status}`}>{STATUS_LABEL[row.status]}</span>
+            <div className="overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-1">
+              <Table
+                rows={rows}
+                rowKey={(row) => row.id}
+                dense
+                columns={[
+                  { key: 'number', header: 'الرقم', ltr: true, cell: (row) => <span className="font-mono text-[12px]">{row.number ?? '—'}</span> },
+                  {
+                    key: 'tenant',
+                    header: 'العميل',
+                    cell: (row) => (
+                      <span className="block">
+                        <span className="block text-[13px] font-bold text-slate-800">{row.tenantName}</span>
+                        <span className="block font-mono text-[11px] text-slate-400" dir="ltr">{row.tenantCode}</span>
+                      </span>
+                    ),
+                  },
+                  { key: 'kind', header: 'النوع', cell: (row) => <span className="text-[12.5px] text-slate-500">{KIND_LABEL[row.kind]}</span> },
+                  {
+                    key: 'status',
+                    header: 'الحالة',
+                    cell: (row) => (
+                      <span className="block">
+                        <Badge tone={INVOICE_STATUS_TONE[row.status]} dot>{STATUS_LABEL[row.status]}</Badge>
                         {row.daysOverdue > 0 && row.status === 'issued' && (
-                          <div className="muted small">متأخّرة {row.daysOverdue} يوماً</div>
+                          <span className="mt-0.5 block text-[11px] font-semibold text-red-500">متأخّرة {row.daysOverdue} يوماً</span>
                         )}
-                      </td>
-                      <td dir="ltr">{dateText(row.issueDate)}</td>
-                      <td dir="ltr">{dateText(row.dueDate)}</td>
-                      <td className="num">{money(row.total, row.currency)}</td>
-                      <td className="num">{money(row.paidAmount, row.currency)}</td>
-                      <td className="num">{money(row.remaining, row.currency)}</td>
-                      <td>
-                        <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
-                          <button className="btn sm" type="button" onClick={() => void openDetail(row.id)}>
-                            تفاصيل
-                          </button>
-                          {row.status === 'draft' && (
-                            <button className="btn sm" type="button" onClick={() => setIssueTarget(row)}>
-                              إصدار
-                            </button>
-                          )}
-                          {row.status === 'issued' && row.kind === 'invoice' && (
-                            <button className="btn sm" type="button" onClick={() => setPayTarget(row)}>
-                              تحصيل
-                            </button>
-                          )}
-                          {(row.status === 'draft' || row.status === 'issued') && (
-                            <button className="btn sm danger" type="button" onClick={() => setVoidTarget(row)}>
-                              إلغاء
-                            </button>
-                          )}
-                          <Link className="btn sm" href={`/invoices/${row.id}/print`}>
-                            طباعة
-                          </Link>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </span>
+                    ),
+                  },
+                  { key: 'issue', header: 'الإصدار', ltr: true, cell: (row) => <span className="font-mono text-[11.5px] text-slate-500">{dateText(row.issueDate)}</span> },
+                  { key: 'due', header: 'الاستحقاق', ltr: true, cell: (row) => <span className="font-mono text-[11.5px] text-slate-500">{dateText(row.dueDate)}</span> },
+                  { key: 'total', header: 'الإجمالي', numeric: true, ltr: true, cell: (row) => <span className="font-mono text-[12px] font-bold">{money(row.total, row.currency)}</span> },
+                  { key: 'paid', header: 'المدفوع', numeric: true, ltr: true, cell: (row) => <span className="font-mono text-[12px] text-emerald-700">{money(row.paidAmount, row.currency)}</span> },
+                  { key: 'remaining', header: 'المتبقّي', numeric: true, ltr: true, cell: (row) => <span className={`font-mono text-[12px] ${Number(row.remaining) > 0 ? 'font-bold text-amber-700' : 'text-slate-400'}`}>{money(row.remaining, row.currency)}</span> },
+                  {
+                    key: 'actions',
+                    header: '',
+                    numeric: true,
+                    cell: (row) => (
+                      <span className="flex flex-wrap items-center justify-end gap-1.5">
+                        <Button variant="secondary" size="sm" onClick={() => void openDetail(row.id)}>تفاصيل</Button>
+                        {row.status === 'draft' && (
+                          <Button variant="secondary" size="sm" onClick={() => setIssueTarget(row)}>إصدار</Button>
+                        )}
+                        {row.status === 'issued' && row.kind === 'invoice' && (
+                          <Button variant="secondary" size="sm" onClick={() => setPayTarget(row)}>تحصيل</Button>
+                        )}
+                        {(row.status === 'draft' || row.status === 'issued') && (
+                          <Button variant="danger" size="sm" onClick={() => setVoidTarget(row)}>إلغاء</Button>
+                        )}
+                        <Link href={`/invoices/${row.id}/print`}>
+                          <Button variant="secondary" size="sm">طباعة</Button>
+                        </Link>
+                      </span>
+                    ),
+                  },
+                ]}
+              />
             </div>
           </>
         ))}

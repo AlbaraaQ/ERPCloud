@@ -36,9 +36,12 @@ import { einvoicingPoints, onboardingSteps, siteModules } from '../../lib/module
 import { trustAxes, trustLimitsAr } from '../../lib/trust';
 import { hrefFor, SITE_PATHS } from '../../lib/site';
 
+import { CountUp } from './count-up';
 import { ContentBlocks } from './blocks';
 import { HelpfulVote } from './helpful-vote';
 import { HeroExperiment } from './hero-experiment';
+import { Marquee } from './marquee';
+import { Reveal } from './reveal';
 import { Breadcrumbs, EmptyState, FaqList, ModuleCard, PostCard, SectionHeading, StepList } from './pieces';
 
 type ShellLike = { taglineAr: string; taglineEn: string; brandName: string };
@@ -59,6 +62,15 @@ export function HomeView({
   // الكود: تغييره من شاشة الإعدادات في اللوحة يكفي، بلا نشرة.
   const heroTitle = locale === 'en' ? shell.taglineEn : shell.taglineAr;
 
+  // أرقام شريط الإحصاء كلها حقيقية ومصدرها محتوى/بنى هذا الموقع: عدد الوحدات، عدد خطوات
+  // البدء، ودراسات الحالة والأسئلة المنشورة — لا رقمٌ مفترض (§3.1).
+  const stats = [
+    { value: siteModules.length, label: t(locale, 'home.stats.modules') },
+    { value: onboardingSteps.length, label: t(locale, 'home.stats.steps') },
+    { value: cases.length, label: t(locale, cases.length === 1 ? 'home.stats.cases.one' : 'home.stats.cases') },
+    { value: faq.length, label: t(locale, faq.length === 1 ? 'home.stats.faq.one' : 'home.stats.faq') },
+  ];
+
   return (
     <>
       {/* P-M10 — البطل صار مكوّناً عميلياً واحداً: يرسم الأساسية على الخادم (فهي ما يراه
@@ -67,44 +79,72 @@ export function HomeView({
       <HeroExperiment
         slug="home"
         title={heroTitle}
+        lead={t(locale, 'home.hero.lead')}
         badge={t(locale, 'home.hero.badge')}
         ctaLabel={t(locale, 'cta.start')}
         ctaHref="/onboarding"
         actions={[
-          { href: l(SITE_PATHS.features), label: t(locale, 'cta.explore'), className: 'btn' },
-          { href: l(SITE_PATHS.help), label: t(locale, 'nav.help'), className: 'btn ghost' },
+          { href: l(SITE_PATHS.features), label: t(locale, 'cta.explore'), className: 'btn ghost' },
         ]}
+        facts={[t(locale, 'home.hero.f1'), t(locale, 'home.hero.f2'), t(locale, 'home.hero.f3')]}
       />
 
+      {/* قطاعات الموقع — من `lib/industries` (محتوى ثابت في المستودع) لا شعارات عملاء مخترعة. */}
+      <Marquee items={industries} />
+
       <section className="section">
-        <SectionHeading
-          title={t(locale, 'home.modules.title')}
-          subtitle={t(locale, 'home.modules.subtitle')}
-          action={{ href: l(SITE_PATHS.features), label: t(locale, 'cta.explore') }}
-        />
+        <Reveal>
+          <SectionHeading
+            title={t(locale, 'home.modules.title')}
+            subtitle={t(locale, 'home.modules.subtitle')}
+            action={{ href: l(SITE_PATHS.features), label: t(locale, 'cta.explore') }}
+          />
+        </Reveal>
         <div className="grid cols">
-          {siteModules.map((module) => (
-            <ModuleCard key={module.key} module={module} locale={locale} />
+          {siteModules.map((module, index) => (
+            <Reveal key={module.key} delay={(index % 3) * 90}>
+              <ModuleCard module={module} locale={locale} />
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* شريط الأرقام — كل قيمةٍ محسوبةٌ من محتوى الموقع نفسه. */}
+      <section className="stats-band">
+        <div className="wrap stats-grid">
+          {stats.map((stat, index) => (
+            <Reveal key={stat.label} delay={index * 80} as="div" className="stat">
+              <b>
+                <CountUp value={stat.value} />
+              </b>
+              <span>{stat.label}</span>
+            </Reveal>
           ))}
         </div>
       </section>
 
       <section className="section">
-        <SectionHeading title={t(locale, 'home.steps.title')} />
+        <Reveal>
+          <SectionHeading title={t(locale, 'home.steps.title')} />
+        </Reveal>
         <StepList steps={onboardingSteps} locale={locale} />
       </section>
 
       <section className="section einvoicing-band">
-        <SectionHeading
-          title={t(locale, 'home.einvoicing.title')}
-          action={{ href: l(SITE_PATHS.einvoicing), label: t(locale, 'cta.readMore') }}
-        />
+        <Reveal>
+          <SectionHeading
+            title={t(locale, 'home.einvoicing.title')}
+            action={{ href: l(SITE_PATHS.einvoicing), label: t(locale, 'cta.readMore') }}
+          />
+        </Reveal>
         <div className="grid cols">
-          {einvoicingPoints.map((point) => (
-            <article className="card" key={point.titleAr}>
-              <h3>{locale === 'en' ? point.titleEn : point.titleAr}</h3>
-              <p className="muted">{locale === 'en' ? point.bodyEn : point.bodyAr}</p>
-            </article>
+          {einvoicingPoints.map((point, index) => (
+            <Reveal key={point.titleAr} delay={(index % 3) * 90}>
+              <article className="card">
+                <h3>{locale === 'en' ? point.titleEn : point.titleAr}</h3>
+                <p className="muted">{locale === 'en' ? point.bodyEn : point.bodyAr}</p>
+              </article>
+            </Reveal>
           ))}
         </div>
         <p>
@@ -116,13 +156,17 @@ export function HomeView({
 
       {cases.length > 0 ? (
         <section className="section">
-          <SectionHeading
-            title={t(locale, 'home.cases.title')}
-            action={{ href: l(SITE_PATHS.cases), label: t(locale, 'cta.readMore') }}
-          />
+          <Reveal>
+            <SectionHeading
+              title={t(locale, 'home.cases.title')}
+              action={{ href: l(SITE_PATHS.cases), label: t(locale, 'cta.readMore') }}
+            />
+          </Reveal>
           <div className="grid cols">
-            {cases.slice(0, 3).map((item) => (
-              <PostCard key={item.slug} post={item} locale={locale} basePath={l(SITE_PATHS.cases)} />
+            {cases.slice(0, 3).map((item, index) => (
+              <Reveal key={item.slug} delay={index * 90}>
+                <PostCard post={item} locale={locale} basePath={l(SITE_PATHS.cases)} />
+              </Reveal>
             ))}
           </div>
         </section>
@@ -130,22 +174,26 @@ export function HomeView({
 
       {faq.length > 0 ? (
         <section className="section">
-          <SectionHeading title={t(locale, 'home.faq.title')} />
+          <Reveal>
+            <SectionHeading title={t(locale, 'home.faq.title')} />
+          </Reveal>
           <FaqList items={faq} />
         </section>
       ) : null}
 
       <section className="section cta-final">
-        <h2>{t(locale, 'home.final.title')}</h2>
-        <p className="muted">{t(locale, 'home.final.body')}</p>
-        <div className="toolbar">
-          <Link className="btn primary" href="/onboarding">
-            {t(locale, 'cta.start')}
-          </Link>
-          <a className="btn" href="mailto:">
-            {t(locale, 'cta.talk')}
-          </a>
-        </div>
+        <Reveal>
+          <h2>{t(locale, 'home.final.title')}</h2>
+          <p className="muted">{t(locale, 'home.final.body')}</p>
+          <div className="toolbar" style={{ justifyContent: 'center' }}>
+            <Link className="btn primary" href="/onboarding">
+              {t(locale, 'cta.start')}
+            </Link>
+            <a className="btn" href="mailto:">
+              {t(locale, 'cta.talk')}
+            </a>
+          </div>
+        </Reveal>
       </section>
     </>
   );

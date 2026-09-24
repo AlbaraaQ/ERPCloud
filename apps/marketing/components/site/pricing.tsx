@@ -91,12 +91,16 @@ export function PricingView({
         ) : null}
       </div>
 
-      {/* ── بطاقات الباقات */}
+      {/* ── بطاقات الباقات: الباقة الثانية هي «المميزة» — الوسطى إن وجدت ثلاث، والرفيعة (pro)
+          مع باقتين — إطارٌ متدرّج وشارة. التمييز جماليّ لا رقمٌ: لا رقم مبيعات ولا تقييم. */}
       <section className="plan-grid" aria-label={t(locale, 'pricing.compare.title')}>
-        {plans.map((plan) => (
-          <article className="card plan-card" key={plan.id}>
-            <h3>{plan.name}</h3>
-            <p className="plan-price">{amountText(plan.amount, plan.currency, locale)}</p>
+        {plans.map((plan, index) => {
+          const featured = plans.length >= 2 && index === 1;
+          return (
+            <article className={featured ? 'card plan-card featured' : 'card plan-card'} key={plan.id}>
+              {featured ? <span className="plan-badge">{t(locale, 'pricing.featured')}</span> : null}
+              <h3>{plan.name}</h3>
+              <p className="plan-price">{amountText(plan.amount, plan.currency, locale)}</p>
             <p className="muted">
               {t(locale, plan.interval === 'year' ? 'pricing.perYear' : 'pricing.perMonth')}
             </p>
@@ -105,11 +109,12 @@ export function PricingView({
                 {t(locale, 'pricing.equivalent')} {amountText(plan.monthlyAmount, plan.currency, locale)}
               </p>
             ) : null}
-            <Link className="btn primary" href={`/onboarding?plan=${encodeURIComponent(plan.code)}`} data-goal="signup_start">
-              {t(locale, 'pricing.choose')}
-            </Link>
-          </article>
-        ))}
+              <Link className="btn primary" href={`/onboarding?plan=${encodeURIComponent(plan.code)}`} data-goal="signup_start">
+                {t(locale, 'pricing.choose')}
+              </Link>
+            </article>
+          );
+        })}
       </section>
 
       {/* ── جدول المقارنة: الباقة × الحقوق */}

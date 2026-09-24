@@ -2,6 +2,19 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import {
+  ArrowLeft,
+  Building2,
+  FileText,
+  Gauge,
+  History,
+  ListChecks,
+  RefreshCw,
+  ScrollText,
+  ShieldCheck,
+  UserRound,
+  CreditCard,
+} from 'lucide-react';
 import { useState } from 'react';
 import {
   usageMetricRegistry,
@@ -18,7 +31,10 @@ import {
 } from '@erp/contracts';
 
 import { Empty, ErrorBox, Loading, Screen } from '../../../components/screen';
-import { MeterBar, SourceTag, Tabs } from '../../../components/ui';
+import { Badge } from '../../../components/ui/badge';
+import { Button } from '../../../components/ui/button';
+import { Tabs as TabsBar } from '../../../components/ui/tabs';
+import { MeterBar, SourceTag } from '../../../components/ui';
 import { ApiError, apiData, apiDelete, apiPatch, apiPost, apiPut } from '../../../lib/api';
 import { useSession } from '../../../lib/session';
 import { useQuery } from '../../../lib/use-query';
@@ -44,16 +60,16 @@ import { useQuery } from '../../../lib/use-query';
  *     «لماذا هذا الحدّ؟» is the question the tab exists to answer.
  */
 
-/** The eight tabs, verbatim from the plan (`PLATFORM_CONSOLE_PLAN.md` §4/‏P-C2). */
+/** The eight tabs, verbatim from the plan (`PLATFORM_CONSOLE_PLAN.md` §4/‏P-C2) — now with icons. */
 const TABS = [
-  { id: 'overview', label: 'نظرة عامة' },
-  { id: 'subscription', label: 'الاشتراك' },
-  { id: 'users', label: 'المستخدمون' },
-  { id: 'usage', label: 'الاستخدام' },
-  { id: 'flags', label: 'الرايات' },
-  { id: 'health', label: 'الصحة' },
-  { id: 'audit', label: 'التدقيق' },
-  { id: 'notes', label: 'الملاحظات' },
+  { id: 'overview', label: 'نظرة عامة', icon: <Building2 size={15} /> },
+  { id: 'subscription', label: 'الاشتراك', icon: <CreditCard size={15} /> },
+  { id: 'users', label: 'المستخدمون', icon: <UserRound size={15} /> },
+  { id: 'usage', label: 'الاستخدام', icon: <Gauge size={15} /> },
+  { id: 'flags', label: 'الرايات', icon: <ListChecks size={15} /> },
+  { id: 'health', label: 'الصحة', icon: <ShieldCheck size={15} /> },
+  { id: 'audit', label: 'التدقيق', icon: <History size={15} /> },
+  { id: 'notes', label: 'الملاحظات', icon: <ScrollText size={15} /> },
 ] as const;
 
 type TabId = (typeof TABS)[number]['id'];
@@ -128,12 +144,12 @@ export default function TenantCardPage() {
       crumbs={['المنصة', 'العملاء', tenant?.name ?? tenantId]}
       actions={
         <>
-          <Link className="btn" href="/tenants">
-            رجوع إلى العملاء
+          <Link href="/tenants">
+            <Button variant="secondary" icon={<ArrowLeft size={14} />}>رجوع إلى العملاء</Button>
           </Link>
-          <button className="btn" type="button" onClick={card.reload}>
+          <Button variant="secondary" icon={<RefreshCw size={14} />} onClick={card.reload}>
             تحديث
-          </button>
+          </Button>
         </>
       }
     >
@@ -143,22 +159,42 @@ export default function TenantCardPage() {
 
       {card.status === 'success' && tenant && (
         <>
-          <div className="card tight">
-            <div className="row" style={{ alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-              <span className={`chip ${tenant.status}`}>{STATUS_LABEL[tenant.status] ?? tenant.status}</span>
-              <span className="muted">
-                أُنشئ في {when(tenant.createdAt)} · آخر نشاط {when(tenant.lastActivityAt)} · آخر دخول{' '}
-                {when(tenant.lastLoginAt)}
+          {/* identity strip */}
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-3 rounded-[10px] border border-slate-200 bg-white px-4 py-3 shadow-1">
+            <span className="grid size-11 flex-none place-items-center rounded-xl bg-slate-900 font-mono text-[14px] font-bold text-white" dir="ltr">
+              {tenant.code.slice(0, 2).toUpperCase()}
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-[16px] font-extrabold text-slate-900">{tenant.name}</span>
+              <span className="block font-mono text-[11.5px] text-slate-400" dir="ltr">
+                {tenant.code} · {tenant.baseCurrency ?? ''} {tenant.timezone ? `· ${tenant.timezone}` : ''}
               </span>
-              <span className="muted">
-                الباقة: {tenant.subscription ? `${tenant.subscription.planName ?? tenant.subscription.planCode ?? '—'}` : 'لا يوجد اشتراك'}
+            </span>
+            <span className="ms-auto flex flex-wrap items-center gap-2">
+              <Badge tone={tenant.status === 'active' ? 'green' : tenant.status === 'suspended' ? 'red' : 'neutral'} dot>
+                {STATUS_LABEL[tenant.status] ?? tenant.status}
+              </Badge>
+              <span className="text-[12px] font-semibold text-slate-400">
+                أُنشئ {when(tenant.createdAt)} · آخر نشاط {when(tenant.lastActivityAt)} · آخر دخول {when(tenant.lastLoginAt)}
               </span>
-            </div>
+            </span>
           </div>
 
-          <Tabs items={TABS.map((entry) => ({ id: entry.id, label: entry.label }))} value={tab} onChange={setTab} />
+          <TabsBar
+            items={TABS.map((entry) => ({ key: entry.id, label: <span className="inline-flex items-center gap-1.5">{entry.icon}{entry.label}</span> }))}
+            value={tab}
+            onChange={(key) => setTab(key as TabId)}
+          />
 
-          {notice && <p className={`alert ${notice.kind}`}>{notice.text}</p>}
+          {notice ? (
+            <div
+              className={`flex items-center gap-2 rounded-[10px] border px-4 py-2.5 text-[13px] font-semibold ${
+                notice.kind === 'ok' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-700'
+              }`}
+            >
+              {notice.text}
+            </div>
+          ) : null}
 
           {tab === 'overview' && (
             <OverviewTab

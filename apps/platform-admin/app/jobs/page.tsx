@@ -1,8 +1,22 @@
 'use client';
 
 import { useState } from 'react';
+import {
+  Activity,
+  Ban,
+  Inbox,
+  RefreshCw,
+  RotateCcw,
+  Server,
+  Wifi,
+} from 'lucide-react';
 
-import { Empty, ErrorBox, Forbidden, Loading, Screen } from '../../components/screen';
+import { Empty, ErrorBox, Forbidden, Screen } from '../../components/screen';
+import { Badge } from '../../components/ui/badge';
+import { Button } from '../../components/ui/button';
+import { Input, Select } from '../../components/ui/input';
+import { SkeletonRows } from '../../components/ui/skeleton';
+import { Table } from '../../components/ui/table';
 import { apiData } from '../../lib/api';
 import { useSession } from '../../lib/session';
 import { useQuery } from '../../lib/use-query';
@@ -45,38 +59,33 @@ const STATUS_LABEL: Record<string, string> = {
   dead: 'ميتة',
 };
 
-const STATUS_CLASS: Record<string, string> = {
-  pending: 'pending',
-  published: 'active',
-  dead: 'failed',
-};
-
 export default function JobsPage() {
   const { canConsole } = useSession();
+  const canManage = canConsole('console.jobs.manage');
   const [status, setStatus] = useState('');
   const [onlyTenant, setOnlyTenant] = useState('');
   const [reason, setReason] = useState('');
-  const [notice, setNotice] = useState<{ kind: 'ok' | 'danger'; text: string } | undefined>(undefined);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [notice, setNotice] = useState<{ kind: 'ok' | 'danger'; text: string }>();
+
+  const params = new URLSearchParams();
+  if (status) params.set('status', status);
+  if (onlyTenant) params.set('tenantId', onlyTenant);
+  params.set('limit', '100');
+  const query = params.toString();
 
   const jobs = useQuery<JobPage>(() => {
-    const params = new URLSearchParams({ limit: '100' });
-    if (status) params.set('filter[status]', status);
-    if (onlyTenant.trim()) params.set('filter[tenantId]', onlyTenant.trim());
-    return apiData<JobPage>(`/platform/jobs?${params.toString()}`);
-  }, [status, onlyTenant]);
+    return apiData<JobPage>(`/platform/jobs?${query}`);
+  }, [status, onlyTenant, query]);
 
   const heartbeat = useQuery<Heartbeat>(() => apiData<Heartbeat>('/platform/jobs/heartbeat'), []);
 
   const rows = jobs.data?.data ?? [];
-  const canManage = canConsole('console.jobs.manage');
   const reasonReady = reason.trim().length >= 5;
 
   async function act(row: JobRow, action: 'retry' | 'cancel') {
     const verb = action === 'retry' ? 'إعادة' : 'إلغاء';
-    if (
-      !window.confirm(`${verb} المهمّة «${row.type}» للعميل ${row.tenantCode ?? row.tenantId.slice(0, 8)}؟`)
-    ) {
+    if (!window.confirm(`${verb} المهمّة «${row.type}» للعميل ${row.tenantCode ?? row.tenantId.slice(0, 8)}؟`)) {
       return;
     }
     setBusyId(row.id);
@@ -102,6 +111,10 @@ export default function JobsPage() {
     }
   }
 
+  const running = heartbeat.data?.running ?? false;
+  const enabled = heartbeat.data?.enabled ?? false;
+  const oldest = heartbeat.data?.oldestPendingAgeSeconds ?? null;
+
   return (
     <Screen
       title="المهام والطوابير"
@@ -109,173 +122,212 @@ export default function JobsPage() {
       crumbs={['المنصة', 'التشغيل']}
       actions={
         <>
-          <button className="btn" type="button" onClick={jobs.reload}>
-            تحديث
-          </button>
-          <button className="btn" type="button" onClick={heartbeat.reload}>
-            نبض العامل
-          </button>
+          <Button variant="secondary" icon={<RefreshCw size={14} />} onClick={jobs.reload}>تحديث</Button>
+          <Button variant="secondary" icon={<Activity size={14} />} onClick={heartbeat.reload}>نبض العامل</Button>
         </>
       }
     >
-      {heartbeat.status === 'success' && (
-        <div className="card tight no-print">
-          <div className="row" style={{ alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-            <span className={`badge ${heartbeat.data?.running ? 'active' : 'pending'}`}>
-              {heartbeat.data?.running ? 'عاملٌ يعمل' : 'لا عامل يعمل (WORKER=0)'}
+      {/* runner heartbeat */}
+      {heartbeat.status === 'success' ? (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[10px] border border-slate-200 bg-white px-4 py-3 shadow-1 no-print">
+          <span className="flex items-center gap-2 text-[13px] font-bold">
+            <span className="relative flex size-2.5">
+              {running && <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-60" />}
+              <span className={`relative inline-flex size-2.5 rounded-full ${running ? 'bg-emerald-500' : 'bg-slate-300'}`} />
             </span>
-            <span className={`badge ${heartbeat.data?.enabled ? 'active' : 'pending'}`}>
-              {heartbeat.data?.enabled ? 'الطابور موصول (Redis)' : 'الطابور في القاعدة فقط'}
+            <span className={running ? 'text-emerald-700' : 'text-slate-500'}>
+              {running ? 'عاملٌ يعمل' : 'لا عامل يعمل (WORKER=0)'}
             </span>
-            <span className="muted small">
-              {heartbeat.data?.oldestPendingAgeSeconds === null
-                ? 'لا صفوف معلَّقة الآن.'
-                : `أقدم صفٍّ معلَّق قبل ${formatAge(heartbeat.data?.oldestPendingAgeSeconds ?? 0)}.`}
-            </span>
-          </div>
-          <p className="muted small" style={{ margin: '6px 0 0' }}>
+          </span>
+          <Badge tone={enabled ? 'green' : 'amber'} dot>
+            <Wifi size={11} /> {enabled ? 'الطابور موصول (Redis)' : 'الطابور في القاعدة فقط'}
+          </Badge>
+          <span className="font-mono text-[12px] text-slate-500" dir="ltr">
+            {oldest === null ? 'لا صفوف معلَّقة الآن.' : `أقدم صفٍّ معلَّق قبل ${formatAge(oldest)}.`}
+          </span>
+          <span className="ms-auto text-[11.5px] text-slate-400 max-w-[380px] leading-relaxed">
             «لا عامل يعمل» ليس عطلاً بذاته: الصفوف تبقى معلَّقة في القاعدة بلا خسارة — لكنها لا تُنفَّذ.
             الاثنان معاً (لا عامل + تراكم) هما الحادثة.
-          </p>
+          </span>
         </div>
-      )}
+      ) : null}
 
-      <div className="card tight no-print">
-        <div className="row" style={{ flexWrap: 'wrap' }}>
-          <label className="field" style={{ minWidth: 200 }}>
-            <span>الحالة</span>
-            <select className="input" value={status} onChange={(event) => setStatus(event.target.value)}>
+      {/* filter bar */}
+      <div className="mt-3 rounded-[10px] border border-slate-200 bg-white p-3 shadow-1 no-print">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <div style={{ minWidth: 160 }}>
+            <Select label="الحالة" value={status} onChange={(e) => setStatus(e.target.value)}>
               <option value="">الكل</option>
               <option value="pending">بانتظار النشر</option>
               <option value="published">نُشرت</option>
               <option value="dead">ميتة</option>
-            </select>
-          </label>
-          <label className="field" style={{ minWidth: 280 }}>
-            <span>معرّف العميل (اختياري)</span>
-            <input
-              className="input"
-              dir="ltr"
-              value={onlyTenant}
-              onChange={(event) => setOnlyTenant(event.target.value)}
-              placeholder="uuid"
-            />
-          </label>
-          <label className="field" style={{ minWidth: 320, flex: 1 }}>
-            <span>سبب الفعل (يُسجَّل في التدقيق — 5 محارف على الأقل)</span>
-            <input
-              className="input"
-              value={reason}
-              onChange={(event) => setReason(event.target.value)}
-              placeholder="مثال: مزوّد البريد عاد للعمل بعد انقطاع"
-            />
-          </label>
+            </Select>
+          </div>
+          <Input label="معرّف العميل (اختياري)" dir="ltr" placeholder="uuid" value={onlyTenant} onChange={(e) => setOnlyTenant(e.target.value)} />
+          <Input
+            label={canManage ? 'سبب الفعل (يُسجَّل في التدقيق — 5 محارف على الأقل)' : 'ملاحظاتك'}
+            placeholder="مثال: مزوّد البريد عاد للعمل بعد انقطاع"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            error={canManage && reason.length > 0 && !reasonReady ? '5 محارف على الأقل' : undefined}
+          />
         </div>
-        {canManage ? (
-          <p className="muted small" style={{ margin: '6px 0 0' }}>
-            الإجراءان يظهران على الصفوف المعلَّقة والميتة فقط. المهمّة التي نُفِّذت لا تُعاد: تنفيذُ ما نُفِّذ
-            مرّتين قرارُ ناشره لا قرار لوحة المنصة.
-          </p>
-        ) : (
-          <p className="muted small" style={{ margin: '6px 0 0' }}>
-            صلاحيتك تسمح بالقراءة فقط (`console.jobs.view`): لا إعادة ولا إلغاء من هنا، ولا يظهران.
-          </p>
-        )}
+        <p className="m-0 mt-2 text-[11.5px] text-slate-400">
+          {canManage
+            ? 'الإجراءان يظهران على الصفوف المعلَّقة والميتة فقط. المهمّة التي نُفِّذت لا تُعاد: تنفيذُ ما نُفِّذ مرّتين قرارُ ناشره لا قرار لوحة المنصة.'
+            : 'صلاحيتك تسمح بالقراءة فقط (console.jobs.view): لا إعادة ولا إلغاء من هنا، ولا يظهران.'}
+        </p>
       </div>
 
-      {notice && <div className={`alert ${notice.kind === 'ok' ? '' : 'danger'}`}>{notice.text}</div>}
+      {notice ? (
+        <div
+          className={`mt-3 flex items-center gap-2 rounded-[10px] border px-4 py-2.5 text-[13px] font-semibold ${
+            notice.kind === 'ok' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-700'
+          }`}
+        >
+          {notice.text}
+        </div>
+      ) : null}
 
-      {jobs.status === 'loading' && <Loading />}
-      {jobs.status === 'forbidden' && <Forbidden />}
-      {jobs.status === 'error' && <ErrorBox message={jobs.error} onRetry={jobs.reload} />}
-      {jobs.status === 'success' &&
-        (rows.length === 0 ? (
-          <Empty
-            title="لا توجد مهام بهذا المرشّح"
-            detail="هذا هو الوضع الطبيعي عندما يعمل العامل ولا توجد مهام فاشلة."
-          />
-        ) : (
-          <>
-            <p className="muted small">
-              {rows.length} من {jobs.data?.meta.total ?? rows.length} مهمّة
-            </p>
-            <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>الاستحقاق</th>
-                    <th>العميل</th>
-                    <th>الطابور</th>
-                    <th>النوع</th>
-                    <th>الحالة</th>
-                    <th className="num">المحاولات</th>
-                    <th>مفاتيح الحمولة</th>
-                    <th>آخر خطأ</th>
-                    {canManage && <th className="no-print">إجراء</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row) => (
-                    <tr key={row.id}>
-                      <td dir="ltr">{new Date(row.runAt).toLocaleString('ar-SA')}</td>
-                      <td dir="ltr">{row.tenantCode ?? row.tenantId.slice(0, 8)}</td>
-                      <td dir="ltr">{row.queue}</td>
-                      <td dir="ltr">{row.type}</td>
-                      <td>
-                        <span className={`badge ${STATUS_CLASS[row.status] ?? 'pending'}`}>
-                          {STATUS_LABEL[row.status] ?? row.status}
+      {jobs.status === 'loading' ? (
+        <div className="mt-3 rounded-[10px] border border-slate-200 bg-white p-4 shadow-1">
+          <SkeletonRows rows={6} />
+        </div>
+      ) : jobs.status === 'forbidden' ? (
+        <Forbidden />
+      ) : jobs.status === 'error' ? (
+        <ErrorBox message={jobs.error} onRetry={jobs.reload} />
+      ) : rows.length === 0 ? (
+        <div className="mt-3 rounded-[10px] border border-slate-200 bg-white p-8 shadow-1">
+          <Empty title="لا توجد مهام بهذا المرشّح" detail="هذا هو الوضع الطبيعي عندما يعمل العامل ولا توجد مهام فاشلة." />
+        </div>
+      ) : (
+        <>
+          <p className="mt-3 mb-2 text-[12px] font-semibold text-slate-400">
+            {rows.length} من {jobs.data?.meta.total ?? rows.length} مهمّة
+          </p>
+          <div className="overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-1">
+            <Table
+              rows={rows}
+              rowKey={(row) => row.id}
+              dense
+              columns={[
+                {
+                  key: 'runAt',
+                  header: 'الاستحقاق',
+                  ltr: true,
+                  cell: (row) => <span className="font-mono text-[11.5px] text-slate-500">{new Date(row.runAt).toLocaleString('en-GB', { timeZone: 'UTC' })} UTC</span>,
+                },
+                {
+                  key: 'tenant',
+                  header: 'العميل',
+                  cell: (row) => <span className="font-mono text-[12px] font-semibold text-slate-700" dir="ltr">{row.tenantCode ?? row.tenantId.slice(0, 8)}</span>,
+                },
+                { key: 'queue', header: 'الطابور', cell: (row) => <span className="font-mono text-[11.5px] text-slate-500" dir="ltr">{row.queue}</span> },
+                { key: 'type', header: 'النوع', cell: (row) => <span className="font-mono text-[11.5px] text-slate-600" dir="ltr">{row.type}</span> },
+                {
+                  key: 'status',
+                  header: 'الحالة',
+                  cell: (row) =>
+                    row.status === 'pending' ? (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-[3px] text-[11.5px] font-bold text-amber-700 ring-1 ring-amber-200">
+                        <span className="relative flex size-1.5">
+                          <span className="absolute inline-flex size-full animate-ping rounded-full bg-amber-400 opacity-70" />
+                          <span className="relative inline-flex size-1.5 rounded-full bg-amber-500" />
                         </span>
-                      </td>
-                      <td className="num">{row.attempts}</td>
-                      <td dir="ltr" className="small">
-                        {row.payloadKeys.length === 0 ? '—' : row.payloadKeys.join(' · ')}
-                      </td>
-                      <td dir="ltr" className="small">
-                        {row.lastError ? row.lastError.slice(0, 80) : '—'}
-                      </td>
-                      {canManage && (
-                        <td className="no-print">
-                          <div className="row" style={{ gap: 6 }}>
-                            <button
-                              className="btn small"
-                              type="button"
-                              disabled={!reasonReady || busyId === row.id || row.status === 'published'}
+                        <Server size={11} /> {STATUS_LABEL[row.status]}
+                      </span>
+                    ) : row.status === 'dead' ? (
+                      <Badge tone="red" dot>{STATUS_LABEL[row.status]}</Badge>
+                    ) : (
+                      <Badge tone="green" dot>{STATUS_LABEL[row.status]}</Badge>
+                    ),
+                },
+                {
+                  key: 'attempts',
+                  header: 'المحاولات',
+                  numeric: true,
+                  ltr: true,
+                  cell: (row) => <span className={`font-mono text-[12px] font-bold ${row.attempts > 3 ? 'text-red-600' : 'text-slate-600'}`}>{row.attempts}</span>,
+                },
+                {
+                  key: 'payload',
+                  header: 'مفاتيح الحمولة',
+                  cell: (row) =>
+                    row.payloadKeys.length === 0 ? (
+                      <span className="text-slate-300">—</span>
+                    ) : (
+                      <span className="flex flex-wrap gap-1" dir="ltr">
+                        {row.payloadKeys.map((key) => (
+                          <span key={key} className="rounded-md border border-slate-200 bg-slate-50 px-1.5 py-0.5 font-mono text-[10.5px] text-slate-500">
+                            {key}
+                          </span>
+                        ))}
+                      </span>
+                    ),
+                },
+                {
+                  key: 'error',
+                  header: 'آخر خطأ',
+                  cell: (row) =>
+                    row.lastError ? (
+                      <span className="block max-w-[260px] truncate font-mono text-[11px] text-red-600" dir="ltr" title={row.lastError}>
+                        {row.lastError}
+                      </span>
+                    ) : (
+                      <span className="text-slate-300">—</span>
+                    ),
+                },
+                ...(canManage
+                  ? [
+                      {
+                        key: 'actions',
+                        header: 'إجراء',
+                        numeric: true as const,
+                        cell: (row: JobRow) => (
+                          <span className="flex items-center justify-end gap-1.5">
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              icon={<RotateCcw size={12} />}
+                              loading={busyId === row.id}
+                              disabled={!reasonReady || row.status === 'published'}
                               title={reasonReady ? 'إعادة إلى الطابور' : 'اكتب السبب أولاً'}
                               onClick={() => void act(row, 'retry')}
                             >
                               إعادة
-                            </button>
-                            <button
-                              className="btn small danger"
-                              type="button"
-                              disabled={!reasonReady || busyId === row.id || row.status === 'published'}
+                            </Button>
+                            <Button
+                              variant="danger"
+                              size="sm"
+                              icon={<Ban size={12} />}
+                              disabled={!reasonReady || row.status === 'published'}
                               title={reasonReady ? 'إلغاء المهمّة' : 'اكتب السبب أولاً'}
                               onClick={() => void act(row, 'cancel')}
                             >
                               إلغاء
-                            </button>
-                          </div>
-                        </td>
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        ))}
+                            </Button>
+                          </span>
+                        ),
+                      },
+                    ]
+                  : []),
+              ]}
+            />
+          </div>
+        </>
+      )}
     </Screen>
   );
 }
 
 function formatAge(seconds: number): string {
-  if (seconds < 60) return `${seconds} ثانية`;
-  if (seconds < 3600) return `${Math.floor(seconds / 60)} دقيقة`;
-  if (seconds < 86_400) return `${Math.floor(seconds / 3600)} ساعة`;
-  return `${Math.floor(seconds / 86_400)} يوم`;
+  if (seconds < 60) return `${seconds} ث`;
+  if (seconds < 3600) return `${Math.floor(seconds / 60)} د`;
+  return `${Math.floor(seconds / 3600)} س`;
 }
 
 function apiMessage(error: unknown): string {
-  if (error instanceof Error && error.message.length > 0) return error.message;
-  return 'تعذّر تنفيذ الفعل.';
+  if (error instanceof Error) return error.message;
+  return String(error);
 }

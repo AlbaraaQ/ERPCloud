@@ -1,152 +1,359 @@
 'use client';
 
 import Link from 'next/link';
+import {
+  CalendarDays,
+  FilePlus2,
+  PackageSearch,
+  ReceiptText,
+  ShoppingCart,
+  TrendingDown,
+  TrendingUp,
+  Wallet,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
 
-import { Screen } from '../components/screen';
-import { apiData } from '../lib/api';
-import { modules, screenCounts, visibleModules } from '../lib/navigation';
+import { AreaCardChart, DonutCardChart } from '../components/ui/chart';
+import { CountUp, Reveal } from '../components/ui/count-up';
+import { EmptyState } from '../components/ui/empty-state';
+import { KpiCard } from '../components/ui/kpi-card';
+import { SkeletonCard } from '../components/ui/skeleton';
+import { Badge } from '../components/ui/badge';
 import { useSession } from '../lib/session';
-import { useQuery } from '../lib/use-query';
+import { money, shortDate } from '../lib/lookups';
+import { computeStats, fetchDashboardData, partyName, type DashboardData } from '../lib/dashboard';
 
-type Subscription = {
-  status: string;
-  plan_name?: string;
-  plan_code?: string;
-  amount?: string;
-  currency?: string;
-  current_period_end?: string | null;
-} | null;
-
-/** The platform console is a separate deployment; link out instead of routing in-app. */
-function platformConsoleUrl(): string {
-  const base = (process.env.NEXT_PUBLIC_PLATFORM_URL ?? '').replace(/\/+$/, '');
-  return `${base}/`;
+function useDashboardData() {
+  const [state, setState] = useState<{ status: 'loading' | 'success' | 'error'; data?: DashboardData; error?: string }>({
+    status: 'loading',
+  });
+  const [nonce, setNonce] = useState(0);
+  useEffect(() => {
+    let cancelled = false;
+    setState({ status: 'loading' });
+    fetchDashboardData()
+      .then((data) => !cancelled && setState({ status: 'success', data }))
+      .catch((error) =>
+        !cancelled &&
+        setState({ status: 'error', error: error instanceof Error ? error.message : String(error) }),
+      );
+    return () => {
+      cancelled = true;
+    };
+  }, [nonce]);
+  return { ...state, reload: () => setNonce((n) => n + 1) };
 }
 
+/** Hijri + Gregorian date line for the greeting. */
+function dateLine(now = new Date()): { greg: string; hijri: string } {
+  const greg = new Intl.DateTimeFormat('ar-SA-u-ca-gregory', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(now);
+  let hijri = '';
+  try {
+    hijri = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }).format(now);
+  } catch {
+    hijri = '';
+  }
+  return { greg, hijri };
+}
+
+const SAR = (value: number) => money(value);
+
 export default function DashboardPage() {
-  const { me, isPlatformAdmin, can } = useSession();
-  const counts = screenCounts();
+  const { me, can } = useSession();
+  const data = useDashboardData();
 
-  const subscription = useQuery<Subscription>(() => apiData<Subscription>('/billing/subscription'), []);
-  const trial = useQuery<{ lines?: unknown[] } | unknown[]>(
-    () => (can('accounting.reports.view') ? apiData('/statements/trial-balance') : Promise.resolve([])),
-    [can('accounting.reports.view')],
-  );
+  const stats = data.status === 'success' && data.data ? computeStats(data.data) : null;
+  const firstName = (me?.user.fullName ?? 'زميلي').split(' ')[0];
+  const hour = new Date().getUTCHours();
+  const greetingWord = hour < 12 ? 'صباح الخير' : 'مساء الخير';
+  const dates = dateLine();
 
-  const tree = visibleModules(me?.permissions ?? [], isPlatformAdmin);
-  const trialRows = Array.isArray(trial.data) ? trial.data.length : ((trial.data as { lines?: unknown[] })?.lines?.length ?? 0);
+  const todayDelta =
+    stats && stats.yesterdaySales > 0 ? ((stats.todaySales - stats.yesterdaySales) / stats.yesterdaySales) * 100 : null;
+  const monthDelta =
+    stats && stats.lastMonthSales > 0 ? ((stats.monthSales - stats.lastMonthSales) / stats.lastMonthSales) * 100 : null;
+
+  if (data.status === 'error') {
+    return (
+      <EmptyState
+        tone="red"
+        icon={<TrendingDown size={30} strokeWidth={1.5} />}
+        title="تعذر تحميل بيانات لوحة المتابعة"
+        description={data.error}
+      />
+    );
+  }
 
   return (
-    <Screen
-      title={`أهلاً ${me?.user.fullName ?? ''}`}
-      subtitle="نقطة البداية لكل وحدات النظام. الشاشات الجاهزة مميّزة بنقطة خضراء في القائمة الجانبية."
-      actions={
-        isPlatformAdmin ? (
-          <a className="btn primary" href={platformConsoleUrl()}>
-            لوحة تحكم المنصة
-          </a>
-        ) : null
-      }
-    >
-      <div className="grid cols">
-        <article className="card">
-          <p className="muted">حالة الاشتراك</p>
-          <div className="kpi" style={{ fontSize: 20 }}>
-            {subscription.status === 'loading'
-              ? '…'
-              : subscription.data
-                ? subscription.data.status === 'active'
-                  ? 'مفعّل'
-                  : subscription.data.status
-                : 'بدون اشتراك'}
+    <div className="grid gap-5">
+      {/* ---------------------------------------------------- greeting */}
+      <Reveal>
+        <section className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-1">
+          {/* dotted grid + gradient wash */}
+          <div
+            aria-hidden
+            className="absolute inset-0 pointer-events-none opacity-70"
+            style={{
+              backgroundImage:
+                'radial-gradient(110rem 34rem at 115% -20%, rgb(37 99 235 / 0.10), transparent 55%), radial-gradient(circle, #e2e8f0 1px, transparent 1px)',
+              backgroundSize: 'auto, 18px 18px',
+            }}
+          />
+          <div className="relative flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h1 className="m-0 text-[26px] font-bold text-slate-900 tracking-tight">
+                {greetingWord}، {firstName} <span aria-hidden>👋</span>
+              </h1>
+              <p className="m-0 mt-1 text-[13px] text-slate-500 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span className="inline-flex items-center gap-1.5">
+                  <CalendarDays size={14} className="text-brand-600" />
+                  {dates.greg}
+                </span>
+                {dates.hijri ? <span dir="rtl" className="text-slate-400">· {dates.hijri} هـ</span> : null}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {can('sales.invoice.create') ? (
+                <Link
+                  href="/sales/invoices/new"
+                  className="inline-flex items-center gap-2 h-10 px-4 rounded-[10px] bg-brand-600 border border-brand-600 text-white text-[13.5px] font-semibold shadow-2 hover:bg-brand-700 transition-all duration-150"
+                >
+                  <FilePlus2 size={16} />
+                  فاتورة جديدة
+                </Link>
+              ) : null}
+              {can('sales.invoices.view') ? (
+                <Link
+                  href="/sales/invoices"
+                  className="inline-flex items-center gap-2 h-10 px-4 rounded-[10px] bg-white border border-slate-300 text-slate-700 text-[13.5px] font-semibold shadow-1 hover:bg-slate-50 transition-all duration-150"
+                >
+                  <ReceiptText size={16} />
+                  كل الفواتير
+                </Link>
+              ) : null}
+              <Link
+                href="/reports/sales"
+                className="inline-flex items-center gap-2 h-10 px-4 rounded-[10px] bg-white border border-slate-300 text-slate-700 text-[13.5px] font-semibold shadow-1 hover:bg-slate-50 transition-all duration-150"
+              >
+                <TrendingUp size={16} />
+                تقارير المبيعات
+              </Link>
+            </div>
           </div>
-          <small className="muted">{subscription.data?.plan_name ?? 'لم يتم اختيار باقة بعد'}</small>
-        </article>
-        <article className="card">
-          <p className="muted">حسابات في ميزان المراجعة</p>
-          <div className="kpi">{trial.status === 'loading' ? '…' : trialRows}</div>
-          <small className="muted">/statements/trial-balance</small>
-        </article>
-        <article className="card">
-          <p className="muted">شاشات جاهزة</p>
-          <div className="kpi">
-            {counts.ready}
-            <span className="muted" style={{ fontSize: 14 }}>
-              {' '}
-              / {counts.total}
-            </span>
-          </div>
-          <small className="muted">
-            {counts.api} شاشة واجهتها البرمجية جاهزة · {counts.planned} قيد التطوير
-          </small>
-        </article>
-        <article className="card">
-          <p className="muted">صلاحياتك</p>
-          <div className="kpi">{me?.permissions.includes('*') ? 'كاملة' : (me?.permissions.length ?? 0)}</div>
-          <small className="muted">{me?.membership.isOwner ? 'مالك المنشأة' : 'مستخدم'}</small>
-        </article>
+        </section>
+      </Reveal>
+
+      {/* -------------------------------------------------------- KPIs */}
+      {data.status === 'loading' ? (
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
+      ) : stats ? (
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
+          <KpiCard
+            title="مبيعات اليوم"
+            value={<CountUp value={stats.todaySales} format={SAR} />}
+            icon={<Wallet size={21} />}
+            tone="blue"
+            delta={todayDelta}
+            deltaLabel="مقارنةً بالأمس"
+            spark={stats.weekSpark}
+            delay={0}
+          />
+          <KpiCard
+            title={`مبيعات ${new Intl.DateTimeFormat('ar', { month: 'long' }).format(new Date())}`}
+            value={<CountUp value={stats.monthSales} format={SAR} />}
+            icon={<ShoppingCart size={21} />}
+            tone="green"
+            delta={monthDelta}
+            deltaLabel="عن الشهر السابق"
+            spark={[stats.lastMonthSales, stats.monthSales]}
+            delay={0.1}
+          />
+          <KpiCard
+            title="ذمم مدينة (فواتير غير مسددة)"
+            value={<CountUp value={stats.receivable} format={SAR} />}
+            icon={<TrendingUp size={21} />}
+            tone="amber"
+            hint={`${stats.overdueInvoices} فاتورة لدى ${stats.overdueCustomers} عميل`}
+            delay={0.2}
+          />
+          <KpiCard
+            title="أصناف تحت الحد الأدنى"
+            value={<CountUp value={stats.lowStockCount} />}
+            icon={<PackageSearch size={21} />}
+            tone={stats.lowStockCount > 0 ? 'red' : 'slate'}
+            hint={`${stats.nearExpiryCount} صنف قريب من الانتهاء`}
+            delay={0.3}
+          />
+        </div>
+      ) : null}
+
+      {/* ------------------------------------------------------ charts */}
+      <div className="grid gap-4 grid-cols-1 xl:grid-cols-5">
+        <Reveal delay={0.15} className="xl:col-span-3">
+          <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-1 h-full">
+            <header className="flex items-start justify-between gap-3 mb-2">
+              <div>
+                <h3 className="m-0 text-[15px] font-bold text-slate-900">مبيعات آخر 7 أيام</h3>
+                <p className="m-0 mt-0.5 text-xs text-slate-500">إجمالي الفواتير المرحّلة (بالريال السعودي)</p>
+              </div>
+              <Badge tone="blue" dot>
+                {stats ? `${stats.week.reduce((sum, day) => sum + day.count, 0)} فاتورة` : '…'}
+              </Badge>
+            </header>
+            {data.status === 'loading' ? (
+              <SkeletonCard lines={5} />
+            ) : stats ? (
+              <AreaCardChart data={stats.week} xKey="label" dataKey="total" formatter={SAR} name="المبيعات" height={264} />
+            ) : null}
+          </section>
+        </Reveal>
+
+        <Reveal delay={0.25} className="xl:col-span-2">
+          <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-1 h-full">
+            <header className="flex items-start justify-between gap-3 mb-2">
+              <div>
+                <h3 className="m-0 text-[15px] font-bold text-slate-900">المبيعات حسب الفرع</h3>
+                <p className="m-0 mt-0.5 text-xs text-slate-500">توزيع الإيراد على الفروع</p>
+              </div>
+            </header>
+            {data.status === 'loading' ? (
+              <SkeletonCard lines={5} />
+            ) : stats && stats.branchTotals.length > 0 ? (
+              <DonutCardChart
+                data={stats.branchTotals.map((entry) => ({ name: entry.label, value: entry.total }))}
+                formatter={SAR}
+                centerValue={money(stats.branchTotals.reduce((sum, entry) => sum + entry.total, 0))}
+                centerLabel="الإجمالي"
+                height={210}
+              />
+            ) : (
+              <EmptyState
+                tone="slate"
+                icon={<ReceiptText size={28} strokeWidth={1.5} />}
+                title="لا توجد مبيعات مرحّلة بعد"
+                description="عندما تُرحَّل أول فاتورة سيظهر توزيعها على الفروع هنا."
+              />
+            )}
+          </section>
+        </Reveal>
       </div>
 
-      <section className="card">
-        <h2>وحدات النظام</h2>
-        <div className="grid cols-2">
-          {tree.map((module) => {
-            const screenCount = module.groups.reduce((sum, group) => sum + group.items.length, 0);
-            const readyCount = module.groups.reduce(
-              (sum, group) => sum + group.items.filter((item) => item.status === 'ready').length,
-              0,
-            );
-            return (
-              <Link className="card tight" key={module.key} href={module.href} style={{ display: 'block' }}>
-                <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                  <strong>
-                    {module.icon} {module.labelAr}
-                  </strong>
-                  <span className="badge">{readyCount}/{screenCount}</span>
-                </div>
-                <p className="muted small" style={{ margin: '6px 0 0' }}>
-                  {module.groups.map((group) => group.labelAr).join(' · ')}
-                </p>
+      {/* ------------------------------------------------ mini tables */}
+      <div className="grid gap-4 grid-cols-1 xl:grid-cols-2">
+        <Reveal delay={0.3}>
+          <section className="rounded-xl border border-slate-200 bg-white shadow-1">
+            <header className="flex items-center justify-between gap-3 px-4 pt-4 pb-2">
+              <h3 className="m-0 text-[15px] font-bold text-slate-900">أحدث الفواتير</h3>
+              <Link href="/sales/invoices" className="text-[12.5px] font-bold text-brand-600 hover:text-brand-700">
+                عرض الكل ←
               </Link>
-            );
-          })}
-        </div>
-      </section>
+            </header>
+            {data.status === 'loading' ? (
+              <div className="p-4">
+                <SkeletonCard lines={4} />
+              </div>
+            ) : stats && stats.lastInvoices.length > 0 ? (
+              <ul className="m-0 list-none p-0 divide-y divide-slate-100">
+                {stats.lastInvoices.map((invoice) => (
+                  <li key={invoice.id}>
+                    <Link
+                      href={`/sales/invoices/${invoice.id}`}
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 transition-colors duration-150"
+                    >
+                      <span className="grid place-items-center size-9 rounded-lg bg-blue-50 text-brand-600 flex-none">
+                        <ReceiptText size={16} />
+                      </span>
+                      <span className="flex-1 min-w-0">
+                        <span className="block text-[13px] font-bold text-slate-800 truncate" dir="ltr">
+                          {invoice.number ?? 'مسودة'}
+                        </span>
+                        <span className="block text-[11.5px] text-slate-400 truncate">
+                          {data.data ? partyName(invoice, data.data.parties) : '—'} · {shortDate(invoice.postedAt ?? invoice.createdAt)}
+                        </span>
+                      </span>
+                      <span className="text-[13px] font-bold text-slate-800" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                        {money(invoice.total)}
+                      </span>
+                      <Badge tone={invoice.paymentStatus === 'paid' ? 'green' : 'amber'} status={invoice.paymentStatus}>
+                        {invoice.paymentStatus === 'paid' ? 'مسدّدة' : 'غير مسدّدة'}
+                      </Badge>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="p-4">
+                <EmptyState
+                  tone="slate"
+                  icon={<ReceiptText size={28} strokeWidth={1.5} />}
+                  title="لا توجد فواتير بعد"
+                  description="ابدأ بإصدار أول فاتورة مبيعات."
+                />
+              </div>
+            )}
+          </section>
+        </Reveal>
 
-      <section className="card">
-        <h2>خارطة التنفيذ</h2>
-        <p className="muted small">
-          إجمالي الشاشات المخطط لها في الشجرة: {counts.total}. هذه القائمة تعكس الحالة الحقيقية لكل شاشة —
-          لا توجد شاشات تعرض بيانات وهمية.
-        </p>
-        <div className="table-wrap" style={{ maxHeight: 320 }}>
-          <table>
-            <thead>
-              <tr>
-                <th>الوحدة</th>
-                <th>جاهزة</th>
-                <th>API جاهز</th>
-                <th>قيد التطوير</th>
-              </tr>
-            </thead>
-            <tbody>
-              {modules.map((module) => {
-                const items = module.groups.flatMap((group) => group.items);
-                return (
-                  <tr key={module.key}>
-                    <td>
-                      {module.icon} {module.labelAr}
-                    </td>
-                    <td className="num">{items.filter((item) => item.status === 'ready').length}</td>
-                    <td className="num">{items.filter((item) => item.status === 'api').length}</td>
-                    <td className="num">{items.filter((item) => item.status === 'planned').length}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </Screen>
+        <Reveal delay={0.4}>
+          <section className="rounded-xl border border-slate-200 bg-white shadow-1">
+            <header className="flex items-center justify-between gap-3 px-4 pt-4 pb-2">
+              <h3 className="m-0 text-[15px] font-bold text-slate-900">أصناف تحت الحد الأدنى</h3>
+              <Link href="/inventory/below-minimum" className="text-[12.5px] font-bold text-brand-600 hover:text-brand-700">
+                عرض الكل ←
+              </Link>
+            </header>
+            {data.status === 'loading' ? (
+              <div className="p-4">
+                <SkeletonCard lines={4} />
+              </div>
+            ) : data.data && data.data.lowStock.length > 0 ? (
+              <ul className="m-0 list-none p-0 divide-y divide-slate-100">
+                {data.data.lowStock.slice(0, 5).map((row) => (
+                  <li key={`${row.itemId}-${row.warehouseId}`} className="flex items-center gap-3 px-4 py-2.5">
+                    <span className="grid place-items-center size-9 rounded-lg bg-red-50 text-red-500 flex-none">
+                      <PackageSearch size={16} />
+                    </span>
+                    <span className="flex-1 min-w-0">
+                      <span className="block text-[13px] font-bold text-slate-800 truncate">{row.nameAr}</span>
+                      <span className="block text-[11.5px] text-slate-400 truncate" dir="ltr">
+                        {row.sku}
+                      </span>
+                    </span>
+                    <span className="text-[12px] text-slate-500 font-semibold">
+                      المتاح <b className="text-red-600">{row.quantity}</b> / الحد {row.minQty}
+                    </span>
+                    <Badge tone="red" dot>
+                      ناقص {row.shortage}
+                    </Badge>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="p-4">
+                <EmptyState
+                  tone="green"
+                  icon={<PackageSearch size={28} strokeWidth={1.5} />}
+                  title="المخزون ضمن الحدود"
+                  description="لا توجد أصناف تحت الحد الأدنى حالياً."
+                />
+              </div>
+            )}
+          </section>
+        </Reveal>
+      </div>
+    </div>
   );
 }

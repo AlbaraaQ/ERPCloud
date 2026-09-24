@@ -1,5 +1,8 @@
 'use client';
 
+import { motion } from 'framer-motion';
+import { Check, Languages } from 'lucide-react';
+
 import { Screen } from '../../../components/screen';
 import { useLang, type Lang } from '../../../lib/i18n';
 
@@ -14,57 +17,65 @@ import { useLang, type Lang } from '../../../lib/i18n';
 export default function LanguagePage() {
   const { lang, setLang, dir } = useLang();
 
-  const option = (value: Lang, titleAr: string, titleEn: string, detail: string) => (
-    <label
-      className="card"
-      style={{
-        display: 'flex',
-        gap: 12,
-        alignItems: 'flex-start',
-        cursor: 'pointer',
-        outline: lang === value ? '2px solid var(--brand, #4f46e5)' : undefined,
-      }}
-    >
-      <input
-        type="radio"
-        name="language"
-        value={value}
-        checked={lang === value}
-        onChange={() => setLang(value)}
-        style={{ marginTop: 6 }}
-      />
-      <span>
-        <strong>
-          {titleAr} — {titleEn}
-        </strong>
-        <p className="muted" style={{ margin: '4px 0 0' }}>
-          {detail}
-        </p>
-      </span>
-    </label>
-  );
+  const option = (value: Lang, titleAr: string, titleEn: string, detail: string, flag: string) => {
+    const active = lang === value;
+    return (
+      <motion.button
+        type="button"
+        onClick={() => setLang(value)}
+        initial={false}
+        animate={{ scale: active ? 1 : 1 }}
+        className={`relative w-full rounded-xl border p-4 text-start transition-all duration-150 ease-out cursor-pointer ${
+          active
+            ? 'border-brand-600 bg-brand-50/50 shadow-3 ring-1 ring-brand-600'
+            : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-2'
+        }`}
+        dir={dir}
+      >
+        {active ? (
+          <span className="absolute top-3 end-3 grid place-items-center size-6 rounded-full bg-brand-600 text-white">
+            <Check size={14} strokeWidth={3} />
+          </span>
+        ) : null}
+        <div className="flex items-center gap-3">
+          <span className="grid place-items-center size-11 rounded-xl bg-slate-100 text-2xl flex-none">{flag}</span>
+          <div className="min-w-0">
+            <p className="m-0 text-[15px] font-bold text-slate-900">
+              {titleAr} <span className="text-slate-400 font-semibold">· {titleEn}</span>
+            </p>
+            <p className="m-0 mt-1 text-[12.5px] text-slate-500 leading-snug">{detail}</p>
+          </div>
+        </div>
+      </motion.button>
+    );
+  };
 
   return (
-    <Screen
-      title="اللغة"
-      subtitle="Language"
-      crumbs={['الإعدادات', 'عامة']}
-    >
-      <section className="card" dir={dir}>
-        <div className="grid" style={{ gap: 12 }}>
-          {option('ar', 'العربية', 'Arabic', 'اتجاه الكتابة من اليمين إلى اليسار (RTL). هذا هو الوضع الافتراضي للنظام.')}
-          {option('en', 'الإنجليزية', 'English', 'Left-to-right (LTR). Shell, menus and the login screen switch; screen content stays Arabic-first.')}
+    <Screen title="اللغة" subtitle="Language" crumbs={['الإعدادات', 'عامة']}>
+      <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-1">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="grid place-items-center size-8 rounded-lg bg-brand-50 text-brand-600">
+            <Languages size={16} />
+          </span>
+          <h3 className="m-0 text-[15px] font-bold text-slate-900">اختر لغة الواجهة</h3>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {option('ar', 'العربية', 'Arabic', 'اتجاه الكتابة من اليمين إلى اليسار (RTL). هذا هو الوضع الافتراضي للنظام.', '🇸🇦')}
+          {option('en', 'الإنجليزية', 'English', 'Left-to-right (LTR). Shell, menus and the login screen switch; screen content stays Arabic-first.', '🇬🇧')}
         </div>
       </section>
 
-      <section className="card">
-        <strong>{lang === 'ar' ? 'معاينة' : 'Preview'}</strong>
-        <p className="muted">
+      <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-1">
+        <h3 className="m-0 text-[15px] font-bold text-slate-900 mb-2">{lang === 'ar' ? 'معاينة' : 'Preview'}</h3>
+        <p className="m-0 text-[13.5px] text-slate-600">
           {lang === 'ar'
             ? 'هكذا تظهر النصوص العامة في النظام: الرئيسية، تسجيل الخروج، رسائل الدخول، وحالات الشاشات.'
             : 'This is how shared chrome text renders: Home, Sign out, login messages and screen states.'}
         </p>
-        <p className="alert" role="note">
+        <p
+          className="m-0 mt-3 rounded-xl border border-brand-200 bg-brand-50 px-4 py-2.5 text-[13px] font-semibold text-brand-800"
+          role="note"
+        >
           {lang === 'ar'
             ? 'تنطبق اللغة على واجهة النظام العامة وقوائم التنقل وشاشة الدخول، بينما تبقى بيانات المستندات والتقارير بلغتها الأصلية.'
             : 'The preference applies to the shared chrome, navigation and login screen; document and report content keeps its original language.'}

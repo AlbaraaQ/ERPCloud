@@ -1,9 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Save } from 'lucide-react';
 
-import { Notice } from '../../../components/data-view';
-import { ErrorBox, Forbidden, Loading, Screen } from '../../../components/screen';
+import { Screen } from '../../../components/screen';
+import { Button } from '../../../components/ui/button';
+import { Labeled } from '../../../components/ui/input';
+import { Table } from '../../../components/ui/table';
+import { Toggle } from '../../../components/ui/toggle';
 import { ApiError, apiData, apiPut } from '../../../lib/api';
 import { useQuery } from '../../../lib/use-query';
 
@@ -16,11 +20,11 @@ type Settings = Record<string, unknown>;
  * `PUT /settings/pos.*` نفسها. والشاشة تقرأ ما هو مكتوبٌ بالفعل وتعرضه بجانب حقوله، فلا
  * تظهر خانةٌ فارغة وكأنّ الإعداد غير قائم.
  */
-const CASHER_FIELDS: Array<{ key: string; label: string; kind: 'boolean' | 'number' | 'text' }> = [
+const CASHER_FIELDS: Array<{ key: string; label: string; kind: 'boolean' | 'number' | 'text'; hint?: string }> = [
   // النصوص حرفيةٌ من `frmCasherSetting.xaml` — بالأيقونة واللفظ الذي يراه المشرف هناك.
-  { key: 'pos.barcodeAuto', label: '📷 الباركود أوتوماتيك', kind: 'boolean' },
-  { key: 'pos.touchScreen', label: '👆 الشاشة تدعم التاتش سكرين', kind: 'boolean' },
-  { key: 'pos.showGroups', label: '📦 عرض المجموعات والأصناف', kind: 'boolean' },
+  { key: 'pos.barcodeAuto', label: '📷 الباركود أوتوماتيك', kind: 'boolean', hint: 'يُسجَّل الباركود تلقائياً عند فتح شاشة البيع.' },
+  { key: 'pos.touchScreen', label: '👆 الشاشة تدعم التاتش سكرين', kind: 'boolean', hint: 'تكبير أزرار شاشة اللمس وتبسيط التنقل.' },
+  { key: 'pos.showGroups', label: '📦 عرض المجموعات والأصناف', kind: 'boolean', hint: 'عرض المجموعات كأزرار سريعة أعلى لوحة الأصناف.' },
   { key: 'pos.defaultDeliveryFee', label: '🚗 قيمة التوصيل الافتراضية', kind: 'number' },
   { key: 'pos.defaultInsurance', label: '🛡️ قيمة التأمين الافتراضية', kind: 'number' },
   { key: 'pos.defaultUnitId', label: '📏 الوحدة الافتراضية', kind: 'text' },
@@ -61,84 +65,152 @@ export default function GeneralSettingsPage() {
     }
   }
 
-  const entries = Object.entries(settings.data ?? {});
+  const entries = Object.entries(settings.data ?? {}).map(([key, value]) => ({ key, value }));
 
   return (
     <Screen
       title="إعدادات عامة"
-      subtitle="الإعدادات المطبقة على هذه المنشأة (العملة، الضريبة، سياسة الترقيم، …)."
+      subtitle="الإعدادات المطبقة على هذه المنشأة (إعدادات الكاشير، العملة، الضريبة، سياسة الترقيم…)."
       crumbs={['الإعدادات', 'إعدادات عامة']}
       actions={
-        <button className="btn" type="button" onClick={settings.reload}>
+        <Button variant="secondary" onClick={settings.reload}>
           تحديث
-        </button>
+        </Button>
       }
     >
-      {settings.status === 'loading' && <Loading />}
+      {settings.status === 'loading' && <ScreenLoading />}
       {settings.status === 'forbidden' && <Forbidden />}
       {settings.status === 'error' && <ErrorBox message={settings.error} onRetry={settings.reload} />}
       {settings.status === 'success' && (
-        <div className="card">
-          <div className="card-head">⚙️ إعدادات الكاشير</div>
-          <div className="form-grid">
-            {CASHER_FIELDS.map((field) => (
-              <label className="field" key={field.key}>
-                <span>{field.label}</span>
-                {field.kind === 'boolean' ? (
-                  <select
-                    className="input"
-                    value={draft[field.key] ?? ''}
-                    onChange={(event) =>
-                      setDraft((current) => ({ ...current, [field.key]: event.target.value }))
-                    }
-                  >
-                    <option value="true">نعم</option>
-                    <option value="false">لا</option>
-                  </select>
-                ) : (
-                  <input
-                    className="input"
-                    dir={field.kind === 'number' ? 'ltr' : undefined}
-                    inputMode={field.kind === 'number' ? 'decimal' : undefined}
-                    value={draft[field.key] ?? ''}
-                    onChange={(event) =>
-                      setDraft((current) => ({ ...current, [field.key]: event.target.value }))
-                    }
+        <section className="rounded-xl border border-slate-200 bg-white shadow-1 overflow-hidden">
+          <header className="px-4 pt-4 pb-1 flex items-center justify-between gap-2">
+            <div>
+              <h3 className="m-0 text-[15px] font-bold text-slate-900">⚙️ إعدادات الكاشير</h3>
+              <p className="m-0 mt-0.5 text-[12.5px] text-slate-400">تُطبَّق مباشرة على شاشة نقطة البيع.</p>
+            </div>
+          </header>
+          <div className="grid gap-x-6 gap-y-4 px-4 py-4 sm:grid-cols-2 lg:grid-cols-3">
+            {CASHER_FIELDS.map((field) =>
+              field.kind === 'boolean' ? (
+                <div key={field.key} className="grid gap-1 rounded-lg border border-slate-100 bg-slate-50/60 p-3">
+                  <Toggle
+                    label={field.label}
+                    hint={field.hint}
+                    checked={draft[field.key] !== 'false'}
+                    onChange={(checked) => setDraft((current) => ({ ...current, [field.key]: String(checked) }))}
                   />
-                )}
-                <span className="muted small" dir="ltr">
-                  {field.key}
-                </span>
-              </label>
-            ))}
+                  <span className="text-[10.5px] font-semibold text-slate-300" dir="ltr">
+                    {field.key}
+                  </span>
+                </div>
+              ) : (
+                <div key={field.key} className="grid gap-1.5">
+                  <Labeled label={field.label}>
+                    <input
+                      dir={field.kind === 'number' ? 'ltr' : undefined}
+                      inputMode={field.kind === 'number' ? 'decimal' : undefined}
+                      value={draft[field.key] ?? ''}
+                      onChange={(event) => setDraft((current) => ({ ...current, [field.key]: event.target.value }))}
+                      className="w-full h-10 px-3 rounded-[10px] border border-slate-300 bg-white text-[13.5px] text-slate-900 focus:outline-none focus:border-brand-600 focus:shadow-[0_0_0_3px_rgb(37_99_235/0.15)] transition-all duration-150"
+                    />
+                  </Labeled>
+                  <span className="text-[10.5px] font-semibold text-slate-300" dir="ltr">
+                    {field.key}
+                  </span>
+                </div>
+              ),
+            )}
           </div>
-          <Notice notice={notice} />
-          <button className="btn primary" type="button" disabled={busy} onClick={saveCasher}>
-            حفظ
-          </button>
-        </div>
+          <footer className="px-4 py-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+            {notice ? (
+              <span
+                className={`text-[13px] font-semibold ${notice.kind === 'ok' ? 'text-emerald-700' : 'text-red-600'}`}
+              >
+                {notice.text}
+              </span>
+            ) : (
+              <span className="text-[12px] text-slate-400">الحفظ يحدّث كل المفاتيح أعلاه دفعة واحدة.</span>
+            )}
+            <Button variant="primary" icon={<Save size={15} />} loading={busy} onClick={() => void saveCasher()}>
+              حفظ
+            </Button>
+          </footer>
+        </section>
       )}
 
       {settings.status === 'success' && (
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>المفتاح</th>
-                <th>القيمة</th>
-              </tr>
-            </thead>
-            <tbody>
-              {entries.map(([key, value]) => (
-                <tr key={key}>
-                  <td dir="ltr">{key}</td>
-                  <td dir="ltr" className="small">{typeof value === 'object' ? JSON.stringify(value) : String(value)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <section className="rounded-xl border border-slate-200 bg-white shadow-1 overflow-hidden">
+          <header className="px-4 pt-4 pb-1">
+            <h3 className="m-0 text-[15px] font-bold text-slate-900">سجل المفاتيح ({entries.length})</h3>
+            <p className="m-0 mt-0.5 text-[12.5px] text-slate-400">كل مفاتيح الإعدادات المخزنة لهذه المنشأة.</p>
+          </header>
+          <div className="px-1 pb-2">
+            <Table
+              rows={entries}
+              rowKey={(row) => row.key}
+              dense
+              columns={[
+                {
+                  key: 'key',
+                  header: 'المفتاح',
+                  ltr: true,
+                  cell: (row) => (
+                    <span className="font-semibold text-slate-700">{row.key}</span>
+                  ),
+                },
+                {
+                  key: 'value',
+                  header: 'القيمة',
+                  ltr: true,
+                  cell: (row) => (
+                    <span className="text-[12.5px] text-slate-600 break-all">
+                      {typeof row.value === 'object' && row.value !== null ? JSON.stringify(row.value) : String(row.value)}
+                    </span>
+                  ),
+                },
+              ]}
+            />
+          </div>
+        </section>
       )}
     </Screen>
+  );
+}
+
+function ScreenLoading() {
+  return (
+    <div className="grid gap-4">
+      {[0, 1].map((i) => (
+        <div key={i} className="rounded-xl border border-slate-200 bg-white p-4 shadow-1 grid gap-3" aria-busy="true">
+          <div className="h-4 w-1/3 rounded-md bg-slate-100 animate-pulse" />
+          {Array.from({ length: 3 }).map((_, j) => (
+            <div key={j} className="h-9 rounded-md bg-slate-100 animate-pulse" style={{ width: `${95 - j * 15}%` }} />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Forbidden() {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-1 grid place-items-center text-center gap-2">
+      <span className="grid place-items-center size-12 rounded-2xl bg-amber-50 text-amber-600">🔒</span>
+      <p className="m-0 text-[15px] font-bold text-slate-800">لا تملك صلاحية الوصول</p>
+      <p className="m-0 text-[13px] text-slate-500 max-w-md">اطلب من مالك الحساب منحك الصلاحية المطلوبة من «صلاحيات المستخدمين».</p>
+    </div>
+  );
+}
+
+function ErrorBox({ message, onRetry }: { message?: string; onRetry?: () => void }) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-1 grid gap-3">
+      <p className="m-0 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-[13px] font-semibold text-red-700">
+        تعذر تحميل البيانات: {message ?? 'خطأ غير معروف'}
+      </p>
+      <Button variant="primary" onClick={onRetry}>
+        إعادة المحاولة
+      </Button>
+    </div>
   );
 }
