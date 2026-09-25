@@ -88,6 +88,21 @@ describe('staff navigation tree', () => {
     expect(reports.every((item) => item.permission === 'reporting.view')).toBe(true);
   });
 
+  it('implements the bank-feeds screens from future enhancement 01', () => {
+    const expected: Record<string, string> = {
+      'bank-accounts': '/treasury/bank-accounts',
+      'bank-statements': '/treasury/bank-statements',
+      'bank-reconciliation': '/treasury/bank-reconciliation',
+    };
+    for (const [key, href] of Object.entries(expected)) {
+      const item = allScreens.find((screen) => screen.key === key);
+      expect(item, key).toBeDefined();
+      expect(item?.status, key).toBe('ready');
+      expect(item?.href, key).toBe(href);
+      expect(item?.permission, key).toBe('treasury.bank.view');
+    }
+  });
+
   it('implements the Salla and synchronisation screens', () => {
     for (const key of ['salla-products', 'salla-orders', 'salla-warehouses', 'salla-settings', 'data-sync', 'sync-manage', 'sync-invoices', 'sync-journals', 'sync-vouchers', 'sync-stock', 'android-devices']) {
       const item = allScreens.find((screen) => screen.key === key);

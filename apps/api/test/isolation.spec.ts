@@ -185,6 +185,11 @@ describe('tenant isolation (TESTING_STRATEGY §6)', () => {
       // 2026-09 architecture/RBAC reorganisation (migration 0032).
       'devices',
       'membership_role_scopes',
+      // Future enhancement 01 — bank feeds and reconciliation (migration 0096).
+      'bank_accounts',
+      'bank_statements',
+      'bank_statement_lines',
+      'bank_reconciliation_rules',
     ]);
   });
 

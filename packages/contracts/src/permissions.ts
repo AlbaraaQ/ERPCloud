@@ -230,6 +230,9 @@ export const permissionRegistry: readonly PermissionDefinition[] = [
   perm('treasury.expensetype.manage', 'Maintain treasury expense types.'),
   perm('treasury.shift.close', 'Open and close cashier shifts.'),
   perm('treasury.shift.post', 'Post the journal entry a counted shift produces.'),
+  // Future enhancement 01 — imported bank statements and reconciliation.
+  perm('treasury.bank.view', 'Read bank accounts, imported statements and reconciliation results.'),
+  perm('treasury.bank.manage', 'Create bank accounts, import statements, match lines and manage reconciliation rules.'),
 
   // e-invoicing (PHASE_13)
   perm('einvoice.view', 'Read e-invoice credentials and submissions.'),

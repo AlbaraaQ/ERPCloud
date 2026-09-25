@@ -14,6 +14,18 @@ Phase 12 unifies legacy receipts and Sand* documents into `vouchers`, adds cash 
 
 Cash-location balances are updated in the same transaction as voucher posting, voiding, transfer send, and transfer receive. Cheque vouchers affect balances only on terminal collection/clearance.
 
+## Future enhancement 01 — Bank Feeds
+
+The bank-feed surface is implemented in `bank-feeds.controller.ts` / `bank-feeds.service.ts`:
+
+- `POST /treasury/bank-statements/import` accepts RFC-4180 CSV text (comma, semicolon or tab), including Arabic headers and debit/credit columns.
+- `GET /treasury/bank-statements/:id/lines` exposes pending, matched and ignored lines without creating accounting entries.
+- `POST /treasury/bank-statements/:id/auto-match` scores posted sales/purchase invoices and vouchers by amount, date, reference and party name.
+- `GET /treasury/bank-reconciliation` compares the imported bank balance with the linked journal account; when no ledger account is linked it reports the matched-lines fallback explicitly.
+- `bank_reconciliation_rules` stores deterministic keyword suggestions. Suggestions are never silently posted.
+
+The database objects live in migration `0096_bank_feeds.sql` and `packages/database/src/schema/banking.ts`. The two permissions are `treasury.bank.view` and `treasury.bank.manage`. Direct Saudi Open Banking, MT940/CAMT and automatic posting remain out of scope for this first slice.
+
 Shift close stores counted denomination lines, expected cash from posted cash vouchers inside the shift window, and `diff = counted - expected`. Reports remain structured JSON until Phase 14 rendering.
 
 **R12 — عهدة الإغلاق**: `POST /shift-closes/:id/post` now writes the desktop's three legs

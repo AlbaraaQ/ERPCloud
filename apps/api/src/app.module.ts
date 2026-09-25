@@ -38,6 +38,7 @@ import { InventoryModule } from './modules/inventory/inventory.module.js';
 import { SalesModule } from './modules/sales/sales.module.js';
 import { PurchasesModule } from './modules/purchases/purchases.module.js';
 import { TreasuryModule } from './modules/treasury/treasury.module.js';
+import { BankFeedsModule } from './modules/treasury/bank-feeds.module.js';
 import { EinvoicingModule } from './modules/einvoicing/einvoicing.module.js';
 import { OperationsModule } from './modules/operations/operations.module.js';
 import { PortalModule } from './modules/portal/portal.module.js';
@@ -113,6 +114,7 @@ import { OpsModule } from './ops/ops.module.js';
     SalesModule,
     PurchasesModule,
     TreasuryModule,
+    BankFeedsModule,
     EinvoicingModule,
     OperationsModule,
     PortalModule,
