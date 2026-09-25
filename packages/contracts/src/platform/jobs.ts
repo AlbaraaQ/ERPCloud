@@ -83,6 +83,8 @@ export const jobTypes = {
   CAMPAIGN_SEND: 'campaign.send',
   FILES_ORPHAN_GC: 'files.orphan-gc',
   IDEMPOTENCY_GC: 'idempotency.gc',
+  // Future enhancement 02 — OCR processing stays on the frozen maintenance queue.
+  OCR_PROCESS: 'ocr.process',
 } as const;
 
 export type JobType = (typeof jobTypes)[keyof typeof jobTypes];

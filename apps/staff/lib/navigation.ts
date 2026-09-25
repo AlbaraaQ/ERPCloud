@@ -1869,6 +1869,25 @@ const treasury: ModuleNode = {
       ],
     },
     {
+      key: 'treasury-bank-feeds',
+      labelAr: 'التغذية البنكية',
+      labelEn: 'Bank feeds',
+      items: [
+        screen('bank-accounts', 'الحسابات البنكية', 'Bank accounts', '/treasury/bank-accounts', 'ready', {
+          permission: 'treasury.bank.view',
+          endpoint: 'GET/POST /treasury/bank-accounts',
+        }),
+        screen('bank-statements', 'كشوف الحساب البنكي', 'Bank statements', '/treasury/bank-statements', 'ready', {
+          permission: 'treasury.bank.view',
+          endpoint: 'POST /treasury/bank-statements/import · GET /treasury/bank-statements',
+        }),
+        screen('bank-reconciliation', 'التسوية البنكية', 'Bank reconciliation', '/treasury/bank-reconciliation', 'ready', {
+          permission: 'treasury.bank.view',
+          endpoint: 'GET /treasury/bank-reconciliation · POST /treasury/bank-statements/:id/auto-match',
+        }),
+      ],
+    },
+    {
       key: 'treasury-ops',
       labelAr: 'العمليات',
       labelEn: 'Operations',

@@ -69,6 +69,7 @@ export type {
 
 export * from './zatca-qr.js';
 export * from './platform/index.js';
+export * from './ocr.js';
 export * from './organization/index.js';
 export * from './devices.js';
 export * from './arabic-words.js';

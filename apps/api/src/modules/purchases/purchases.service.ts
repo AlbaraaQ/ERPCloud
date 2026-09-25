@@ -52,6 +52,11 @@ export type PurchaseLineInput = {
   costCenterId?: string;
 };
 export type PurchaseInvoiceInput = { branchId: string; warehouseId?: string; partyId: string; costCenterId?: string; referenceInvoiceId?: string; kind?: 'purchase' | 'purchase_return'; supplierReferenceNo?: string; supplierReferenceDate?: string; currency?: string; priceIncludesVat?: boolean; invoiceDiscount?: string; extraTax?: string; withholding?: string; landedCostAlloc?: 'qty' | 'value'; lines: PurchaseLineInput[] };
+export type PurchaseHeaderDraftInput = Omit<PurchaseInvoiceInput, 'lines'> & {
+  subtotal?: string;
+  taxTotal?: string;
+  total?: string;
+};
 export type PurchaseCostInput = { costName: string; amount: string; allocationTarget?: 'inventory' | 'expense'; costCenterId?: string; accountId?: string };
 export type PurchasePostingInput = { fiscalPeriodId?: string; journalLines?: JournalLineInput[]; settlement?: 'credit' | 'cash' | 'bank'; settlementAccountId?: string; settlementCashLocationId?: string };
 export type PurchasePaymentInput = { amount: string; idempotencyKey?: string; voucherId?: string; reference?: string };
@@ -115,6 +120,50 @@ export class PurchasesService {
       if (!supplier || !['supplier', 'both'].includes(supplier.kind)) throw new DomainError('PURCHASE_SUPPLIER_REQUIRED', 'Purchase invoices require a supplier party', 422);
       await tx.insert(purchaseInvoices).values({ id, tenantId, createdBy: tryGetAuthContext()?.userId, branchId: input.branchId, warehouseId: input.warehouseId, partyId: input.partyId, costCenterId: input.costCenterId ?? null, referenceInvoiceId: input.referenceInvoiceId, kind: input.kind ?? 'purchase', supplierReferenceNo: input.supplierReferenceNo, supplierReferenceDate: input.supplierReferenceDate, currency: input.currency ?? 'SAR', priceIncludesVat: input.priceIncludesVat ?? false, landedCostAlloc: input.landedCostAlloc ?? 'value', invoiceDiscount: totals.discount, extraTax: totals.extraTax, withholding: totals.withholding, subtotal: totals.subtotal, taxTotal: totals.tax, total: totals.total, status: 'draft' });
       await tx.insert(purchaseInvoiceLines).values(input.lines.map((line, index) => { const calculated = totals.lines[index]; if (!calculated) throw new DomainError('PURCHASE_TOTALS_INVALID', 'Purchase totals do not match invoice lines', 422); return { id: newId(), tenantId, invoiceId: id, lineNo: index + 1, itemId: line.itemId, description: line.description, quantity: line.quantity, unitPrice: line.unitPrice, discountRate: line.discountRate ?? '0', discountAmount: calculated.discount, taxGroupId: line.taxGroupId, taxRate: line.taxRate ?? '0', net: calculated.net, tax: calculated.tax, total: calculated.total, serialNos: cleanSerialNos(line.serialNos), lotId: line.lotId, costCenterId: line.costCenterId ?? null, batchNo: line.batchNo?.trim() || null, productionDate: line.productionDate?.trim() || null, expiryDate: line.expiryDate?.trim() || null }; }));
+    });
+    return this.get(tenantId, id);
+  }
+
+  /**
+   * OCR review deliberately starts as a header-only draft. No stock item is invented from
+   * untrusted text; the reviewer may add mapped lines later, while the extracted supplier
+   * reference and totals remain visible on the document.
+   */
+  async createHeaderDraft(tenantId: string, input: PurchaseHeaderDraftInput) {
+    const taxTotal = money(input.taxTotal ?? '0');
+    const total = input.total === undefined ? money(input.subtotal ?? '0').plus(taxTotal) : money(input.total);
+    const subtotal = input.subtotal === undefined ? total.minus(taxTotal) : money(input.subtotal);
+    if (![subtotal, taxTotal, total].every((value) => value.isFinite() && value.gte(0))) {
+      throw new DomainError('PURCHASE_TOTALS_INVALID', 'OCR totals must be non-negative decimal values', 422);
+    }
+    const id = newId();
+    await withTenantTx(this.database.db, tenantId, async (tx) => {
+      await this.accounting.assertCostCentersInTx(tx, tenantId, [input.costCenterId]);
+      const [supplier] = await tx.select().from(parties).where(and(eq(parties.tenantId, tenantId), eq(parties.id, input.partyId)));
+      if (!supplier || !['supplier', 'both'].includes(supplier.kind)) throw new DomainError('PURCHASE_SUPPLIER_REQUIRED', 'Purchase invoices require a supplier party', 422);
+      await tx.insert(purchaseInvoices).values({
+        id,
+        tenantId,
+        createdBy: tryGetAuthContext()?.userId,
+        branchId: input.branchId,
+        warehouseId: input.warehouseId,
+        partyId: input.partyId,
+        costCenterId: input.costCenterId ?? null,
+        referenceInvoiceId: input.referenceInvoiceId,
+        kind: input.kind ?? 'purchase',
+        supplierReferenceNo: input.supplierReferenceNo,
+        supplierReferenceDate: input.supplierReferenceDate,
+        currency: input.currency ?? 'SAR',
+        priceIncludesVat: input.priceIncludesVat ?? false,
+        landedCostAlloc: input.landedCostAlloc ?? 'value',
+        invoiceDiscount: input.invoiceDiscount ?? '0',
+        extraTax: input.extraTax ?? '0',
+        withholding: input.withholding ?? '0',
+        subtotal: subtotal.toFixed(4),
+        taxTotal: taxTotal.toFixed(4),
+        total: total.toFixed(4),
+        status: 'draft',
+      });
     });
     return this.get(tenantId, id);
   }

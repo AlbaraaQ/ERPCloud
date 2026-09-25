@@ -12,6 +12,8 @@ export * from './inventory.js';
 export * from './sales.js';
 export * from './purchases.js';
 export * from './treasury.js';
+export * from './banking.js';
+export * from './ocr.js';
 export * from './einvoicing.js';
 export * from './migration.js';
 export * from './compat.js';

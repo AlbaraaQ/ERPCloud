@@ -219,6 +219,8 @@ export const permissionRegistry: readonly PermissionDefinition[] = [
   perm('purchase.invoice.pay', 'Record supplier payment hooks on purchase invoices.'),
   perm('purchase.cost.manage', 'Create, update and allocate purchase landed costs.'),
   perm('purchase.adjustment.create', 'Issue credit and debit notes against posted purchase invoices.'),
+  // Future enhancement 02 — OCR review and creation of purchase drafts.
+  perm('purchase.ocr.use', 'Upload purchase documents, review OCR fields and create purchase drafts.'),
 
   // treasury (PHASE_13)
   perm('treasury.view', 'List and read vouchers and shifts.'),
@@ -230,6 +232,9 @@ export const permissionRegistry: readonly PermissionDefinition[] = [
   perm('treasury.expensetype.manage', 'Maintain treasury expense types.'),
   perm('treasury.shift.close', 'Open and close cashier shifts.'),
   perm('treasury.shift.post', 'Post the journal entry a counted shift produces.'),
+  // Future enhancement 01 — imported bank statements and reconciliation.
+  perm('treasury.bank.view', 'Read bank accounts, imported statements and reconciliation results.'),
+  perm('treasury.bank.manage', 'Create bank accounts, import statements, match lines and manage reconciliation rules.'),
 
   // e-invoicing (PHASE_13)
   perm('einvoice.view', 'Read e-invoice credentials and submissions.'),
