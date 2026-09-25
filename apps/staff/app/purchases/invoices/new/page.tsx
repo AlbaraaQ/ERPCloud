@@ -97,6 +97,7 @@ export default function NewPurchaseInvoicePage() {
   const [ocrBusy, setOcrBusy] = useState(false);
   const [ocrJob, setOcrJob] = useState<OcrJob>();
   const [ocrFileUrl, setOcrFileUrl] = useState('');
+  const [ocrFileName, setOcrFileName] = useState('');
   const [ocrSupplierName, setOcrSupplierName] = useState('');
   const [ocrTotalText, setOcrTotalText] = useState('');
   const [ocrTaxText, setOcrTaxText] = useState('');
@@ -131,6 +132,7 @@ export default function NewPurchaseInvoicePage() {
       await apiPost(`/files/${presign.fileId}/finalize`, {});
       const download = await apiData<FileDownload>(`/files/${presign.fileId}/download`);
       setOcrFileUrl(download.url);
+      setOcrFileName(download.name);
 
       let job = await apiPost<OcrJob>('/ocr/jobs', { fileId: presign.fileId, entityType: 'purchase_invoice' });
       for (let attempt = 0; attempt < 24 && (job.status === 'queued' || job.status === 'processing'); attempt += 1) {
@@ -231,7 +233,13 @@ export default function NewPurchaseInvoicePage() {
         branchId: effectiveBranch,
         warehouseId: effectiveWarehouse || undefined,
         partyId,
-        ...(ocrJob?.status === 'done' ? { supplierName: ocrSupplierName || undefined } : { kind }),
+        ...(ocrJob?.status === 'done'
+          ? {
+              supplierName: ocrSupplierName || undefined,
+              taxTotal: ocrTaxText.trim() || undefined,
+              total: ocrTotalText.trim() || undefined,
+            }
+          : { kind }),
         costCenterId: costCenterId || undefined,
         supplierReferenceNo: supplierRef.trim() || undefined,
         supplierReferenceDate: supplierRefDate || undefined,
@@ -299,10 +307,29 @@ export default function NewPurchaseInvoicePage() {
             </div>
             {ocrJob.status === 'done' ? (
               <>
-                <div className="form-grid">
+                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '1rem', alignItems: 'start' }}>
+                  <div className="card" style={{ minHeight: 280 }}>
+                    {ocrFileUrl ? (
+                      ocrFileName.toLocaleLowerCase().endsWith('.pdf') ? (
+                        <iframe title="معاينة ملف الفاتورة" src={ocrFileUrl} style={{ width: '100%', minHeight: 420, border: 0 }} />
+                      ) : (
+                        <img src={ocrFileUrl} alt="معاينة فاتورة الشراء" style={{ display: 'block', maxWidth: '100%', maxHeight: 520, margin: '0 auto', objectFit: 'contain' }} />
+                      )
+                    ) : (
+                      <p className="muted">لا تتوفر معاينة للملف.</p>
+                    )}
+                  </div>
+                  <div className="form-grid">
                   <label className="field">
                     <span>اسم المورد المستخرج</span>
-                    <input className="input" value={ocrSupplierName} onChange={(event) => setOcrSupplierName(event.target.value)} />
+                    <input
+                      className="input"
+                      value={ocrSupplierName}
+                      onChange={(event) => {
+                        setOcrSupplierName(event.target.value);
+                        setPartyId('');
+                      }}
+                    />
                   </label>
                   <label className="field">
                     <span>رقم الفاتورة المستخرج</span>
@@ -320,6 +347,7 @@ export default function NewPurchaseInvoicePage() {
                     <span>الضريبة المستخرجة</span>
                     <input className="input" dir="ltr" inputMode="decimal" value={ocrTaxText} onChange={(event) => setOcrTaxText(event.target.value)} />
                   </label>
+                  </div>
                 </div>
                 <div className="row" aria-label="ثقة الحقول المستخرجة">
                   {Object.entries(ocrJob.extracted.fields).map(([key, field]) => (

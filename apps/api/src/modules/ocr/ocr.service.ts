@@ -212,9 +212,9 @@ export class OcrService implements OnModuleInit {
     if (input.lines.length === 0) {
       return this.purchases.createHeaderDraft(tenantId, {
         ...headerInput,
-        subtotal: extracted.subtotal ?? undefined,
-        taxTotal: extracted.taxTotal ?? undefined,
-        total: extracted.total ?? undefined,
+        subtotal: input.subtotal ?? extracted.subtotal ?? undefined,
+        taxTotal: input.taxTotal ?? extracted.taxTotal ?? undefined,
+        total: input.total ?? extracted.total ?? undefined,
       });
     }
     const purchaseInput: PurchaseInvoiceInput = {

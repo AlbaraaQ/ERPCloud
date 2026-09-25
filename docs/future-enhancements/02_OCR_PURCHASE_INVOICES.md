@@ -53,7 +53,7 @@ ocr_jobs (
 - `POST /ocr/presign` — `{ name, mime, sizeBytes }`، يقبل PDF/صورة ويعيد `fileId` ورابط الرفع.
 - `POST /ocr/jobs` — `{ fileId, entityType, sourceText? }`؛ `sourceText` fixture اختياري للمزوّد mock فقط.
 - `GET /ocr/jobs/:id` — حالة المهمة والحقول المستخرجة والثقة.
-- `POST /purchases/invoices/from-ocr` — `{ ocrJobId, branchId, partyId?, supplierName?, costCenterId?, lines? }`؛ إذا كانت `lines` فارغة ينشئ مسودة رأسية totals/ref/date فقط، وإذا أرسل المستخدم بنوداً يمررها إلى إنشاء فاتورة الشراء المعتاد.
+- `POST /purchases/invoices/from-ocr` — `{ ocrJobId, branchId, partyId?, supplierName?, subtotal?, taxTotal?, total?, costCenterId?, lines? }`؛ القيم المراجعة للضريبة/الإجمالي تتغلب على الاستخراج، وإذا كانت `lines` فارغة ينشئ مسودة رأسية totals/ref/date فقط، وإذا أرسل المستخدم بنوداً يمررها إلى إنشاء فاتورة الشراء المعتاد.
 
 كل المسارات محمية بـ`purchase.ocr.use`، ومسار الإنشاء من OCR يتطلب أيضاً `purchase.invoice.create`.
 
