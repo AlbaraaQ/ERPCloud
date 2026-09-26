@@ -71,6 +71,8 @@ describe('RLS SQL builders (MULTI_TENANCY §3.5)', () => {
       'bank_statements',
       'bank_statement_lines',
       'bank_reconciliation_rules',
+      // R17 — printer/report links.
+      'printer_report_links',
       // Future enhancement 02 — purchase-invoice OCR jobs.
       'ocr_jobs',
     ]);
