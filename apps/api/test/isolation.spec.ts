@@ -170,6 +170,10 @@ describe('tenant isolation (TESTING_STRATEGY §6)', () => {
       'notifications',
       'outbox_jobs',
       'idempotency_keys',
+      // Future enhancement 03 — e-commerce stores, orders and sync logs (migration 0099).
+      'ecommerce_stores',
+      'ecommerce_orders',
+      'ecommerce_sync_logs',
       'document_sequences',
       // PHASE_05 — organization structure.
       'company_profiles',

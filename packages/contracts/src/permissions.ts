@@ -303,6 +303,8 @@ export const permissionRegistry: readonly PermissionDefinition[] = [
   perm('fitment.manage', 'Maintain vehicle makes, models and item fitment rows.'),
   perm('salla.integration.view', 'Read Salla synchronization status and export logs.'),
   perm('salla.integration.manage', 'Manage Salla OAuth connections, mappings, export queues and webhooks.'),
+  // Future enhancement 03 — provider-neutral Salla/Zid/Shopify orders and stock.
+  perm('ecommerce.manage', 'Connect e-commerce stores, synchronize orders and monitor stock updates.'),
 ] as const;
 
 /**

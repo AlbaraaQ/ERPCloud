@@ -86,6 +86,9 @@ export const jobTypes = {
   OCR_PROCESS: 'ocr.process',
   FILES_ORPHAN_GC: 'files.orphan-gc',
   IDEMPOTENCY_GC: 'idempotency.gc',
+  // Future enhancement 03 — order imports and stock pushes share the existing maintenance queue.
+  ECOMMERCE_IMPORT: 'ecommerce.import',
+  ECOMMERCE_STOCK: 'ecommerce.stock',
 } as const;
 
 export type JobType = (typeof jobTypes)[keyof typeof jobTypes];

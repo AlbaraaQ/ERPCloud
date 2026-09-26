@@ -42,7 +42,7 @@
 
 ## ملاحظات تنفيذ
 
-- ترحيل 0096 استُخدم لـ Bank Feeds؛ أي تحسين جديد يبدأ من 0097
+- الترحيل `0096` استُخدم لـ Bank Feeds و`0097` لـ OCR و`0098` لتحصين RLS؛ تكامل التجارة الإلكترونية يبدأ من `0099`.
 - كل صلاحية جديدة تُضاف في `packages/contracts/src/permissions.ts` + ترحيل idempotent + اختبار `permission-codes.spec.ts`
 - كل شاشة جديدة يجب أن تكون مسار حقيقي ويقيسها `navigation.spec.ts`
 - لا `git add -A` — مسارات صريحة فقط
@@ -53,6 +53,7 @@
 
 - **01 Bank Feeds مكتملة 100%**: migration `0096_bank_feeds.sql`، API، 3 شاشات Staff، اختبار 8 حالات، وسكربت تحقق حي 15 نقطة.
 - **02 OCR قيد التحقق بمزود خارجي**: migration `0097_ocr_purchase_invoices.sql`، API/worker، شاشة مراجعة Staff، اختبار 6 حالات، و`verify-ocr.mjs`؛ يلزم ضبط endpoint حقيقي لاختبار دقة العربية.
+- **03 Ecommerce منفذة**: migration `0099_ecommerce_stores_orders.sql`، مزودو Salla/Zid/Shopify مع mock transport، عاملَا `ecommerce.import` و`ecommerce.stock` على طابور `maintenance`، 11 حالة mock + اختبار API، و`verify-ecommerce.mjs` بأكثر من 15 نقطة؛ اختبار sandbox خارجي يبقى اختيارياً.
 - P-C1..12 مكتملة
 - P-M1..10 مكتملة
 - 232 شاشة ready + 1 planned مستبعدة

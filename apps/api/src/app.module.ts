@@ -55,6 +55,7 @@ import { FitmentModule } from './modules/fitment/fitment.module.js';
 import { MarinaModule } from './modules/marina/marina.module.js';
 import { OpticsModule } from './modules/optics/optics.module.js';
 import { SallaModule } from './modules/integrations/salla/salla.module.js';
+import { EcommerceModule } from './modules/ecommerce/ecommerce.module.js';
 import { TailoringModule } from './modules/tailoring/tailoring.module.js';
 import { PaymentsModule } from './modules/payments/payments.module.js';
 import { WhatsappModule } from './modules/integrations/whatsapp/whatsapp.module.js';
@@ -133,6 +134,7 @@ import { OpsModule } from './ops/ops.module.js';
     MarinaModule,
     FitmentModule,
     SallaModule,
+    EcommerceModule,
     PaymentsModule,
     WhatsappModule,
   ],

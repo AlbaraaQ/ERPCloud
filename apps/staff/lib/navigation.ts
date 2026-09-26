@@ -1121,6 +1121,10 @@ const sales: ModuleNode = {
           'ready',
           { permission: 'parties.view', endpoint: '/portal-access' },
         ),
+        screen('ecommerce-orders', 'طلبات المتجر الإلكتروني', 'E-commerce orders', '/sales/ecommerce-orders', 'ready', {
+          permission: 'ecommerce.manage',
+          endpoint: 'GET /ecommerce/orders?store_id=&status=',
+        }),
       ],
     },
   ],
@@ -1617,6 +1621,10 @@ const settings: ModuleNode = {
           permission: 'tenant.email.log.view',
           endpoint:
             'GET /email/messages · GET /email/templates · PUT /email/templates/:event · GET/PUT /email/settings',
+        }),
+        screen('ecommerce', 'التجارة الإلكترونية — سلة · زد · Shopify', 'E-commerce', '/settings/ecommerce', 'ready', {
+          permission: 'ecommerce.manage',
+          endpoint: 'GET /ecommerce/providers · POST/GET /ecommerce/stores · POST /ecommerce/stores/:id/sync',
         }),
       ],
     },

@@ -128,6 +128,10 @@ export const rlsProtectedTables = [
   'notifications',
   'outbox_jobs',
   'idempotency_keys',
+  // Future enhancement 03 — provider-neutral e-commerce connections, orders and logs.
+  'ecommerce_stores',
+  'ecommerce_orders',
+  'ecommerce_sync_logs',
   'document_sequences',
   // PHASE_05 — organization (DATABASE_DESIGN §5 + §3 currencies).
   'company_profiles',

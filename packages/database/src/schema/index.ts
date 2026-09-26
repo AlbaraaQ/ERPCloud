@@ -25,3 +25,4 @@ export * from './printing.js';
 export * from './hrm.js';
 export * from './projects.js';
 export * from './niche.js';
+export * from './ecommerce.js';
