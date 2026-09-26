@@ -193,16 +193,16 @@ export default function TenantsPage() {
               {
                 key: 'name',
                 header: 'المنشأة',
-                cell: (row) => (
-                  <Link href={`/tenants/${row.id}`} className="group grid gap-0.5">
+                cell: (tenant) => (
+                  <Link href={`/tenants/${tenant.id}`} className="group grid gap-0.5">
                     <span className="flex items-center gap-2">
                       <span className="grid size-7 flex-none place-items-center rounded-md bg-slate-900 font-mono text-[10px] font-bold text-white" dir="ltr">
-                        {row.code.slice(0, 2).toUpperCase()}
+                        {tenant.code.slice(0, 2).toUpperCase()}
                       </span>
-                      <span className="truncate font-bold text-slate-800 group-hover:text-violet-700 transition-colors duration-150">{row.name}</span>
+                      <span className="truncate font-bold text-slate-800 group-hover:text-violet-700 transition-colors duration-150">{tenant.name}</span>
                     </span>
                     <span className="font-mono text-[10.5px] text-slate-400" dir="ltr">
-                      {gregDate(row.createdAt)}
+                      {gregDate(tenant.createdAt)}
                     </span>
                   </Link>
                 ),
