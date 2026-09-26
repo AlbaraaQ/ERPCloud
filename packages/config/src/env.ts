@@ -123,6 +123,12 @@ const envSchema = z.object({
   /** A `pending` file older than this is an abandoned upload and is collected. */
   FILES_ORPHAN_GC_HOURS: z.coerce.number().int().positive().default(24),
 
+  /** Future enhancement 02 — endpoint/provider may be overridden by platform settings; the API key remains an env secret. */
+  OCR_PROVIDER: z.enum(['http', 'mock']).default('http'),
+  OCR_ENDPOINT: z.union([z.literal(''), z.string().url()]).optional(),
+  OCR_API_KEY: z.string().optional(),
+  OCR_TIMEOUT_MS: z.coerce.number().int().positive().max(300_000).default(60_000),
+
   /**
    * P-C10 — أين تُكتب نسخة المنصّة حين لا اعتمادات تخزين كائنات. النسخة تُكتب دائماً إلى
    * ملفٍّ يُقرأ من مكانه (التحقّق يعيد قراءته ويحسب بصمته)، و`ObjectStoragePort` هو الوجهة

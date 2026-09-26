@@ -40,11 +40,14 @@ export default function PurchaseInvoicesPage() {
       subtitle="فواتير الموردين بما فيها التكاليف الإضافية التي تُحمَّل على تكلفة الأصناف عند الترحيل."
       crumbs={['المشتريات', 'العمليات']}
       actions={
-        can('purchase.invoice.create') ? (
-          <Link className="btn primary" href="/purchases/invoices/new">
-            فاتورة مشتريات جديدة
-          </Link>
-        ) : null
+        <>
+          {can('purchase.ocr.use') && <Link className="btn" href="/purchases/invoices/ocr">قراءة فاتورة بالـ OCR</Link>}
+          {can('purchase.invoice.create') && (
+            <Link className="btn primary" href="/purchases/invoices/new">
+              فاتورة مشتريات جديدة
+            </Link>
+          )}
+        </>
       }
     >
       <div className="card toolbar">

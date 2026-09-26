@@ -143,6 +143,13 @@ export const rlsProtectedTables = [
   // 2026-09 architecture/RBAC reorganisation (migration 0032).
   'devices',
   'membership_role_scopes',
+  // Future enhancement 01 — bank feeds and reconciliation.
+  'bank_accounts',
+  'bank_statements',
+  'bank_statement_lines',
+  'bank_reconciliation_rules',
+  // Future enhancement 02 — purchase-invoice OCR jobs and their extracted fields.
+  'ocr_jobs',
 ] as const;
 
 export type QueryRowsOf<T> = QueryRows<T>;

@@ -7,7 +7,7 @@ import { printerReportLinks, withTenantTx, type DatabaseHandle } from '@erp/data
 import { DATABASE_HANDLE } from '../../database/database.module.js';
 import { tryGetAuthContext } from '../platform/context/tenant-context.js';
 
-import { PrintSettingsService, REPORT_SCOPE_PREFIX, PRINT_SCOPES, reportScope } from './print-settings.service.js';
+import { PrintSettingsService, REPORT_SCOPE_PREFIX, PRINT_SCOPES } from './print-settings.service.js';
 import { reportByKey } from './report-catalog.js';
 
 export const printerLinkInputSchema = z.object({

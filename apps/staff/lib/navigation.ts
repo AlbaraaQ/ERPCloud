@@ -550,6 +550,10 @@ const purchases: ModuleNode = {
         screen('purchase-invoice', 'فاتورة المشتريات', 'Purchase invoice', '/purchases/invoices', 'ready', {
           endpoint: '/purchase-invoices',
         }),
+        screen('purchase-ocr', 'قراءة فاتورة بالـ OCR', 'OCR purchase invoice', '/purchases/invoices/ocr', 'ready', {
+          permission: 'purchase.ocr.use',
+          endpoint: 'POST /ocr/jobs',
+        }),
         screen(
           'purchase-return',
           'مردود المشتريات',
@@ -1865,6 +1869,25 @@ const treasury: ModuleNode = {
         screen('expense-card', '📒 بطاقة حساب المصاريف', 'Expense card', '/accounting/expenses', 'ready', {
           permission: 'treasury.view',
           endpoint: '/expense-types',
+        }),
+      ],
+    },
+    {
+      key: 'treasury-bank-feeds',
+      labelAr: 'التغذية البنكية',
+      labelEn: 'Bank feeds',
+      items: [
+        screen('bank-accounts', 'الحسابات البنكية', 'Bank accounts', '/treasury/bank-accounts', 'ready', {
+          permission: 'treasury.bank.view',
+          endpoint: 'GET/POST /treasury/bank-accounts',
+        }),
+        screen('bank-statements', 'كشوف الحساب البنكي', 'Bank statements', '/treasury/bank-statements', 'ready', {
+          permission: 'treasury.bank.view',
+          endpoint: 'POST /treasury/bank-statements/import · GET /treasury/bank-statements',
+        }),
+        screen('bank-reconciliation', 'التسوية البنكية', 'Bank reconciliation', '/treasury/bank-reconciliation', 'ready', {
+          permission: 'treasury.bank.view',
+          endpoint: 'GET /treasury/bank-reconciliation · POST /treasury/bank-statements/:id/auto-match',
         }),
       ],
     },

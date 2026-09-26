@@ -277,7 +277,8 @@ describe('platform console RBAC and cross-tenant audit (P-C1)', () => {
     // `limits.*` للحصص (P-C5)، ثم ثمانية `site.*` أضافها P-M5 (هوية الموقع ونطاقه ولغته
     // وحالة الصيانة)، و`billing.trial_days` أضافه P-M4 (فترة التجربة المعلَنة في التسجيل)
     // — وكلها بحاجةٍ إلى تسمية عربية وشرح، وهذا ما يفحصه السطر التالي.
-    expect(body.settings.length).toBe(32);
+    // OCR provider routing adds two platform-scoped keys (`ocr.provider`, `ocr.endpoint`).
+    expect(body.settings.length).toBe(34);
     for (const row of body.settings) {
       expect(row.labelAr.length).toBeGreaterThan(0);
     }

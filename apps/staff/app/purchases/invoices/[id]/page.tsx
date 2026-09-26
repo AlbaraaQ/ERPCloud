@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
 import { DataTable, Notice } from '../../../../components/data-view';
@@ -64,7 +64,9 @@ type Invoice = {
 
 export default function PurchaseInvoiceDetailPage() {
   const params = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
   const invoiceId = String(params.id);
+  const ocrJobId = searchParams.get('ocrJobId');
   const { can } = useSession();
   const invoice = useQuery<Invoice>(() => apiData<Invoice>(`/purchase-invoices/${invoiceId}`), [invoiceId]);
   const items = useQuery<Item[]>(() => listItems(), []);
@@ -152,6 +154,11 @@ export default function PurchaseInvoiceDetailPage() {
           <Link className="btn primary" href={`/print/purchase-invoice/${doc.id}`}>
             🖨️ طباعة
           </Link>
+          {ocrJobId && doc.status === 'draft' && doc.lines.length === 0 && (
+            <Link className="btn" href={`/purchases/invoices/ocr?job=${encodeURIComponent(ocrJobId)}`}>
+              استكمال ربط بنود OCR
+            </Link>
+          )}
           <Link className="btn" href="/purchases/invoices">
             كل الفواتير
           </Link>

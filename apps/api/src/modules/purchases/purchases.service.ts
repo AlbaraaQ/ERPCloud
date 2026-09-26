@@ -51,7 +51,25 @@ export type PurchaseLineInput = {
   /** R9 — 📊 مركز تكلفة السطر (`Inv_Sub.ItemCostCenter`); يسبق مركز الرأس عند وسم القيد. */
   costCenterId?: string;
 };
-export type PurchaseInvoiceInput = { branchId: string; warehouseId?: string; partyId: string; costCenterId?: string; referenceInvoiceId?: string; kind?: 'purchase' | 'purchase_return'; supplierReferenceNo?: string; supplierReferenceDate?: string; currency?: string; priceIncludesVat?: boolean; invoiceDiscount?: string; extraTax?: string; withholding?: string; landedCostAlloc?: 'qty' | 'value'; lines: PurchaseLineInput[] };
+export type PurchaseInvoiceInput = {
+  branchId: string;
+  warehouseId?: string;
+  partyId: string;
+  costCenterId?: string;
+  referenceInvoiceId?: string;
+  kind?: 'purchase' | 'purchase_return';
+  supplierReferenceNo?: string;
+  supplierReferenceDate?: string;
+  currency?: string;
+  priceIncludesVat?: boolean;
+  invoiceDiscount?: string;
+  extraTax?: string;
+  withholding?: string;
+  landedCostAlloc?: 'qty' | 'value';
+  /** OCR may create an incomplete header draft before the reviewer maps item lines. */
+  headerTotals?: { subtotal: string; tax: string; total: string };
+  lines: PurchaseLineInput[];
+};
 export type PurchaseCostInput = { costName: string; amount: string; allocationTarget?: 'inventory' | 'expense'; costCenterId?: string; accountId?: string };
 export type PurchasePostingInput = { fiscalPeriodId?: string; journalLines?: JournalLineInput[]; settlement?: 'credit' | 'cash' | 'bank'; settlementAccountId?: string; settlementCashLocationId?: string };
 export type PurchasePaymentInput = { amount: string; idempotencyKey?: string; voucherId?: string; reference?: string };
@@ -101,9 +119,28 @@ export class PurchasesService {
   }
 
   async create(tenantId: string, input: PurchaseInvoiceInput) {
-    if (!input.lines.length) throw new DomainError('PURCHASE_LINES_REQUIRED', 'At least one purchase line is required', 422);
+    if (!input.lines.length && !input.headerTotals) {
+      throw new DomainError('PURCHASE_LINES_REQUIRED', 'At least one purchase line is required unless a header draft is explicitly requested', 422);
+    }
     const id = newId();
-    const totals = calculateInvoiceTotals({ lines: input.lines, priceIncludesVat: input.priceIncludesVat, invoiceDiscount: input.invoiceDiscount, extraTax: input.extraTax, withholding: input.withholding });
+    const totals = input.lines.length
+      ? calculateInvoiceTotals({
+          lines: input.lines,
+          priceIncludesVat: input.priceIncludesVat,
+          invoiceDiscount: input.invoiceDiscount,
+          extraTax: input.extraTax,
+          withholding: input.withholding,
+        })
+      : {
+          lines: [],
+          subtotal: input.headerTotals?.subtotal ?? '0',
+          discount: input.invoiceDiscount ?? '0',
+          taxable: input.headerTotals?.subtotal ?? '0',
+          tax: input.headerTotals?.tax ?? '0',
+          extraTax: input.extraTax ?? '0',
+          withholding: input.withholding ?? '0',
+          total: input.headerTotals?.total ?? '0',
+        };
     await withTenantTx(this.database.db, tenantId, async (tx) => {
       // R9 — كل مركزٍ مُسمّى (رأساً أو على سطر) يُفحَص قبل أي كتابة: مركزُ مستأجرٍ آخر
       // ليس مركزاً عندنا. وهذا مسار الإنشاء الوحيد لكل فواتير الشراء ومردوداتها.
@@ -114,7 +151,99 @@ export class PurchasesService {
       const [supplier] = await tx.select().from(parties).where(and(eq(parties.tenantId, tenantId), eq(parties.id, input.partyId)));
       if (!supplier || !['supplier', 'both'].includes(supplier.kind)) throw new DomainError('PURCHASE_SUPPLIER_REQUIRED', 'Purchase invoices require a supplier party', 422);
       await tx.insert(purchaseInvoices).values({ id, tenantId, createdBy: tryGetAuthContext()?.userId, branchId: input.branchId, warehouseId: input.warehouseId, partyId: input.partyId, costCenterId: input.costCenterId ?? null, referenceInvoiceId: input.referenceInvoiceId, kind: input.kind ?? 'purchase', supplierReferenceNo: input.supplierReferenceNo, supplierReferenceDate: input.supplierReferenceDate, currency: input.currency ?? 'SAR', priceIncludesVat: input.priceIncludesVat ?? false, landedCostAlloc: input.landedCostAlloc ?? 'value', invoiceDiscount: totals.discount, extraTax: totals.extraTax, withholding: totals.withholding, subtotal: totals.subtotal, taxTotal: totals.tax, total: totals.total, status: 'draft' });
-      await tx.insert(purchaseInvoiceLines).values(input.lines.map((line, index) => { const calculated = totals.lines[index]; if (!calculated) throw new DomainError('PURCHASE_TOTALS_INVALID', 'Purchase totals do not match invoice lines', 422); return { id: newId(), tenantId, invoiceId: id, lineNo: index + 1, itemId: line.itemId, description: line.description, quantity: line.quantity, unitPrice: line.unitPrice, discountRate: line.discountRate ?? '0', discountAmount: calculated.discount, taxGroupId: line.taxGroupId, taxRate: line.taxRate ?? '0', net: calculated.net, tax: calculated.tax, total: calculated.total, serialNos: cleanSerialNos(line.serialNos), lotId: line.lotId, costCenterId: line.costCenterId ?? null, batchNo: line.batchNo?.trim() || null, productionDate: line.productionDate?.trim() || null, expiryDate: line.expiryDate?.trim() || null }; }));
+      if (input.lines.length > 0) {
+        await tx.insert(purchaseInvoiceLines).values(
+          input.lines.map((line, index) => {
+            const calculated = totals.lines[index];
+            if (!calculated) throw new DomainError('PURCHASE_TOTALS_INVALID', 'Purchase totals do not match invoice lines', 422);
+            return {
+              id: newId(),
+              tenantId,
+              invoiceId: id,
+              lineNo: index + 1,
+              itemId: line.itemId,
+              description: line.description,
+              quantity: line.quantity,
+              unitPrice: line.unitPrice,
+              discountRate: line.discountRate ?? '0',
+              discountAmount: calculated.discount,
+              taxGroupId: line.taxGroupId,
+              taxRate: line.taxRate ?? '0',
+              net: calculated.net,
+              tax: calculated.tax,
+              total: calculated.total,
+              serialNos: cleanSerialNos(line.serialNos),
+              lotId: line.lotId,
+              costCenterId: line.costCenterId ?? null,
+              batchNo: line.batchNo?.trim() || null,
+              productionDate: line.productionDate?.trim() || null,
+              expiryDate: line.expiryDate?.trim() || null,
+            };
+          }),
+        );
+      }
+    });
+    return this.get(tenantId, id);
+  }
+
+  /** Replace the lines of an existing OCR/header draft without creating a second invoice. */
+  async replaceDraftLines(tenantId: string, id: string, lines: PurchaseLineInput[]) {
+    if (!lines.length) throw new DomainError('PURCHASE_LINES_REQUIRED', 'At least one purchase line is required', 422);
+    const invoice = await this.get(tenantId, id);
+    if (invoice.status !== 'draft') throw new DomainError('PURCHASE_INVOICE_IMMUTABLE', 'Only draft purchase invoices can be changed', 409);
+    const totals = calculateInvoiceTotals({ lines, priceIncludesVat: invoice.priceIncludesVat, invoiceDiscount: invoice.invoiceDiscount });
+
+    await withTenantTx(this.database.db, tenantId, async (tx) => {
+      await this.accounting.assertCostCentersInTx(tx, tenantId, lines.map((line) => line.costCenterId));
+      const [supplier] = await tx
+        .select({ id: parties.id, kind: parties.kind })
+        .from(parties)
+        .where(and(eq(parties.tenantId, tenantId), eq(parties.id, invoice.partyId)))
+        .limit(1);
+      if (!supplier || !['supplier', 'both'].includes(supplier.kind)) {
+        throw new DomainError('PURCHASE_SUPPLIER_REQUIRED', 'Purchase invoices require a supplier party', 422);
+      }
+      await tx.delete(purchaseInvoiceLines).where(and(eq(purchaseInvoiceLines.tenantId, tenantId), eq(purchaseInvoiceLines.invoiceId, id)));
+      await tx.insert(purchaseInvoiceLines).values(
+        lines.map((line, index) => {
+          const calculated = totals.lines[index];
+          if (!calculated) throw new DomainError('PURCHASE_TOTALS_INVALID', 'Purchase totals do not match invoice lines', 422);
+          return {
+            id: newId(),
+            tenantId,
+            invoiceId: id,
+            lineNo: index + 1,
+            itemId: line.itemId,
+            description: line.description,
+            quantity: line.quantity,
+            unitPrice: line.unitPrice,
+            discountRate: line.discountRate ?? '0',
+            discountAmount: calculated.discount,
+            taxGroupId: line.taxGroupId,
+            taxRate: line.taxRate ?? '0',
+            net: calculated.net,
+            tax: calculated.tax,
+            total: calculated.total,
+            serialNos: cleanSerialNos(line.serialNos),
+            lotId: line.lotId,
+            costCenterId: line.costCenterId ?? null,
+            batchNo: line.batchNo?.trim() || null,
+            productionDate: line.productionDate?.trim() || null,
+            expiryDate: line.expiryDate?.trim() || null,
+          };
+        }),
+      );
+      await tx
+        .update(purchaseInvoices)
+        .set({
+          subtotal: totals.subtotal,
+          taxTotal: totals.tax,
+          total: totals.total,
+          invoiceDiscount: totals.discount,
+          updatedAt: new Date(),
+          version: invoice.version + 1,
+        })
+        .where(and(eq(purchaseInvoices.tenantId, tenantId), eq(purchaseInvoices.id, id), eq(purchaseInvoices.status, 'draft')));
     });
     return this.get(tenantId, id);
   }
@@ -122,10 +251,7 @@ export class PurchasesService {
   async updateDraft(tenantId: string, id: string, input: Partial<PurchaseInvoiceInput>) {
     const invoice = await this.get(tenantId, id);
     if (invoice.status !== 'draft') throw new DomainError('PURCHASE_INVOICE_IMMUTABLE', 'Only draft purchase invoices can be changed', 409);
-    if (input.lines) {
-      await withTenantTx(this.database.db, tenantId, (tx) => tx.delete(purchaseInvoiceLines).where(and(eq(purchaseInvoiceLines.tenantId, tenantId), eq(purchaseInvoiceLines.invoiceId, id))));
-      return this.create(tenantId, { ...input, branchId: input.branchId ?? invoice.branchId, partyId: input.partyId ?? invoice.partyId, warehouseId: input.warehouseId ?? invoice.warehouseId ?? undefined, lines: input.lines } as PurchaseInvoiceInput);
-    }
+    if (input.lines) return this.replaceDraftLines(tenantId, id, input.lines);
     await withTenantTx(this.database.db, tenantId, (tx) => tx.update(purchaseInvoices).set({ warehouseId: input.warehouseId, supplierReferenceNo: input.supplierReferenceNo, supplierReferenceDate: input.supplierReferenceDate, landedCostAlloc: input.landedCostAlloc, costCenterId: input.costCenterId, updatedAt: new Date() }).where(and(eq(purchaseInvoices.tenantId, tenantId), eq(purchaseInvoices.id, id))));
     return this.get(tenantId, id);
   }

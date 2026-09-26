@@ -1657,3 +1657,64 @@ tr.opening td {
     font-size: 26px;
   }
 }
+.ocr-review-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(280px, 0.9fr) minmax(420px, 1.1fr);
+}
+
+.ocr-document-preview {
+  background: #f1f5f9;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  min-height: 420px;
+  overflow: hidden;
+}
+
+.ocr-document-preview iframe,
+.ocr-document-preview img {
+  border: 0;
+  display: block;
+  height: 420px;
+  object-fit: contain;
+  width: 100%;
+}
+
+.ocr-fields {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ocr-field {
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  display: grid;
+  gap: 6px;
+  grid-template-columns: 1fr auto;
+  padding: 10px;
+}
+
+.ocr-field > span:nth-child(2),
+.ocr-field > .input {
+  grid-column: 1 / -1;
+  font-size: 16px;
+}
+
+.ocr-field > span:last-child {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+
+@media (max-width: 960px) {
+  .ocr-review-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .ocr-fields {
+    grid-template-columns: 1fr;
+  }
+}

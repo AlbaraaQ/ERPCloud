@@ -42,7 +42,7 @@
 
 ## ملاحظات تنفيذ
 
-- كل ترحيل يبدأ من 0096 (آخر ترحيل حالي 0095)
+- ترحيل 0096 استُخدم لـ Bank Feeds؛ أي تحسين جديد يبدأ من 0097
 - كل صلاحية جديدة تُضاف في `packages/contracts/src/permissions.ts` + ترحيل idempotent + اختبار `permission-codes.spec.ts`
 - كل شاشة جديدة يجب أن تكون مسار حقيقي ويقيسها `navigation.spec.ts`
 - لا `git add -A` — مسارات صريحة فقط
@@ -51,7 +51,8 @@
 
 ## الحالة الحالية (للتذكير)
 
-- 01-10 مكتملة 100% (R17 أغلق 10)
+- **01 Bank Feeds مكتملة 100%**: migration `0096_bank_feeds.sql`، API، 3 شاشات Staff، اختبار 8 حالات، وسكربت تحقق حي 15 نقطة.
+- **02 OCR قيد التحقق بمزود خارجي**: migration `0097_ocr_purchase_invoices.sql`، API/worker، شاشة مراجعة Staff، اختبار 6 حالات، و`verify-ocr.mjs`؛ يلزم ضبط endpoint حقيقي لاختبار دقة العربية.
 - P-C1..12 مكتملة
 - P-M1..10 مكتملة
 - 232 شاشة ready + 1 planned مستبعدة
