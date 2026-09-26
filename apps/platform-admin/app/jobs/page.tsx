@@ -4,7 +4,6 @@ import { useState } from 'react';
 import {
   Activity,
   Ban,
-  Inbox,
   RefreshCw,
   RotateCcw,
   Server,

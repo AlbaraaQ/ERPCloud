@@ -71,6 +71,7 @@ export const baselineRoles: readonly BaselineRoleSeed[] = [
       'purchase.invoice.post',
       'purchase.invoice.void',
       'purchase.adjustment.create',
+      'approval.approve',
       'treasury.view',
       'treasury.voucher.create',
       'treasury.voucher.post',

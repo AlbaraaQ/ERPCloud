@@ -26,6 +26,8 @@ export const errorCodes = {
   MIGRATION_CONFLICT: 'MIGRATION_CONFLICT',
   RATE_LIMITED: 'RATE_LIMITED',
   INTERNAL: 'INTERNAL',
+  // PHASE_04 — a draft was accepted but must wait for the configured approval chain.
+  APPROVAL_REQUIRED: 'APPROVAL_REQUIRED',
   // PHASE_05 §7 — no posting profile answers a (branch, doc_type) lookup.
   ACCOUNT_PROFILE_MISSING: 'ACCOUNT_PROFILE_MISSING',
   // Round 11 — credentials were valid but the user has TOTP enabled and sent no code.
@@ -233,6 +235,7 @@ export const errorStatus: Record<ErrorCode, number> = {
   MIGRATION_CONFLICT: 409,
   RATE_LIMITED: 429,
   INTERNAL: 500,
+  APPROVAL_REQUIRED: 202,
   ACCOUNT_PROFILE_MISSING: 422,
   MFA_REQUIRED: 401,
   USAGE_LIMIT_REACHED: 409,
@@ -331,6 +334,7 @@ export const errorTitle: Record<ErrorCode, string> = {
   MIGRATION_CONFLICT: 'Migration conflict',
   RATE_LIMITED: 'Rate limited',
   INTERNAL: 'Internal error',
+  APPROVAL_REQUIRED: 'Approval required',
   ACCOUNT_PROFILE_MISSING: 'Posting profile missing',
   MFA_REQUIRED: 'Verification code required',
   USAGE_LIMIT_REACHED: 'Usage limit reached',

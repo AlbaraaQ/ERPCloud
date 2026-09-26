@@ -11,7 +11,7 @@ type Token = { text: string; cls: string };
  */
 function tokenizeJson(line: string, lineIdx: number): Token[] {
   const tokens: Token[] = [];
-  const re = /("(?:[^"\\]|\\.)*")(\s*:)?|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|(\btrue\b|\bfalse\b)|(\bnull\b)|([{}\[\],:])/g;
+  const re = /("(?:[^"\\]|\\.)*")(\s*:)?|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|(\btrue\b|\bfalse\b)|(\bnull\b)|([{}[\],:])/g;
   let last = 0;
   let match: RegExpExecArray | null;
   while ((match = re.exec(line)) !== null) {

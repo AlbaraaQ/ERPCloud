@@ -46,7 +46,7 @@ export const industries: readonly Industry[] = [
     icon: '🧵',
     labelAr: 'التفصيل',
     labelEn: 'Tailoring',
-    module: { label: 'التفصيل', source: 'apps/staff/lib/navigation.ts:1137' },
+    module: { label: 'التفصيل', source: 'apps/staff/lib/navigation.ts:1141' },
     summaryAr:
       'الورشة التي تُقاس فيها الأجساد مرّةً وتُطلب الثياب مرّةً بعد مرّة: القياس محفوظٌ على العميل، والخيارات مسعَّرة، والفاتورة إلكترونية.',
     pictureAr: [
@@ -58,37 +58,37 @@ export const industries: readonly Industry[] = [
       {
         label: 'إدارة طلبات التفصيل',
         href: '/tailoring/orders',
-        source: 'apps/staff/lib/navigation.ts:1147',
+        source: 'apps/staff/lib/navigation.ts:1151',
         whatAr: 'الطلب بعميله وقياساته وخياراته وموعد تسليمه في شاشةٍ واحدة.',
       },
       {
         label: 'قياسات العملاء',
         href: '/tailoring/measurements',
-        source: 'apps/staff/lib/navigation.ts:1167',
+        source: 'apps/staff/lib/navigation.ts:1171',
         whatAr: 'القياس يُحفظ على العميل لا على الطلب، فيُعاد استعماله بلا سؤالٍ جديد.',
       },
       {
         label: 'خصائص القياسات',
         href: '/tailoring/measurements/attributes',
-        source: 'apps/staff/lib/navigation.ts:1179',
+        source: 'apps/staff/lib/navigation.ts:1183',
         whatAr: 'الورشة تُضيف ما تقيسه هي (طول كمّ · محيط صدر · كتف) بلا انتظار مبرمج.',
       },
       {
         label: 'إدارة الخيارات الجاهزة',
         href: '/tailoring/options',
-        source: 'apps/staff/lib/navigation.ts:1197',
+        source: 'apps/staff/lib/navigation.ts:1201',
         whatAr: 'كل خيارٍ بمجموعته وسعره، فيُسعَّر الطلب من الكتالوج لا من الذاكرة.',
       },
       {
         label: 'أنواع التفصيل',
         href: '/tailoring/types',
-        source: 'apps/staff/lib/navigation.ts:1206',
+        source: 'apps/staff/lib/navigation.ts:1210',
         whatAr: 'ثوبٌ · بشت · عباية — لكلٍّ نوعُه وقوالبه، والتقرير يفصل بينها.',
       },
       {
         label: 'فواتير التفصيل',
         href: '/tailoring/invoices',
-        source: 'apps/staff/lib/navigation.ts:1153',
+        source: 'apps/staff/lib/navigation.ts:1157',
         whatAr: 'الفاتورة تصدر من الطلب نفسه بترميزٍ ضريبيّ صحيح، لا في دفترٍ آخر.',
       },
     ],
@@ -103,7 +103,7 @@ export const industries: readonly Industry[] = [
     icon: '👓',
     labelAr: 'النظارات',
     labelEn: 'Optics',
-    module: { label: 'النظارات', source: 'apps/staff/lib/navigation.ts:1227' },
+    module: { label: 'النظارات', source: 'apps/staff/lib/navigation.ts:1231' },
     summaryAr:
       'بصرياتٌ تُصدر وصفةً بقياساتها لكل عين، فتبيع النظارة اليوم وتفتح الزيارة القادمة على بيانات العميل نفسها.',
     pictureAr: [
@@ -115,13 +115,13 @@ export const industries: readonly Industry[] = [
       {
         label: 'بيانات النظارات',
         href: '/optics/prescriptions',
-        source: 'apps/staff/lib/navigation.ts:1240',
+        source: 'apps/staff/lib/navigation.ts:1244',
         whatAr: 'الوصفة بحقولها لكل عين، مربوطةً بالعميل لا بالفاتورة — فتُقرأ بعد سنة.',
       },
       {
         label: 'أسماء الحقول',
         href: '/optics/field-labels',
-        source: 'apps/staff/lib/navigation.ts:1257',
+        source: 'apps/staff/lib/navigation.ts:1261',
         whatAr: 'التسمية التي تُكتب على الشاشة هي ما يقوله الموظّف للعميل، فتُعرَّب وتُضبط.',
       },
     ],
@@ -136,7 +136,7 @@ export const industries: readonly Industry[] = [
     icon: '⛵',
     labelAr: 'إدارة المراسي',
     labelEn: 'Marina',
-    module: { label: 'إدارة المراسي', source: 'apps/staff/lib/navigation.ts:1377' },
+    module: { label: 'إدارة المراسي', source: 'apps/staff/lib/navigation.ts:1381' },
     summaryAr:
       'المرسى الذي يؤجّر مكانه بالعقد والفترة لا بالنقاش: إشغالٌ يُرى، وفواتيرُ تأجيرٍ تصدر من الحجز، ومخالفاتٌ تُقيَّد على المركب وصاحبه.',
     pictureAr: [
@@ -148,61 +148,61 @@ export const industries: readonly Industry[] = [
       {
         label: 'بطاقة الفئة وفترات التأجير',
         href: '/marina/groups',
-        source: 'apps/staff/lib/navigation.ts:1391',
+        source: 'apps/staff/lib/navigation.ts:1395',
         whatAr: 'الفئة وفترة التأجير هما سعرُ الإيجار وقاعدته — يُعرَّفان مرّةً ويُطبَّقان.',
       },
       {
         label: 'بطاقات النماذج والمراكب والملاك',
         href: '/marina/vessels',
-        source: 'apps/staff/lib/navigation.ts:1399',
+        source: 'apps/staff/lib/navigation.ts:1403',
         whatAr: 'المركب ومالكه ونموذجه في بطاقةٍ واحدة، ومنها يُبنى العقد.',
       },
       {
         label: 'الحجوزات',
         href: '/marina/bookings',
-        source: 'apps/staff/lib/navigation.ts:1442',
+        source: 'apps/staff/lib/navigation.ts:1446',
         whatAr: 'الحجز يقفل المرسى لفترته، ومنه تصدر فاتورة التأجير بلا إعادة كتابة.',
       },
       {
         label: 'الإضافات',
         href: '/marina/additions',
-        source: 'apps/staff/lib/navigation.ts:1407',
+        source: 'apps/staff/lib/navigation.ts:1411',
         whatAr: 'خدماتُ الحجز (كهرباء · ماء · تنظيف) بأسعارها، فتُضاف للفاتورة لا للحساب الشفهي.',
       },
       {
         label: 'تحضير المراكب',
         href: '/marina/preparation',
-        source: 'apps/staff/lib/navigation.ts:1417',
+        source: 'apps/staff/lib/navigation.ts:1421',
         whatAr: 'ما يجب أن يكون جاهزاً قبل الوصول: قائمةٌ تُنفَّذ لا تُتذكَّر.',
       },
       {
         label: 'المخالفات',
         href: '/marina/violations',
-        source: 'apps/staff/lib/navigation.ts:1421',
+        source: 'apps/staff/lib/navigation.ts:1425',
         whatAr: 'المخالفة تُقيَّد على المركب وعقدِه، فتظهر في حساب مالكه لا في نقاشٍ شفهي.',
       },
       {
         label: 'خطة الدور',
         href: '/marina/rota',
-        source: 'apps/staff/lib/navigation.ts:1424',
+        source: 'apps/staff/lib/navigation.ts:1428',
         whatAr: 'دورُ التشغيل بين المراكب مكتوبٌ لا محفوظ.',
       },
       {
         label: 'إغلاق اليومية',
         href: '/marina/day-close',
-        source: 'apps/staff/lib/navigation.ts:1445',
+        source: 'apps/staff/lib/navigation.ts:1449',
         whatAr: 'مقبوضات اليوم تُقفل في خطوةٍ واحدة، ومعها الورديات.',
       },
       {
         label: 'إغلاقات اليومية',
         href: '/reports/cashier-shift',
-        source: 'apps/staff/lib/navigation.ts:1456',
+        source: 'apps/staff/lib/navigation.ts:1460',
         whatAr: 'أثرُ كل إغلاق يبقى للمراجعة، ولا يُصحَّح بعد الصرف.',
       },
       {
         label: 'تقرير فواتير التأجير',
         href: '/reports/marina-rentals',
-        source: 'apps/staff/lib/navigation.ts:1461',
+        source: 'apps/staff/lib/navigation.ts:1465',
         whatAr: 'ما أُجّر وما حُصّل وما بقي — في تقريرٍ من البيانات نفسها لا من دفتر جانبي.',
       },
     ],
@@ -217,7 +217,7 @@ export const industries: readonly Industry[] = [
     icon: '🏗️',
     labelAr: 'المقاولات',
     labelEn: 'Contracting',
-    module: { label: 'إدارة المشاريع', source: 'apps/staff/lib/navigation.ts:1478' },
+    module: { label: 'إدارة المشاريع', source: 'apps/staff/lib/navigation.ts:1482' },
     summaryAr:
       'مقاولٌ يعرف ربح كل مشروع أثناء المشروع لا بعده: عرضٌ من البنود، وعقد، وعقدُ مقاولٍ من الباطن، ومستخلصُ إنجاز.',
     pictureAr: [
@@ -229,43 +229,43 @@ export const industries: readonly Industry[] = [
       {
         label: 'عروض',
         href: '/projects/offers',
-        source: 'apps/staff/lib/navigation.ts:1518',
+        source: 'apps/staff/lib/navigation.ts:1522',
         whatAr: 'العرض يُبنى من البنود بأسعارها، فلا يُعاد ترقيم المشروع بعد الفوز.',
       },
       {
         label: 'بطاقة بند',
         href: '/projects/boq',
-        source: 'apps/staff/lib/navigation.ts:1488',
+        source: 'apps/staff/lib/navigation.ts:1492',
         whatAr: 'البند بكميته ووحدته وسعره؛ وأثر أي تعديل يُرى قبل أن يصير خلافاً.',
       },
       {
         label: 'مراحل مشروع',
         href: '/projects/stages',
-        source: 'apps/staff/lib/navigation.ts:1492',
+        source: 'apps/staff/lib/navigation.ts:1496',
         whatAr: 'المرحلة هي وحدة الإنجاز والتحصيل، فيُقاس التقدّم بمراحل لا بانطباع.',
       },
       {
         label: 'عقد عميل',
         href: '/projects',
-        source: 'apps/staff/lib/navigation.ts:1503',
+        source: 'apps/staff/lib/navigation.ts:1507',
         whatAr: 'قيمةُ العقد وبنوده ومنه تُصدر المستخلصات والفواتير.',
       },
       {
         label: 'عقد مقاول',
         href: '/projects/contractor-contract',
-        source: 'apps/staff/lib/navigation.ts:1508',
+        source: 'apps/staff/lib/navigation.ts:1512',
         whatAr: 'التعاقد من الباطن يبقى مربوطاً بالعقد الأصلي، فيُعرف ربح كلٍّ منهما.',
       },
       {
         label: 'سند دفع لمقاول',
         href: '/projects/contractor-payment',
-        source: 'apps/staff/lib/navigation.ts:1524',
+        source: 'apps/staff/lib/navigation.ts:1528',
         whatAr: 'الدفعة تُقيَّد على المقاول وتُنقص مستحقاته في الحساب نفسه.',
       },
       {
         label: 'متابعة',
         href: '/projects/followup',
-        source: 'apps/staff/lib/navigation.ts:1514',
+        source: 'apps/staff/lib/navigation.ts:1518',
         whatAr: 'نسبة الإنجاز والمصروف مقابل قيمة العقد — صورةُ المشروع في سطر.',
       },
     ],
@@ -313,10 +313,9 @@ export const industries: readonly Industry[] = [
       {
         label: 'إعدادات ربط سلة',
         href: '/integrations/salla/settings',
-        // أُزيح السطر من 1738 إلى 1748 في R7 (`1a38b2a`) حين أُضيفت «مدير الملفات»
-        // إلى `settings-admin` فوقه بعشرة أسطر؛ والسبيك يفتح الملف عند السطر المكتوب،
-        // فبقيت الإشارة قديمةً حتى رآها الفحص الشامل في R9.
-        source: 'apps/staff/lib/navigation.ts:1748',
+        // أُزيح السطر من 1738 إلى 1752 بعد إضافة شاشات الإعدادات؛ والسبيك يفتح
+        // الملف عند السطر المكتوب، فيبقى هذا المصدر قابلاً للتحقق عند تغيير القائمة.
+        source: 'apps/staff/lib/navigation.ts:1752',
         whatAr: 'الربط ورمزه ومفتاحه في شاشة إعدادات، والسرّ مشفَّرٌ عند التخزين لا نصّاً ظاهراً.',
       },
     ],

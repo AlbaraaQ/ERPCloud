@@ -116,6 +116,27 @@ export const platformSettingDefinitions: readonly PlatformSettingDefinition[] = 
     helpAr: 'رقم التواصل المعروض للعملاء، بصيغة دولية.',
     defaultValue: '',
   },
+  // Future enhancement 02 — provider routing is control-plane configuration. The API key
+  // deliberately stays in the deployment secret store (`OCR_API_KEY`), never in a
+  // browsable settings response.
+  {
+    key: 'ocr.provider',
+    labelAr: 'مزود OCR',
+    labelEn: 'OCR provider',
+    kind: 'select',
+    options: ['http', 'mock'],
+    optionLabels: ['خدمة HTTP', 'اختبار محلي'],
+    helpAr: 'المحول الذي يقرأ فواتير الشراء؛ المفتاح السري من OCR_API_KEY.',
+    defaultValue: 'http',
+  },
+  {
+    key: 'ocr.endpoint',
+    labelAr: 'عنوان خدمة OCR',
+    labelEn: 'OCR endpoint',
+    kind: 'url',
+    helpAr: 'نقطة HTTP التي تستقبل رابط الملف الموقّع وتعيد الحقول المستخرجة.',
+    defaultValue: '',
+  },
   {
     key: 'platform.domains',
     labelAr: 'نطاقات الخدمة',

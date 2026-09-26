@@ -214,6 +214,7 @@ export const permissionRegistry: readonly PermissionDefinition[] = [
   perm('sales.salesman.manage', 'Maintain salesman cards.'),
   perm('purchase.view', 'List and read purchase documents.'),
   perm('purchase.invoice.create', 'Create draft purchase invoices.'),
+  perm('purchase.ocr.use', 'Upload purchase invoices and review OCR extraction results.'),
   perm('purchase.invoice.post', 'Post purchase invoices.'),
   perm('purchase.invoice.void', 'Void posted purchase invoices.'),
   perm('purchase.invoice.pay', 'Record supplier payment hooks on purchase invoices.'),
@@ -230,6 +231,9 @@ export const permissionRegistry: readonly PermissionDefinition[] = [
   perm('treasury.expensetype.manage', 'Maintain treasury expense types.'),
   perm('treasury.shift.close', 'Open and close cashier shifts.'),
   perm('treasury.shift.post', 'Post the journal entry a counted shift produces.'),
+  // Future enhancement 01 — imported bank statements and reconciliation.
+  perm('treasury.bank.view', 'Read bank accounts, imported statements and reconciliation results.'),
+  perm('treasury.bank.manage', 'Create bank accounts, import statements, match lines and manage reconciliation rules.'),
 
   // e-invoicing (PHASE_13)
   perm('einvoice.view', 'Read e-invoice credentials and submissions.'),
@@ -299,6 +303,11 @@ export const permissionRegistry: readonly PermissionDefinition[] = [
   perm('fitment.manage', 'Maintain vehicle makes, models and item fitment rows.'),
   perm('salla.integration.view', 'Read Salla synchronization status and export logs.'),
   perm('salla.integration.manage', 'Manage Salla OAuth connections, mappings, export queues and webhooks.'),
+  // Future enhancement 03 — provider-neutral Salla/Zid/Shopify orders and stock.
+  perm('ecommerce.manage', 'Connect e-commerce stores, synchronize orders and monitor stock updates.'),
+  // Future enhancement 04 — sequential approval workflows.
+  perm('approval.manage', 'Create and maintain tenant approval workflows.'),
+  perm('approval.approve', 'Review, approve and reject assigned approval requests.'),
 ] as const;
 
 /**

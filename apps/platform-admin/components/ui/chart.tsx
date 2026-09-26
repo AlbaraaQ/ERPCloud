@@ -184,7 +184,7 @@ export function DonutCardChart({
   centerValue?: string;
 }) {
   const slices = data.map((slice, i) => ({ ...slice, color: slice.color ?? DONUT_PALETTE[i % DONUT_PALETTE.length] }));
-  const total = slices.reduce((sum, s) => sum + s.value, 0);
+  const grandTotal = slices.reduce((sum, s) => sum + s.value, 0);
   return (
     <div className="relative">
       <ResponsiveContainer width="100%" height={height}>
@@ -220,7 +220,7 @@ export function DonutCardChart({
             <span className="size-2.5 rounded-full flex-none" style={{ background: slice.color }} />
             <span className="truncate">{slice.name}</span>
             <span className="ms-auto font-semibold text-slate-800" style={{ fontVariantNumeric: 'tabular-nums' }}>
-              {total > 0 ? Math.round((slice.value / total) * 100) : 0}%
+              {grandTotal > 0 ? Math.round((slice.value / grandTotal) * 100) : 0}%
             </span>
           </li>
         ))}

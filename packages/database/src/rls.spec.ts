@@ -51,6 +51,10 @@ describe('RLS SQL builders (MULTI_TENANCY §3.5)', () => {
       'notifications',
       'outbox_jobs',
       'idempotency_keys',
+      // Future enhancement 03 — provider-neutral e-commerce surfaces.
+      'ecommerce_stores',
+      'ecommerce_orders',
+      'ecommerce_sync_logs',
       'document_sequences',
       // PHASE_05 — organization structure (DATABASE_DESIGN §5 + §3 currencies).
       'company_profiles',
@@ -66,6 +70,20 @@ describe('RLS SQL builders (MULTI_TENANCY §3.5)', () => {
       // 2026-09 architecture/RBAC reorganisation (migration 0032).
       'devices',
       'membership_role_scopes',
+      // Future enhancement 01 — bank feeds and reconciliation.
+      'bank_accounts',
+      'bank_statements',
+      'bank_statement_lines',
+      'bank_reconciliation_rules',
+      // R17 — printer/report links.
+      'printer_report_links',
+      // Future enhancement 02 — purchase-invoice OCR jobs.
+      'ocr_jobs',
+      // Future enhancement 04 — approval workflow engine.
+      'approval_workflows',
+      'approval_steps',
+      'approval_requests',
+      'approval_decisions',
     ]);
   });
 

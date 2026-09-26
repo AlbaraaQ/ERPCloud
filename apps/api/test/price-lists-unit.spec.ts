@@ -67,7 +67,7 @@ describe('R19 price lists unit-aware', () => {
     });
     expect(itemUnitRes.status).toBe(201);
 
-    const curRes = await api(ctx.server, 'post', '/api/v1/currencies', { token: actor.token, body: { code: 'SAR', nameAr: 'ريال سعودي', isBase: true } });
+    await api(ctx.server, 'post', '/api/v1/currencies', { token: actor.token, body: { code: 'SAR', nameAr: 'ريال سعودي', isBase: true } });
     // currency may already exist or 201/200
     const plRes = await api(ctx.server, 'post', '/api/v1/price-lists', { token: actor.token, body: { name: 'قائمة R19', currencyCode: 'SAR' } });
     expect(plRes.status).toBe(201);

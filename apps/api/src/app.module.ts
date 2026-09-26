@@ -31,13 +31,16 @@ import { PlatformOperationsModule } from './modules/operations/platform-operatio
 import { ImpersonationGuard } from './modules/support/impersonation.guard.js';
 import { PlatformAdminModule } from './modules/platform/admin/platform-admin.module.js';
 import { AccountingModule } from './modules/accounting/accounting.module.js';
+import { ApprovalModule } from './modules/approvals/approvals.module.js';
 import { OrganizationModule } from './modules/organization/index.js';
 import { PartiesModule } from './modules/parties/parties.module.js';
 import { CatalogModule } from './modules/organization/catalog/catalog.module.js';
 import { InventoryModule } from './modules/inventory/inventory.module.js';
 import { SalesModule } from './modules/sales/sales.module.js';
 import { PurchasesModule } from './modules/purchases/purchases.module.js';
+import { OcrModule } from './modules/ocr/ocr.module.js';
 import { TreasuryModule } from './modules/treasury/treasury.module.js';
+import { BankFeedsModule } from './modules/treasury/bank-feeds.module.js';
 import { EinvoicingModule } from './modules/einvoicing/einvoicing.module.js';
 import { OperationsModule } from './modules/operations/operations.module.js';
 import { PortalModule } from './modules/portal/portal.module.js';
@@ -53,6 +56,7 @@ import { FitmentModule } from './modules/fitment/fitment.module.js';
 import { MarinaModule } from './modules/marina/marina.module.js';
 import { OpticsModule } from './modules/optics/optics.module.js';
 import { SallaModule } from './modules/integrations/salla/salla.module.js';
+import { EcommerceModule } from './modules/ecommerce/ecommerce.module.js';
 import { TailoringModule } from './modules/tailoring/tailoring.module.js';
 import { PaymentsModule } from './modules/payments/payments.module.js';
 import { WhatsappModule } from './modules/integrations/whatsapp/whatsapp.module.js';
@@ -108,11 +112,14 @@ import { OpsModule } from './ops/ops.module.js';
     PlatformAdminModule,
     CatalogModule,
     AccountingModule,
+    ApprovalModule,
     PartiesModule,
     InventoryModule,
     SalesModule,
     PurchasesModule,
+    OcrModule,
     TreasuryModule,
+    BankFeedsModule,
     EinvoicingModule,
     OperationsModule,
     PortalModule,
@@ -129,6 +136,7 @@ import { OpsModule } from './ops/ops.module.js';
     MarinaModule,
     FitmentModule,
     SallaModule,
+    EcommerceModule,
     PaymentsModule,
     WhatsappModule,
   ],

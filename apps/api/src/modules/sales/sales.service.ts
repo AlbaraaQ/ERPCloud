@@ -26,6 +26,7 @@ import {
 
 import { assertDiscountWithinLimit, sumDiscount, sumLineGross } from '../../common/discount-limit.js';
 import { DATABASE_HANDLE } from '../../database/database.module.js';
+import { DomainEventsService } from '../../events/domain-events.service.js';
 import { WebhookPublisher } from '../developer/webhook-publisher.service.js';
 import { UsageService } from '../usage/index.js';
 import { AccountingService } from '../accounting/accounting.service.js';
@@ -35,6 +36,7 @@ import { PostingProfilesService } from '../organization/posting-profiles/posting
 import { isUniqueViolation } from '../organization/shared/org-support.js';
 import { tryGetAuthContext } from '../platform/context/tenant-context.js';
 import { SequencesService } from '../platform-services/index.js';
+import { ApprovalService } from '../approvals/approvals.service.js';
 
 /**
  * 🔢 الأرقام التسلسلية كما يكتبها المُدخِل: نصٌّ مقصوص، بلا فراغات ولا تكرار — فالسطر
@@ -216,6 +218,8 @@ export class SalesService {
     private readonly usage: UsageService,
     // P-C11 — الإعلان عن الأحداث يُحقن ولا يُستورَد: الوحدة تُصرّح بتبعيّتها في موديولها.
     private readonly webhooks: WebhookPublisher,
+    private readonly domainEvents: DomainEventsService,
+    private readonly approvals: ApprovalService,
   ) {}
 
   async list(tenantId: string) {
@@ -364,11 +368,46 @@ export class SalesService {
    * settlement payment have all succeeded.
    */
   async createAndPost(tenantId: string, input: SalesInvoiceInput, posting: PostingInput = {}) {
-    return withTenantTx(this.database.db, tenantId, async (tx) => {
+    // Keep the POS checkout atomic when no approval applies.  When a workflow does
+    // apply, the draft must commit before the request can be created; otherwise the
+    // 202 response would roll the draft and its request back together.
+    const totals = calculateInvoiceTotals({
+      lines: input.lines,
+      priceIncludesVat: input.priceIncludesVat,
+      invoiceDiscount: input.invoiceDiscount,
+      extraTax: input.extraTax,
+      withholding: input.withholding,
+    });
+    const approvalApplies = await this.approvals.hasApplicableWorkflow(tenantId, 'sales_invoice', {
+      amount: totals.total,
+      branchId: input.branchId,
+      costCenterId: input.costCenterId,
+    });
+    if (approvalApplies) {
+      const id = await withTenantTx(this.database.db, tenantId, (tx) =>
+        this.createInTx(tx, tenantId, input),
+      );
+      const created = await this.get(tenantId, id);
+      await this.approvals.ensureApprovalRequired(tenantId, 'sales_invoice', id, {
+        amount: created.total,
+        branchId: created.branchId,
+        costCenterId: created.costCenterId,
+        posting: posting as unknown as Record<string, unknown>,
+      });
+      // A notify-only workflow or a request that was already approved may continue;
+      // the normal post path is still bypassed here because the workflow was checked.
+      return this.postWithoutApproval(tenantId, id, posting);
+    }
+
+    const invoice = await withTenantTx(this.database.db, tenantId, async (tx) => {
       const id = await this.createInTx(tx, tenantId, input);
       const posted = await this.postInTx(tx, tenantId, id, posting);
       return posted ?? this.getInTx(tx, tenantId, id);
     });
+    // POS uses this atomic path instead of `post()`, so it must publish the same
+    // post-commit events for webhook consumers and e-commerce stock workers.
+    this.announcePosted(tenantId, invoice);
+    return invoice;
   }
 
   async updateDraft(tenantId: string, id: string, input: Partial<SalesInvoiceInput>) {
@@ -470,9 +509,35 @@ export class SalesService {
   }
 
   async post(tenantId: string, id: string, posting: PostingInput = {}) {
+    const invoice = await this.get(tenantId, id);
+    if (invoice.status === 'posted') return invoice;
+    if (invoice.status !== 'draft')
+      throw new DomainError('SALES_INVOICE_INVALID_STATUS', 'Only draft invoices can be posted', 409);
+    if (posting.journalLines?.length && !posting.fiscalPeriodId)
+      throw new DomainError(
+        'SALES_FISCAL_PERIOD_REQUIRED',
+        'A fiscal period is required for accounting posting',
+        422,
+      );
+
+    await this.approvals.ensureApprovalRequired(tenantId, 'sales_invoice', id, {
+      amount: invoice.total,
+      branchId: invoice.branchId,
+      costCenterId: invoice.costCenterId,
+      posting: posting as unknown as Record<string, unknown>,
+    });
+    return this.postWithoutApproval(tenantId, id, posting);
+  }
+
+  /** Called only by the approval completion event; it cannot open a second chain. */
+  async postApproved(tenantId: string, id: string, posting: PostingInput = {}) {
+    return this.postWithoutApproval(tenantId, id, posting);
+  }
+
+  private async postWithoutApproval(tenantId: string, id: string, posting: PostingInput = {}) {
     // Fail fast, before a transaction is even opened: an explicit-journal posting
-    // that names no period can never be written, and the gate must fire before any
-    // inventory side effect (sales.service.spec).
+    // that names no period can never be written, and the approval gate must fire before
+    // any inventory side effect (sales.service.spec).
     if (posting.journalLines?.length && !posting.fiscalPeriodId)
       throw new DomainError(
         'SALES_FISCAL_PERIOD_REQUIRED',
@@ -483,9 +548,33 @@ export class SalesService {
       this.postInTx(tx, tenantId, id, posting),
     );
     const invoice = posted ?? (await this.get(tenantId, id));
-    // P-C11 — `invoice.posted` يُعلَن **بعد** نجاح المعاملة: الحدث يقول ما جرى لا ما نُوي
-    // فعله. و`void` مقصود: الإعلان لا يوقف الصدور — عنوانٌ معطّل عند العميل ليس سبباً لرفض
-    // فاتورة. والفشل مسجَّل في سجلّ التسليم حيث يُقرأ.
+    // `invoice.posted` is emitted only after the transaction commits. The same helper is
+    // used by the atomic POS path (`createAndPost`) so no posting path skips stock sync.
+    this.announcePosted(tenantId, invoice);
+    return invoice;
+  }
+
+  private announcePosted(
+    tenantId: string,
+    invoice: {
+      id: string;
+      number: string | null;
+      kind: string;
+      status: string;
+      total: string;
+      currency: string;
+      partyId: string | null;
+      branchId: string;
+      warehouseId: string | null;
+      lines: Array<{
+        itemId: string | null;
+        metadata: unknown;
+        quantity: string;
+      }>;
+    },
+  ): void {
+    // P-C11 — announce only after the posting transaction has committed. The event
+    // contains item identifiers and quantities, never provider credentials.
     void this.webhooks.emit('invoice.posted', tenantId, {
       invoiceId: invoice.id,
       number: invoice.number,
@@ -496,7 +585,26 @@ export class SalesService {
       partyId: invoice.partyId,
       branchId: invoice.branchId,
     });
-    return invoice;
+    void this.domainEvents.emit({
+      type: 'sales.invoice.posted',
+      tenantId,
+      payload: {
+        invoiceId: invoice.id,
+        warehouseId: invoice.warehouseId,
+        lines: invoice.lines
+          .filter((line) => Boolean(line.itemId))
+          .map((line) => ({
+            itemId: line.itemId,
+            remoteItemId:
+              typeof line.metadata === 'object' &&
+              line.metadata &&
+              typeof (line.metadata as Record<string, unknown>).remoteItemId === 'string'
+                ? (line.metadata as Record<string, unknown>).remoteItemId
+                : undefined,
+            quantity: line.quantity,
+          })),
+      },
+    });
   }
 
   /**
