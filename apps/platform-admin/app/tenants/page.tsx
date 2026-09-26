@@ -9,7 +9,6 @@ import {
   PlayCircle,
   Plus,
   Search,
-  UserRound,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
