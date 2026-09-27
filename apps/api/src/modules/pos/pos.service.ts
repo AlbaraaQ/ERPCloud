@@ -415,6 +415,16 @@ export class PosService {
         warehouseRows.find((row) => row.isDefault) ??
         warehouseRows[0];
 
+      const basePrices = itemRows
+        .filter((row) => row.salePrice !== null)
+        .map((row) => ({
+          priceListId: null,
+          itemId: row.id,
+          unitId: row.baseUnitId,
+          unitPrice: row.salePrice,
+          minQty: '0',
+        }));
+
       return {
         data: {
           schemaVersion: 1,
@@ -431,7 +441,7 @@ export class PosService {
           warehouses: warehouseRows,
           cashLocations: cashRows,
           priceLists: priceListRows,
-          prices: priceRows,
+          prices: [...basePrices, ...priceRows],
           stock: stockRows,
           defaults: {
             branchId: defaultBranch?.id ?? null,
@@ -738,7 +748,7 @@ export class PosService {
       !payload.payment
     )
       return { code: 'VALIDATION_FAILED', message: 'Offline payload is not a POS checkout payload' };
-    if (payload.payment.method !== 'cash' || (payload.payments && payload.payments.length > 0))
+    if (payload.payment.method !== 'cash' || payload.payments?.some((tender) => tender.method !== 'cash'))
       return { code: 'POS_OFFLINE_CASH_ONLY', message: 'Offline POS accepts cash payments only' };
     return undefined;
   }
