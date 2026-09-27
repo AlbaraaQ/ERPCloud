@@ -1581,8 +1581,65 @@ tr.opening td {
   line-height: 1.35;
 }
 
+/* ------------------------------------------------------------------ offline POS */
+.offline-scanner {
+  width: min(100%, 360px);
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  background: #0f172a;
+  margin-bottom: 10px;
+}
+.stat-card {
+  display: grid;
+  gap: 3px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+.stat-card span,
+.stat-card small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.stat-card strong {
+  font-size: 25px;
+  line-height: 1.1;
+  color: var(--text);
+}
+.subtle {
+  background: var(--surface-2);
+}
+.offline-receipt {
+  display: none;
+}
+
 /* ------------------------------------------------------------------ print */
 @media print {
+  body:has(.offline-receipt) > * {
+    display: none !important;
+  }
+  .offline-receipt {
+    display: block !important;
+    width: 72mm;
+    margin: 0 auto;
+    color: #000;
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    line-height: 1.45;
+  }
+  .offline-receipt h1,
+  .offline-receipt strong {
+    font-size: 15px;
+  }
+  @page {
+    size: 80mm auto;
+    margin: 4mm;
+  }
+
+
   .side,
   .topbar,
   .toolbar,

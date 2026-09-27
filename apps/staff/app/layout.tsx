@@ -8,10 +8,12 @@ import { TokenBridge } from '../components/token-bridge';
 import { ToastProvider } from '../components/ui/toast';
 import { LanguageProvider } from '../lib/i18n';
 import { SessionProvider } from '../lib/session';
+import { ServiceWorkerRegister } from '../components/service-worker-register';
 
 export const metadata: Metadata = {
   title: 'Cloud ERP — لوحة التحكم',
   description: 'نظام محاسبي سحابي متعدد المنشآت',
+  manifest: '/manifest.webmanifest',
 };
 
 export const viewport: Viewport = { width: 'device-width', initialScale: 1 };
@@ -23,6 +25,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
         <LanguageProvider>
           <SessionProvider>
             <TokenBridge />
+            <ServiceWorkerRegister />
             <ToastProvider>
               <AuthGate>{children}</AuthGate>
             </ToastProvider>

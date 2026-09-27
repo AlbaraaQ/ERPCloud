@@ -206,6 +206,7 @@ describe('tenant isolation (TESTING_STRATEGY §6)', () => {
       'custom_fields',
       'custom_field_values',
       'custom_reports',
+      'offline_queue',
     ]);
   });
 

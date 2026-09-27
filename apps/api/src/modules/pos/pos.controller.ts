@@ -9,6 +9,7 @@ import {
   type OrderItemInput,
   type PosCheckoutInput,
   type PosHoldInput,
+  type PosOfflineSyncInput,
   type TableCategoryInput,
 } from './pos.service.js';
 
@@ -70,6 +71,19 @@ export class PosController {
   ) {
     return this.pos.close(getTenantContext().tenantId, id, body);
   }
+  /** Snapshot used to seed IndexedDB before a till leaves the network. */
+  @Get('offline-data') @RequiresPermission('pos.view') offlineData() {
+    return this.pos.offlineData(getTenantContext().tenantId);
+  }
+
+  /** Replays cash-only IndexedDB tickets; each ticket gets an independent outcome. */
+  @Post('offline-sync') @RequiresPermission('pos.operate', 'sales.invoice.post') offlineSync(
+    @Body() body: PosOfflineSyncInput,
+  ) {
+    const ctx = getTenantContext();
+    return this.pos.offlineSync(ctx.tenantId, ctx.userId, body);
+  }
+
   /**
    * The till checkout. One call creates, posts, relieves stock and settles the
    * sale — and links it to the cashier's open shift so the day-close report can

@@ -165,6 +165,8 @@ export const rlsProtectedTables = [
   'custom_fields',
   'custom_field_values',
   'custom_reports',
+  // Future enhancement 06 — durable idempotency ledger for offline POS invoices.
+  'offline_queue',
 ] as const;
 
 export type QueryRowsOf<T> = QueryRows<T>;

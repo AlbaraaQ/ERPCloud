@@ -1,18 +1,29 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Decimal } from 'decimal.js';
-import { and, eq, isNull, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { calculateInvoiceTotals, DomainError, errorCodes, newId } from '@erp/contracts';
 import { resolveTenantSettings } from '@erp/config';
 import {
+  branches,
   cashLocations,
   diningTables,
+  itemBarcodes,
+  itemCategories,
+  itemUnits,
   items,
+  offlineQueue,
   orderEvents,
   posHolds,
+  parties,
+  priceListItems,
+  priceLists,
   salesInvoices,
   shiftCloses,
+  stockBalances,
   tableCategories,
+  taxGroups,
   tenantSettings,
+  unitsOfMeasure,
   warehouses,
   withTenantTx,
   type DatabaseHandle,
@@ -79,9 +90,34 @@ export type PosCheckoutInput = {
    * `payment` المفرد ولا تلغيه، ومجموعها يجب أن يطابق صافي الفاتورة («⚖️ F6 مطابقة» L548)
    * أو يقلّ عنه إن كان الباقي على ذمة عميلٍ مُسمّى.
    */
-  payments?: Array<{ method: 'cash' | 'card' | 'bank'; amount: string; cashLocationId?: string; settlementAccountId?: string; reference?: string }>;
+  payments?: Array<{
+    method: 'cash' | 'card' | 'bank';
+    amount: string;
+    cashLocationId?: string;
+    settlementAccountId?: string;
+    reference?: string;
+  }>;
   /** R4 — كل صف يخزّن مبالغ الفكة المعلنة، والتغيير يُحسب على الجزء النقدي وحده. */
   tendered?: string;
+};
+
+/**
+ * An invoice captured while the browser has no network. `payload` is the exact checkout
+ * shape used by `/pos/checkout`; keeping it nested makes the replay identity impossible to
+ * confuse with a server invoice number. The service also accepts the payload flattened for
+ * older clients, but new clients should always use `payload`.
+ */
+export type PosOfflineInvoiceInput = {
+  offlineId: string;
+  deviceId?: string;
+  sequenceNo: number;
+  createdAt?: string;
+  payload?: PosCheckoutInput;
+} & Partial<PosCheckoutInput>;
+
+export type PosOfflineSyncInput = {
+  deviceId?: string;
+  invoices: PosOfflineInvoiceInput[];
 };
 
 /** 🅿️ خانة تعليق كما يكتبها الكاشير — سطور الواجهة لا سطور المستند. */
@@ -149,17 +185,636 @@ export class PosService {
       const rows = await tx
         .select({ key: tenantSettings.key, value: tenantSettings.value })
         .from(tenantSettings)
-        .where(
-          and(eq(tenantSettings.tenantId, tenantId), sql`${tenantSettings.key} like 'pos.%'`),
-        );
+        .where(and(eq(tenantSettings.tenantId, tenantId), sql`${tenantSettings.key} like 'pos.%'`));
       return new Map(rows.map((row) => [row.key, row.value as string | boolean | number | null]));
     });
     const resolved = resolveTenantSettings(stored);
     return {
-      data: Object.fromEntries(
-        Object.entries(resolved).filter(([key]) => key.startsWith('pos.')),
-      ) as Record<string, string | boolean | number | null>,
+      data: Object.fromEntries(Object.entries(resolved).filter(([key]) => key.startsWith('pos.'))) as Record<
+        string,
+        string | boolean | number | null
+      >,
     };
+  }
+
+  /**
+   * Immutable snapshot for a till that is about to lose the network. The query is tenant
+   * scoped and intentionally returns only the small, sale-facing projection; accounting
+   * master data never becomes an offline client-side dependency.
+   */
+  async offlineData(tenantId: string) {
+    await this.ensureEnabled(tenantId);
+    return withTenantTx(this.database.db, tenantId, async (tx) => {
+      const [
+        itemRows,
+        categoryRows,
+        unitRows,
+        taxRows,
+        customerRows,
+        branchRows,
+        warehouseRows,
+        cashRows,
+        priceListRows,
+      ] = await Promise.all([
+        tx
+          .select({
+            id: items.id,
+            sku: items.sku,
+            barcode: items.barcode,
+            nameAr: items.nameAr,
+            nameEn: items.nameEn,
+            categoryId: items.categoryId,
+            baseUnitId: items.baseUnitId,
+            kind: items.kind,
+            salePrice: items.salePrice,
+            taxGroupId: items.taxGroupId,
+            trackLot: items.trackLot,
+            trackSerial: items.trackSerial,
+            weightedScale: items.weightedScale,
+          })
+          .from(items)
+          .where(and(eq(items.tenantId, tenantId), eq(items.showInPos, true), isNull(items.deletedAt)))
+          .limit(10000),
+        tx
+          .select({
+            id: itemCategories.id,
+            code: itemCategories.code,
+            nameAr: itemCategories.nameAr,
+            nameEn: itemCategories.nameEn,
+            sortOrder: itemCategories.sortOrder,
+          })
+          .from(itemCategories)
+          .where(
+            and(
+              eq(itemCategories.tenantId, tenantId),
+              eq(itemCategories.showInPos, true),
+              isNull(itemCategories.deletedAt),
+            ),
+          ),
+        tx
+          .select({
+            id: unitsOfMeasure.id,
+            code: unitsOfMeasure.code,
+            nameAr: unitsOfMeasure.nameAr,
+            nameEn: unitsOfMeasure.nameEn,
+          })
+          .from(unitsOfMeasure)
+          .where(and(eq(unitsOfMeasure.tenantId, tenantId), isNull(unitsOfMeasure.deletedAt))),
+        tx
+          .select({
+            id: taxGroups.id,
+            nameAr: taxGroups.nameAr,
+            nameEn: taxGroups.nameEn,
+            rate: taxGroups.rate,
+            isInclusiveDefault: taxGroups.isInclusiveDefault,
+          })
+          .from(taxGroups)
+          .where(and(eq(taxGroups.tenantId, tenantId), isNull(taxGroups.deletedAt))),
+        tx
+          .select({
+            id: parties.id,
+            code: parties.code,
+            name: parties.name,
+            phone: parties.phone,
+            email: parties.email,
+            branchId: parties.branchId,
+          })
+          .from(parties)
+          .where(
+            and(
+              eq(parties.tenantId, tenantId),
+              sql`${parties.kind} in ('customer', 'both')`,
+              isNull(parties.deletedAt),
+            ),
+          )
+          .limit(10000),
+        tx
+          .select({
+            id: branches.id,
+            code: branches.code,
+            nameAr: branches.nameAr,
+            nameEn: branches.nameEn,
+            isDefault: branches.isDefault,
+          })
+          .from(branches)
+          .where(
+            and(eq(branches.tenantId, tenantId), eq(branches.isActive, true), isNull(branches.deletedAt)),
+          ),
+        tx
+          .select({
+            id: warehouses.id,
+            branchId: warehouses.branchId,
+            code: warehouses.code,
+            name: warehouses.name,
+            isDefault: warehouses.isDefault,
+          })
+          .from(warehouses)
+          .where(
+            and(
+              eq(warehouses.tenantId, tenantId),
+              eq(warehouses.isActive, true),
+              isNull(warehouses.deletedAt),
+            ),
+          ),
+        tx
+          .select({
+            id: cashLocations.id,
+            branchId: cashLocations.branchId,
+            kind: cashLocations.kind,
+            name: cashLocations.name,
+            isDefault: cashLocations.isDefault,
+            changeInPos: cashLocations.changeInPos,
+          })
+          .from(cashLocations)
+          .where(
+            and(
+              eq(cashLocations.tenantId, tenantId),
+              eq(cashLocations.isActive, true),
+              isNull(cashLocations.deletedAt),
+            ),
+          ),
+        tx
+          .select({
+            id: priceLists.id,
+            name: priceLists.name,
+            currencyCode: priceLists.currencyCode,
+            isDefault: priceLists.isDefault,
+          })
+          .from(priceLists)
+          .where(
+            and(
+              eq(priceLists.tenantId, tenantId),
+              eq(priceLists.isActive, true),
+              isNull(priceLists.deletedAt),
+            ),
+          ),
+      ]);
+
+      const itemIds = itemRows.map((row) => row.id);
+      const [barcodeRows, itemUnitRows, stockRows, priceRows] = await Promise.all([
+        itemIds.length
+          ? tx
+              .select({
+                barcode: itemBarcodes.barcode,
+                itemId: itemBarcodes.itemId,
+                unitId: itemBarcodes.unitId,
+              })
+              .from(itemBarcodes)
+              .where(and(eq(itemBarcodes.tenantId, tenantId), inArray(itemBarcodes.itemId, itemIds)))
+          : Promise.resolve([]),
+        itemIds.length
+          ? tx
+              .select({
+                itemId: itemUnits.itemId,
+                unitId: itemUnits.unitId,
+                ratio: itemUnits.ratio,
+                barcode: itemUnits.barcode,
+                salePrice: itemUnits.salePrice,
+                isDefaultSale: itemUnits.isDefaultSale,
+              })
+              .from(itemUnits)
+              .where(and(eq(itemUnits.tenantId, tenantId), inArray(itemUnits.itemId, itemIds)))
+          : Promise.resolve([]),
+        itemIds.length
+          ? tx
+              .select({
+                itemId: stockBalances.itemId,
+                warehouseId: stockBalances.warehouseId,
+                quantity: stockBalances.quantity,
+              })
+              .from(stockBalances)
+              .where(and(eq(stockBalances.tenantId, tenantId), inArray(stockBalances.itemId, itemIds)))
+          : Promise.resolve([]),
+        priceListRows.length && itemIds.length
+          ? tx
+              .select({
+                priceListId: priceListItems.priceListId,
+                itemId: priceListItems.itemId,
+                unitId: priceListItems.unitId,
+                unitPrice: priceListItems.unitPrice,
+                minQty: priceListItems.minQty,
+              })
+              .from(priceListItems)
+              .where(
+                and(
+                  eq(priceListItems.tenantId, tenantId),
+                  inArray(
+                    priceListItems.priceListId,
+                    priceListRows.map((row) => row.id),
+                  ),
+                  inArray(priceListItems.itemId, itemIds),
+                ),
+              )
+          : Promise.resolve([]),
+      ]);
+
+      const defaultBranch = branchRows.find((row) => row.isDefault) ?? branchRows[0];
+      const defaultWarehouse =
+        warehouseRows.find((row) => row.isDefault && row.branchId === defaultBranch?.id) ??
+        warehouseRows.find((row) => row.branchId === defaultBranch?.id) ??
+        warehouseRows.find((row) => row.isDefault) ??
+        warehouseRows[0];
+
+      return {
+        data: {
+          schemaVersion: 1,
+          generatedAt: new Date().toISOString(),
+          expiresInSeconds: 24 * 60 * 60,
+          items: itemRows,
+          categories: categoryRows,
+          units: unitRows,
+          itemUnits: itemUnitRows,
+          barcodes: barcodeRows,
+          taxes: taxRows,
+          customers: customerRows,
+          branches: branchRows,
+          warehouses: warehouseRows,
+          cashLocations: cashRows,
+          priceLists: priceListRows,
+          prices: priceRows,
+          stock: stockRows,
+          defaults: {
+            branchId: defaultBranch?.id ?? null,
+            warehouseId: defaultWarehouse?.id ?? null,
+            cashLocationId:
+              cashRows.find((row) => row.isDefault && row.branchId === defaultBranch?.id)?.id ?? null,
+          },
+        },
+      };
+    });
+  }
+
+  /**
+   * Replays a batch one ticket at a time. A bad stock balance is a row-level conflict, not
+   * a batch failure: the cashier can resolve that ticket while the remaining cash sales post.
+   */
+  async offlineSync(tenantId: string, userId: string, input: PosOfflineSyncInput) {
+    await this.ensureEnabled(tenantId);
+    if (!input || !Array.isArray(input.invoices) || input.invoices.length === 0)
+      throw new DomainError('VALIDATION_FAILED', 'At least one offline invoice is required', 422);
+    if (input.invoices.length > 100)
+      throw new DomainError('VALIDATION_FAILED', 'A sync batch cannot contain more than 100 invoices', 422);
+
+    const results: Array<Record<string, unknown>> = [];
+    const seenDeviceSequences = new Set<string>();
+    for (const invoice of input.invoices) {
+      const deviceId = invoice.deviceId ?? input.deviceId;
+      const offlineId = typeof invoice.offlineId === 'string' ? invoice.offlineId.trim() : '';
+      const sequenceNo = invoice.sequenceNo;
+      if (!deviceId || !/^[A-Za-z0-9._:-]{1,128}$/.test(deviceId)) {
+        results.push({
+          offlineId: offlineId || null,
+          sequenceNo,
+          status: 'conflict',
+          errorCode: 'POS_OFFLINE_DEVICE_INVALID',
+          message: 'A stable deviceId is required',
+          resolution: { action: 'reconfigure-device' },
+        });
+        continue;
+      }
+      if (!offlineId || offlineId.length > 160 || !Number.isInteger(sequenceNo) || sequenceNo <= 0) {
+        results.push({
+          offlineId: offlineId || null,
+          sequenceNo,
+          status: 'conflict',
+          errorCode: 'POS_OFFLINE_SEQUENCE_INVALID',
+          message: 'offlineId and a positive integer sequenceNo are required',
+          resolution: { action: 'edit-and-retry' },
+        });
+        continue;
+      }
+      const sequenceKey = `${deviceId}:${sequenceNo}`;
+      if (seenDeviceSequences.has(sequenceKey)) {
+        results.push({
+          offlineId,
+          sequenceNo,
+          status: 'conflict',
+          errorCode: 'POS_OFFLINE_SEQUENCE_DUPLICATE',
+          message: 'The sequence number is duplicated in this batch',
+          resolution: { action: 'remove-duplicate' },
+        });
+        continue;
+      }
+      seenDeviceSequences.add(sequenceKey);
+
+      const [existing] = await withTenantTx(this.database.db, tenantId, (tx) =>
+        tx
+          .select()
+          .from(offlineQueue)
+          .where(and(eq(offlineQueue.tenantId, tenantId), eq(offlineQueue.offlineId, offlineId)))
+          .limit(1),
+      );
+      if (existing?.status === 'synced') {
+        results.push({
+          offlineId,
+          sequenceNo,
+          status: existing.status,
+          invoiceId: existing.invoiceId,
+          number: existing.invoiceNumber,
+          errorCode: existing.errorCode,
+          message: existing.errorDetail,
+          resolution: { action: 'remove-local-copy' },
+        });
+        continue;
+      }
+      if (existing && existing.sequenceNo !== sequenceNo) {
+        results.push({
+          offlineId,
+          sequenceNo,
+          status: 'conflict',
+          errorCode: 'POS_OFFLINE_ID_SEQUENCE_MISMATCH',
+          message: 'The same offlineId was submitted with another sequence number',
+          resolution: { action: 'restore-original-sequence', sequenceNo: existing.sequenceNo },
+        });
+        continue;
+      }
+
+      const [latest] = await withTenantTx(this.database.db, tenantId, (tx) =>
+        tx
+          .select({ sequenceNo: offlineQueue.sequenceNo })
+          .from(offlineQueue)
+          .where(and(eq(offlineQueue.tenantId, tenantId), eq(offlineQueue.deviceId, deviceId)))
+          .orderBy(desc(offlineQueue.sequenceNo))
+          .limit(1),
+      );
+      if (!existing && latest && sequenceNo <= latest.sequenceNo) {
+        results.push({
+          offlineId,
+          sequenceNo,
+          status: 'conflict',
+          errorCode: 'POS_OFFLINE_SEQUENCE_OLD',
+          message: `Sequence ${sequenceNo} is not newer than the last accepted sequence ${latest.sequenceNo}`,
+          resolution: { action: 'refresh-device-sequence', lastAcceptedSequence: latest.sequenceNo },
+        });
+        continue;
+      }
+
+      const incomingPayload =
+        invoice.payload ??
+        (() => {
+          const flat = { ...invoice } as Record<string, unknown>;
+          delete flat.offlineId;
+          delete flat.deviceId;
+          delete flat.sequenceNo;
+          delete flat.createdAt;
+          delete flat.payload;
+          return flat;
+        })();
+      const rawPayload = existing ? (invoice.payload ?? existing.payload) : incomingPayload;
+      const payload = rawPayload as PosCheckoutInput;
+      const conflict = this.validateOfflineCashPayload(payload);
+      if (existing) {
+        await withTenantTx(this.database.db, tenantId, (tx) =>
+          tx
+            .update(offlineQueue)
+            .set({
+              status: conflict ? 'conflict' : 'pending',
+              payload: rawPayload as unknown as Record<string, unknown>,
+              errorCode: conflict?.code,
+              errorDetail: conflict?.message,
+              updatedAt: new Date(),
+            })
+            .where(and(eq(offlineQueue.tenantId, tenantId), eq(offlineQueue.offlineId, offlineId))),
+        );
+      } else {
+        await withTenantTx(this.database.db, tenantId, (tx) =>
+          tx.insert(offlineQueue).values({
+            id: newId(),
+            tenantId,
+            deviceId,
+            offlineId,
+            sequenceNo,
+            status: conflict ? 'conflict' : 'pending',
+            payload: rawPayload as unknown as Record<string, unknown>,
+            createdBy: userId,
+            createdAt:
+              invoice.createdAt && !Number.isNaN(Date.parse(invoice.createdAt))
+                ? new Date(invoice.createdAt)
+                : new Date(),
+            updatedAt: new Date(),
+            errorCode: conflict?.code,
+            errorDetail: conflict?.message,
+          }),
+        );
+      }
+      if (conflict) {
+        if (existing) {
+          await withTenantTx(this.database.db, tenantId, (tx) =>
+            tx
+              .update(offlineQueue)
+              .set({
+                status: 'conflict',
+                errorCode: conflict.code,
+                errorDetail: conflict.message,
+                updatedAt: new Date(),
+              })
+              .where(and(eq(offlineQueue.tenantId, tenantId), eq(offlineQueue.offlineId, offlineId))),
+          );
+        }
+        results.push({
+          offlineId,
+          sequenceNo,
+          status: 'conflict',
+          errorCode: conflict.code,
+          message: conflict.message,
+          resolution: { action: 'change-payment-to-cash' },
+        });
+        continue;
+      }
+
+      try {
+        // `offline_queue` is updated after the canonical checkout commits. If the process
+        // dies in that small window, orderType is the durable replay marker that lets the
+        // next request find the already-posted invoice instead of selling twice.
+        const replayOrderType = `offline-pos:${offlineId}`;
+        const [postedAlready] = await withTenantTx(this.database.db, tenantId, (tx) =>
+          tx
+            .select({
+              id: salesInvoices.id,
+              number: salesInvoices.number,
+              status: salesInvoices.status,
+              total: salesInvoices.total,
+            })
+            .from(salesInvoices)
+            .where(and(eq(salesInvoices.tenantId, tenantId), eq(salesInvoices.orderType, replayOrderType)))
+            .limit(1),
+        );
+        if (postedAlready) {
+          if (postedAlready.status !== 'posted')
+            throw new DomainError(
+              'POS_OFFLINE_POST_INCOMPLETE',
+              'A previous offline attempt did not finish posting',
+              409,
+            );
+          await withTenantTx(this.database.db, tenantId, (tx) =>
+            tx
+              .update(offlineQueue)
+              .set({
+                status: 'synced',
+                invoiceId: postedAlready.id,
+                invoiceNumber: postedAlready.number,
+                updatedAt: new Date(),
+                syncedAt: new Date(),
+              })
+              .where(and(eq(offlineQueue.tenantId, tenantId), eq(offlineQueue.offlineId, offlineId))),
+          );
+          results.push({
+            offlineId,
+            sequenceNo,
+            status: 'synced',
+            invoiceId: postedAlready.id,
+            number: postedAlready.number,
+            total: postedAlready.total,
+            change: '0.0000',
+          });
+          continue;
+        }
+        const checkoutPayload = {
+          ...(await this.withOfflineDefaults(tenantId, payload)),
+          orderType: replayOrderType,
+        };
+        const posted = await this.checkout(tenantId, userId, checkoutPayload);
+        await withTenantTx(this.database.db, tenantId, (tx) =>
+          tx
+            .update(offlineQueue)
+            .set({
+              status: 'synced',
+              invoiceId: posted.data.invoiceId,
+              invoiceNumber: posted.data.number,
+              updatedAt: new Date(),
+              syncedAt: new Date(),
+            })
+            .where(and(eq(offlineQueue.tenantId, tenantId), eq(offlineQueue.offlineId, offlineId))),
+        );
+        results.push({
+          offlineId,
+          sequenceNo,
+          status: 'synced',
+          invoiceId: posted.data.invoiceId,
+          number: posted.data.number,
+          total: posted.data.total,
+          change: posted.data.change,
+        });
+      } catch (error) {
+        const code = error instanceof DomainError ? error.code : 'INTERNAL';
+        const message = error instanceof Error ? error.message : 'Offline invoice could not be posted';
+        await withTenantTx(this.database.db, tenantId, (tx) =>
+          tx
+            .update(offlineQueue)
+            .set({ status: 'conflict', errorCode: code, errorDetail: message, updatedAt: new Date() })
+            .where(and(eq(offlineQueue.tenantId, tenantId), eq(offlineQueue.offlineId, offlineId))),
+        );
+        results.push({
+          offlineId,
+          sequenceNo,
+          status: 'conflict',
+          errorCode: code,
+          message,
+          resolution:
+            code === 'STOCK_INSUFFICIENT'
+              ? { action: 'edit-quantity-or-refresh-stock' }
+              : { action: 'review-and-retry' },
+        });
+      }
+    }
+    return {
+      data: {
+        processed: results.length,
+        synced: results.filter((row) => row.status === 'synced').length,
+        conflicts: results.filter((row) => row.status === 'conflict').length,
+        results,
+      },
+    };
+  }
+
+  private validateOfflineCashPayload(
+    payload: PosCheckoutInput,
+  ): { code: string; message: string } | undefined {
+    if (
+      !payload ||
+      typeof payload !== 'object' ||
+      !payload.branchId ||
+      !Array.isArray(payload.lines) ||
+      !payload.payment
+    )
+      return { code: 'VALIDATION_FAILED', message: 'Offline payload is not a POS checkout payload' };
+    if (payload.payment.method !== 'cash' || (payload.payments && payload.payments.length > 0))
+      return { code: 'POS_OFFLINE_CASH_ONLY', message: 'Offline POS accepts cash payments only' };
+    return undefined;
+  }
+
+  private async withOfflineDefaults(tenantId: string, payload: PosCheckoutInput): Promise<PosCheckoutInput> {
+    const [branch] = await withTenantTx(this.database.db, tenantId, (tx) =>
+      tx
+        .select({ id: branches.id })
+        .from(branches)
+        .where(
+          and(
+            eq(branches.tenantId, tenantId),
+            eq(branches.id, payload.branchId),
+            eq(branches.isActive, true),
+            isNull(branches.deletedAt),
+          ),
+        )
+        .limit(1),
+    );
+    if (!branch)
+      throw new DomainError('NOT_FOUND', 'The offline invoice branch is not available', 404, {
+        field: 'branchId',
+      });
+
+    const itemIds = [...new Set(payload.lines.map((line) => line.itemId))];
+    const itemRows = itemIds.length
+      ? await withTenantTx(this.database.db, tenantId, (tx) =>
+          tx
+            .select({ id: items.id })
+            .from(items)
+            .where(and(eq(items.tenantId, tenantId), inArray(items.id, itemIds), isNull(items.deletedAt))),
+        )
+      : [];
+    if (itemRows.length !== itemIds.length)
+      throw new DomainError('NOT_FOUND', 'One or more offline items are no longer available', 404, {
+        field: 'lines',
+      });
+
+    const partyId = payload.partyId;
+    if (partyId) {
+      const [party] = await withTenantTx(this.database.db, tenantId, (tx) =>
+        tx
+          .select({ id: parties.id })
+          .from(parties)
+          .where(and(eq(parties.tenantId, tenantId), eq(parties.id, partyId), isNull(parties.deletedAt)))
+          .limit(1),
+      );
+      if (!party)
+        throw new DomainError('PARTY_NOT_FOUND', 'The offline customer is no longer available', 404, {
+          field: 'partyId',
+        });
+    }
+
+    const [warehouse] = await withTenantTx(this.database.db, tenantId, (tx) =>
+      tx
+        .select({ id: warehouses.id })
+        .from(warehouses)
+        .where(
+          and(
+            eq(warehouses.tenantId, tenantId),
+            payload.warehouseId
+              ? eq(warehouses.id, payload.warehouseId)
+              : eq(warehouses.branchId, payload.branchId),
+            eq(warehouses.branchId, payload.branchId),
+            eq(warehouses.isActive, true),
+            isNull(warehouses.deletedAt),
+          ),
+        )
+        .orderBy(warehouses.isDefault, warehouses.code)
+        .limit(1),
+    );
+    if (payload.warehouseId && !warehouse)
+      throw new DomainError('NOT_FOUND', 'The offline warehouse is not available for this branch', 404, {
+        field: 'warehouseId',
+      });
+    return { ...payload, warehouseId: warehouse?.id };
   }
 
   // ── 🅿️ الفواتير المعلّقة (Hold Orders) ────────────────────────────────────────
@@ -178,11 +833,7 @@ export class PosService {
         .select()
         .from(posHolds)
         .where(
-          and(
-            eq(posHolds.tenantId, tenantId),
-            eq(posHolds.branchId, branchId),
-            eq(posHolds.userId, userId),
-          ),
+          and(eq(posHolds.tenantId, tenantId), eq(posHolds.branchId, branchId), eq(posHolds.userId, userId)),
         )
         .orderBy(posHolds.slot),
     );
@@ -256,9 +907,7 @@ export class PosService {
         .limit(1);
       if (!row || row.userId !== userId)
         throw new DomainError(errorCodes.POS_HOLD_NOT_FOUND, 'This hold belongs to another cashier', 404);
-      await tx
-        .delete(posHolds)
-        .where(and(eq(posHolds.tenantId, tenantId), eq(posHolds.id, id)));
+      await tx.delete(posHolds).where(and(eq(posHolds.tenantId, tenantId), eq(posHolds.id, id)));
       return { data: { id, slot: row.slot, cart: row.cart, total: row.total, label: row.label } };
     });
   }
@@ -274,9 +923,7 @@ export class PosService {
         .limit(1);
       if (!row || row.userId !== userId)
         throw new DomainError(errorCodes.POS_HOLD_NOT_FOUND, 'This hold belongs to another cashier', 404);
-      await tx
-        .delete(posHolds)
-        .where(and(eq(posHolds.tenantId, tenantId), eq(posHolds.id, id)));
+      await tx.delete(posHolds).where(and(eq(posHolds.tenantId, tenantId), eq(posHolds.id, id)));
       return { data: { id, released: true } };
     });
   }
@@ -362,17 +1009,15 @@ export class PosService {
         .update(diningTables)
         .set({ status: 'open', openedAt: row.openedAt ?? new Date(), updatedAt: new Date() })
         .where(and(eq(diningTables.tenantId, tenantId), eq(diningTables.id, id)));
-      await tx
-        .insert(orderEvents)
-        .values({
-          id: newId(),
-          tenantId,
-          branchId: row.branchId,
-          tableId: id,
-          kind: 'open',
-          businessDay,
-          lineKey: newId(),
-        });
+      await tx.insert(orderEvents).values({
+        id: newId(),
+        tenantId,
+        branchId: row.branchId,
+        tableId: id,
+        kind: 'open',
+        businessDay,
+        lineKey: newId(),
+      });
       return { id, status: 'open' };
     });
   }
@@ -540,18 +1185,16 @@ export class PosService {
             eq(orderEvents.kind, 'add_item'),
           ),
         );
-      await tx
-        .insert(orderEvents)
-        .values({
-          id: newId(),
-          tenantId,
-          branchId: table.branchId,
-          tableId,
-          kind: 'send_to_invoice',
-          businessDay,
-          lineKey: allocated.display,
-          invoiceId: invoice.id,
-        });
+      await tx.insert(orderEvents).values({
+        id: newId(),
+        tenantId,
+        branchId: table.branchId,
+        tableId,
+        kind: 'send_to_invoice',
+        businessDay,
+        lineKey: allocated.display,
+        invoiceId: invoice.id,
+      });
       await tx
         .update(diningTables)
         .set({ currentInvoiceId: invoice.id, updatedAt: new Date() })
@@ -950,8 +1593,7 @@ export class PosService {
    */
   private async assertPriceOverridesAllowed(tenantId: string, lines: PosCheckoutLine[]) {
     const tenant = getRequestContext().tenant;
-    if (tenant?.permissions.includes('*') || tenant?.permissions.includes('pos.priceoverride'))
-      return;
+    if (tenant?.permissions.includes('*') || tenant?.permissions.includes('pos.priceoverride')) return;
     const itemIds = [...new Set(lines.map((line) => line.itemId))];
     const rows = await withTenantTx(this.database.db, tenantId, (tx) =>
       tx
@@ -966,12 +1608,11 @@ export class PosService {
       return new Decimal(stated).minus(new Decimal(line.unitPrice)).abs().gt(0.00005);
     });
     if (overridden)
-      throw new DomainError(
-        errorCodes.POS_PRICE_OVERRIDE_FORBIDDEN,
-        'لا يمكن تعديل السعر',
-        403,
-        { field: 'lines', itemId: overridden.itemId, unitPrice: overridden.unitPrice },
-      );
+      throw new DomainError(errorCodes.POS_PRICE_OVERRIDE_FORBIDDEN, 'لا يمكن تعديل السعر', 403, {
+        field: 'lines',
+        itemId: overridden.itemId,
+        unitPrice: overridden.unitPrice,
+      });
   }
 
   async openLines(tenantId: string, tableId: string): Promise<OpenLine[]> {

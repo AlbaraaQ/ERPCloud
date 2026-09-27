@@ -87,6 +87,7 @@ describe('RLS SQL builders (MULTI_TENANCY §3.5)', () => {
       'custom_fields',
       'custom_field_values',
       'custom_reports',
+      'offline_queue',
     ]);
   });
 

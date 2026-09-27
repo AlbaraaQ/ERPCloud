@@ -199,10 +199,17 @@ const accounting: ModuleNode = {
           permission: 'reporting.view',
           endpoint: '/reports',
         }),
-        screen('custom-report-builder', 'منشئ التقارير المخصص', 'Custom report builder', '/reports/builder', 'ready', {
-          permission: 'reporting.view',
-          endpoint: 'GET/POST /custom-reports · POST /custom-reports/:id/run',
-        }),
+        screen(
+          'custom-report-builder',
+          'منشئ التقارير المخصص',
+          'Custom report builder',
+          '/reports/builder',
+          'ready',
+          {
+            permission: 'reporting.view',
+            endpoint: 'GET/POST /custom-reports · POST /custom-reports/:id/run',
+          },
+        ),
         screen('custom-reports', 'التقارير المحفوظة', 'Saved custom reports', '/reports/custom', 'ready', {
           permission: 'reporting.view',
           endpoint: 'GET /custom-reports',
@@ -558,10 +565,17 @@ const purchases: ModuleNode = {
         screen('purchase-invoice', 'فاتورة المشتريات', 'Purchase invoice', '/purchases/invoices', 'ready', {
           endpoint: '/purchase-invoices',
         }),
-        screen('purchase-ocr', 'قراءة فاتورة بالـ OCR', 'OCR purchase invoice', '/purchases/invoices/ocr', 'ready', {
-          permission: 'purchase.ocr.use',
-          endpoint: 'POST /ocr/jobs',
-        }),
+        screen(
+          'purchase-ocr',
+          'قراءة فاتورة بالـ OCR',
+          'OCR purchase invoice',
+          '/purchases/invoices/ocr',
+          'ready',
+          {
+            permission: 'purchase.ocr.use',
+            endpoint: 'POST /ocr/jobs',
+          },
+        ),
         screen(
           'purchase-return',
           'مردود المشتريات',
@@ -736,6 +750,14 @@ const sales: ModuleNode = {
         screen('pos', 'نقطة البيع', 'Point of sale', '/sales/pos', 'ready', {
           permission: 'sales.invoice.create',
           endpoint: 'POST /sales/invoices',
+        }),
+        screen('pos-offline', 'نقطة البيع أوفلاين', 'Offline POS', '/pos/offline', 'ready', {
+          permission: 'pos.operate',
+          endpoint: 'GET /pos/offline-data · POST /pos/offline-sync',
+        }),
+        screen('pos-offline-queue', 'طابور POS أوفلاين', 'Offline POS queue', '/pos/offline-queue', 'ready', {
+          permission: 'pos.operate',
+          endpoint: 'POST /pos/offline-sync',
         }),
         screen('sales-invoice', 'فاتورة مبيعات', 'Sales invoice', '/sales/invoices', 'ready', {
           endpoint: '/sales/invoices',
@@ -1129,10 +1151,17 @@ const sales: ModuleNode = {
           'ready',
           { permission: 'parties.view', endpoint: '/portal-access' },
         ),
-        screen('ecommerce-orders', 'طلبات المتجر الإلكتروني', 'E-commerce orders', '/sales/ecommerce-orders', 'ready', {
-          permission: 'ecommerce.manage',
-          endpoint: 'GET /ecommerce/orders?store_id=&status=',
-        }),
+        screen(
+          'ecommerce-orders',
+          'طلبات المتجر الإلكتروني',
+          'E-commerce orders',
+          '/sales/ecommerce-orders',
+          'ready',
+          {
+            permission: 'ecommerce.manage',
+            endpoint: 'GET /ecommerce/orders?store_id=&status=',
+          },
+        ),
       ],
     },
   ],
@@ -1630,14 +1659,29 @@ const settings: ModuleNode = {
           endpoint:
             'GET /email/messages · GET /email/templates · PUT /email/templates/:event · GET/PUT /email/settings',
         }),
-        screen('ecommerce', 'التجارة الإلكترونية — سلة · زد · Shopify', 'E-commerce', '/settings/ecommerce', 'ready', {
-          permission: 'ecommerce.manage',
-          endpoint: 'GET /ecommerce/providers · POST/GET /ecommerce/stores · POST /ecommerce/stores/:id/sync',
-        }),
-        screen('approval-settings', 'مسارات الموافقات', 'Approval workflows', '/settings/approvals', 'ready', {
-          permission: 'approval.manage',
-          endpoint: 'GET/POST/PATCH /approval-workflows · GET/POST /approval-workflows/:id/steps',
-        }),
+        screen(
+          'ecommerce',
+          'التجارة الإلكترونية — سلة · زد · Shopify',
+          'E-commerce',
+          '/settings/ecommerce',
+          'ready',
+          {
+            permission: 'ecommerce.manage',
+            endpoint:
+              'GET /ecommerce/providers · POST/GET /ecommerce/stores · POST /ecommerce/stores/:id/sync',
+          },
+        ),
+        screen(
+          'approval-settings',
+          'مسارات الموافقات',
+          'Approval workflows',
+          '/settings/approvals',
+          'ready',
+          {
+            permission: 'approval.manage',
+            endpoint: 'GET/POST/PATCH /approval-workflows · GET/POST /approval-workflows/:id/steps',
+          },
+        ),
         screen('custom-fields', 'الحقول الإضافية', 'Custom fields', '/settings/custom-fields', 'ready', {
           permission: 'custom_fields.view',
           endpoint: 'GET/POST/PUT/DELETE /custom-fields',
@@ -1913,14 +1957,28 @@ const treasury: ModuleNode = {
           permission: 'treasury.bank.view',
           endpoint: 'GET/POST /treasury/bank-accounts',
         }),
-        screen('bank-statements', 'كشوف الحساب البنكي', 'Bank statements', '/treasury/bank-statements', 'ready', {
-          permission: 'treasury.bank.view',
-          endpoint: 'POST /treasury/bank-statements/import · GET /treasury/bank-statements',
-        }),
-        screen('bank-reconciliation', 'التسوية البنكية', 'Bank reconciliation', '/treasury/bank-reconciliation', 'ready', {
-          permission: 'treasury.bank.view',
-          endpoint: 'GET /treasury/bank-reconciliation · POST /treasury/bank-statements/:id/auto-match',
-        }),
+        screen(
+          'bank-statements',
+          'كشوف الحساب البنكي',
+          'Bank statements',
+          '/treasury/bank-statements',
+          'ready',
+          {
+            permission: 'treasury.bank.view',
+            endpoint: 'POST /treasury/bank-statements/import · GET /treasury/bank-statements',
+          },
+        ),
+        screen(
+          'bank-reconciliation',
+          'التسوية البنكية',
+          'Bank reconciliation',
+          '/treasury/bank-reconciliation',
+          'ready',
+          {
+            permission: 'treasury.bank.view',
+            endpoint: 'GET /treasury/bank-reconciliation · POST /treasury/bank-statements/:id/auto-match',
+          },
+        ),
       ],
     },
     {
@@ -1968,7 +2026,8 @@ const treasury: ModuleNode = {
         screen('cheques', '🏦 كشف الشيكات', 'Cheque register', '/treasury/cheques', 'ready', {
           permission: 'treasury.view',
           endpoint: '/vouchers?filter[method]=cheque',
-          description: 'frmSandQ / frmPaymentVoucher — تحت التحصيل/محصّل/مرتجع مع تحصيل بقيد أوراق القبض→صندوق وارتجاع بقيد عكسي',
+          description:
+            'frmSandQ / frmPaymentVoucher — تحت التحصيل/محصّل/مرتجع مع تحصيل بقيد أوراق القبض→صندوق وارتجاع بقيد عكسي',
         }),
       ],
     },
