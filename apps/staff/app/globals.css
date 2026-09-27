@@ -251,7 +251,9 @@ h6 {
   padding: 8px 12px;
   font-size: 13px;
   width: 100%;
-  transition: box-shadow var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+  transition:
+    box-shadow var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
 }
 .nav-search::placeholder {
   color: var(--muted);
@@ -332,7 +334,9 @@ h6 {
   border-radius: 8px;
   color: #475569;
   font-size: 13px;
-  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
 }
 .nav-link:hover {
   background: var(--surface-2);
@@ -427,7 +431,9 @@ h6 {
   box-shadow: var(--shadow-1);
 }
 .card.lift {
-  transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
 }
 .card.lift:hover {
   transform: translateY(-4px);
@@ -499,8 +505,11 @@ h6 {
   font-weight: 600;
   cursor: pointer;
   box-shadow: var(--shadow-1);
-  transition: background var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out),
-    box-shadow var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
   white-space: nowrap;
 }
 .btn:hover {
@@ -519,7 +528,9 @@ h6 {
   background: var(--color-brand-600);
   color: #fff;
   border-color: var(--color-brand-600);
-  box-shadow: var(--shadow-2), inset 0 1px 0 rgb(255 255 255 / 0.12);
+  box-shadow:
+    var(--shadow-2),
+    inset 0 1px 0 rgb(255 255 255 / 0.12);
 }
 .btn.primary:hover {
   background: var(--color-brand-700);
@@ -568,7 +579,9 @@ textarea.input {
   min-width: 0;
   width: 100%;
   font-size: 13.5px;
-  transition: box-shadow var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+  transition:
+    box-shadow var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
 }
 .input::placeholder {
   color: #94a3b8;
@@ -885,7 +898,9 @@ th.num {
   background: var(--surface);
   padding: 10px;
   cursor: pointer;
-  transition: border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out),
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out),
     transform var(--dur-fast) var(--ease-out);
 }
 .pos-tile:hover {
@@ -1560,7 +1575,9 @@ tr.opening td {
   font-family: inherit;
   font-size: inherit;
   color: inherit;
-  transition: border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
 }
 .bank-tile:hover {
   border-color: var(--color-brand-400);
@@ -1618,13 +1635,20 @@ tr.opening td {
 
 /* ------------------------------------------------------------------ print */
 @media print {
-  body:has(.offline-receipt) > * {
-    display: none !important;
+  body:has(.offline-receipt) * {
+    visibility: hidden !important;
+  }
+  body:has(.offline-receipt) .offline-receipt,
+  body:has(.offline-receipt) .offline-receipt * {
+    visibility: visible !important;
   }
   .offline-receipt {
     display: block !important;
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
     width: 72mm;
-    margin: 0 auto;
+    margin: 0;
     color: #000;
     font-family: Arial, sans-serif;
     font-size: 11px;
@@ -1638,7 +1662,6 @@ tr.opening td {
     size: 80mm auto;
     margin: 4mm;
   }
-
 
   .side,
   .topbar,
