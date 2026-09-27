@@ -47,6 +47,11 @@ describe('PHASE_05 custom fields and safe report builder', () => {
     expect(list(response.body as Record<string, unknown>).every((field) => field.entity === 'party')).toBe(true);
   });
 
+  it('returns a conflict for a duplicate tenant/entity key', async () => {
+    const response = await request('post', '/custom-fields', { body: { entity: 'party', key: 'customer_segment', label: 'Duplicate', type: 'text' } });
+    expect(response.status, JSON.stringify(response.body)).toBe(409);
+  });
+
   it('rejects an unsupported type and malformed key', async () => {
     const response = await request('post', '/custom-fields', { body: { entity: 'party', key: 'Bad Key', label: 'Bad', type: 'currency' } });
     expect(response.status).toBeGreaterThanOrEqual(400);

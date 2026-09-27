@@ -31,6 +31,15 @@ async function raw(method, path, body, auth = token) {
 }
 const payload = (response) => response.body?.data ?? response.body;
 const rows = (response) => { const value = payload(response); return Array.isArray(value) ? value : []; };
+function verificationValue(field) {
+  switch (field.type) {
+    case 'number': return 1;
+    case 'date': return '2026-09-27';
+    case 'boolean': return true;
+    case 'select': return Array.isArray(field.options) ? field.options[0] : undefined;
+    default: return 'verification';
+  }
+}
 
 async function main() {
   console.log(`■ custom fields verification @ ${tenantCode}`);
@@ -52,7 +61,13 @@ async function main() {
 
   const required = await raw('PUT', '/custom-fields/values', { entity: 'party', entityId: partyId, values: {} });
   check('required value is enforced', required.status >= 400 && required.status < 500);
-  const save = await raw('PUT', '/custom-fields/values', { entity: 'party', entityId: partyId, values: { [payload(create)?.key]: '2026-09-27' } });
+  const fieldDefinitions = rows(await raw('GET', '/custom-fields?entity=party'));
+  const validValues = Object.fromEntries(fieldDefinitions
+    .filter((field) => field.required)
+    .map((field) => [field.key, verificationValue(field)])
+    .filter(([, value]) => value !== undefined));
+  validValues[payload(create)?.key] = '2026-09-27';
+  const save = await raw('PUT', '/custom-fields/values', { entity: 'party', entityId: partyId, values: validValues });
   check('date value saves', save.status === 200);
   const values = await raw('GET', `/custom-fields/${fieldId}/values?entity_id=${partyId}`);
   check('saved value reads in card API', values.status === 200 && rows(values).some((field) => field.value === '2026-09-27'));

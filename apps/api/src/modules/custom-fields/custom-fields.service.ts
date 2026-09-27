@@ -319,6 +319,14 @@ export class CustomFieldsService {
   }
 
   private isUniqueViolation(error: unknown): boolean {
-    return typeof error === 'object' && error !== null && 'code' in error && (error as { code?: string }).code === '23505';
+    const seen = new Set<object>();
+    let current: unknown = error;
+    while (typeof current === 'object' && current !== null && !seen.has(current)) {
+      seen.add(current);
+      const candidate = current as { code?: unknown; cause?: unknown };
+      if (candidate.code === '23505') return true;
+      current = candidate.cause;
+    }
+    return false;
   }
 }
