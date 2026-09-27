@@ -18,6 +18,7 @@ import {
 } from '@erp/database';
 
 import { DATABASE_HANDLE } from '../../../database/database.module.js';
+import { CustomFieldsService } from '../../custom-fields/custom-fields.service.js';
 import { UsageService } from '../../usage/index.js';
 
 /** One line of a bill of materials. `ratio` is base units per one of `unitId`. */
@@ -152,10 +153,11 @@ export class CatalogService {
   constructor(
     @Inject(DATABASE_HANDLE) private readonly database: DatabaseHandle,
     private readonly usage: UsageService,
+    private readonly customFields: CustomFieldsService,
   ) {}
 
   async listItems(tenantId: string, q?: string) {
-    return withTenantTx(this.database.db, tenantId, (tx) =>
+    const rows = await withTenantTx(this.database.db, tenantId, (tx) =>
       tx
         .select()
         .from(items)
@@ -169,6 +171,7 @@ export class CatalogService {
         .orderBy(asc(items.nameAr))
         .limit(100),
     );
+    return this.customFields.decorate(tenantId, 'item', rows);
   }
 
   async createItem(tenantId: string, input: CatalogItemInput) {
@@ -655,13 +658,15 @@ export class CatalogService {
   }
 
   async getItem(tenantId: string, id: string) {
-    return withTenantTx(this.database.db, tenantId, async (tx) => {
-      const [row] = await tx
+    const [row] = await withTenantTx(this.database.db, tenantId, async (tx) => {
+      return tx
         .select()
         .from(items)
         .where(and(eq(items.id, id), eq(items.tenantId, tenantId), isNull(items.deletedAt)));
-      return row;
     });
+    if (!row) return row;
+    const [decorated] = await this.customFields.decorate(tenantId, 'item', [row]);
+    return decorated ?? row;
   }
 
   private async requireItem(tx: DrizzleTx, tenantId: string, id: string) {

@@ -31,6 +31,7 @@ import {
 } from '@erp/database';
 
 import { DATABASE_HANDLE } from '../../database/database.module.js';
+import { CustomFieldsService } from '../custom-fields/custom-fields.service.js';
 import { AccountingService, defaultNormalBalance, type AccountType, type JournalLineInput } from '../accounting/accounting.service.js';
 import { TreasuryService } from '../treasury/treasury.service.js';
 import { FileAttachmentRegistry } from '../platform-services/files/file-attachments.js';
@@ -287,7 +288,7 @@ function toEmployeeCard(entry: { row: Employee; departmentName: string | null; d
 
 @Injectable()
 export class HrmService implements OnModuleInit {
-  constructor(@Inject(DATABASE_HANDLE) private readonly database: DatabaseHandle, private readonly accounting: AccountingService, private readonly treasury: TreasuryService, private readonly attachments: FileAttachmentRegistry) {}
+  constructor(@Inject(DATABASE_HANDLE) private readonly database: DatabaseHandle, private readonly accounting: AccountingService, private readonly treasury: TreasuryService, private readonly attachments: FileAttachmentRegistry, private readonly customFields: CustomFieldsService) {}
 
   onModuleInit(): void {
     this.attachments.register('employee', async (tx, tenantId, entityId) => {
@@ -399,7 +400,7 @@ export class HrmService implements OnModuleInit {
         query.jobId ? eq(employees.jobId, query.jobId) : undefined,
       ))
       .orderBy(employees.employeeNo));
-    return rows.map(toEmployeeCard);
+    return this.customFields.decorate(tenantId, 'employee', rows.map(toEmployeeCard));
   }
 
   /** 👤 تعريف موظف — the card behind `frmEmployees.xaml`, read back by id. */
@@ -416,7 +417,8 @@ export class HrmService implements OnModuleInit {
     if (!row) throw new DomainError('NOT_FOUND', 'Employee not found', 404);
     const card = toEmployeeCard(row);
     const branchesList = await this.listEmployeeBranches(tenantId, id);
-    return { ...card, branches: branchesList, photoFileId: (row.row as Employee).photoFileId ?? null };
+    const [decorated] = await this.customFields.decorate(tenantId, 'employee', [card]);
+    return { ...(decorated ?? card), branches: branchesList, photoFileId: (row.row as Employee).photoFileId ?? null };
   }
 
   async createEmployee(tenantId: string, input: EmployeeInput) {

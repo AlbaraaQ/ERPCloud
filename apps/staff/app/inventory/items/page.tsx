@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { DataTable, Notice, QueryView } from '../../../components/data-view';
 import { Screen } from '../../../components/screen';
@@ -27,6 +27,7 @@ import {
   type Unit,
   type Warehouse,
 } from '../../../lib/lookups';
+import { getCustomFieldValues, saveCustomFieldValues, type CustomFieldValue } from '../../../lib/custom-fields';
 import { useSession } from '../../../lib/session';
 import { useQuery } from '../../../lib/use-query';
 
@@ -76,6 +77,9 @@ export default function ItemsPage() {
   const [form, setForm] = useState(blank);
   const [editing, setEditing] = useState<Item | undefined>();
   const [selectedId, setSelectedId] = useState('');
+  const [customValues, setCustomValues] = useState<CustomFieldValue[]>([]);
+  const [customDraft, setCustomDraft] = useState<Record<string, unknown>>({});
+  const [customBusy, setCustomBusy] = useState(false);
   const [tab, setTab] = useState<CardTab>('general');
   const [componentDraft, setComponentDraft] = useState({
     componentItemId: '',
@@ -204,6 +208,13 @@ export default function ItemsPage() {
 
   const rows = items.data ?? [];
   const selected = rows.find((row) => row.id === selectedId);
+  useEffect(() => {
+    if (!selected) { setCustomValues([]); setCustomDraft({}); return; }
+    void getCustomFieldValues('item', selected.id).then((values) => {
+      setCustomValues(values);
+      setCustomDraft(Object.fromEntries(values.map((field) => [field.key, field.value ?? (field.type === 'boolean' ? false : '')])));
+    }).catch(() => { setCustomValues([]); setCustomDraft({}); });
+  }, [selectedId, selected]);
   const cardUnits = useQuery<ItemUnit[]>(
     () => (selected ? listItemUnits(selected.id) : Promise.resolve([])),
     [selectedId],
@@ -248,6 +259,19 @@ export default function ItemsPage() {
       setNotice({ kind: 'danger', text: error instanceof ApiError ? error.message : String(error) });
     } finally {
       setComponentBusy(false);
+    }
+  }
+
+  async function saveCustomValues() {
+    if (!selected) return;
+    setCustomBusy(true);
+    try {
+      await saveCustomFieldValues('item', selected.id, customDraft);
+      setNotice({ kind: 'ok', text: 'تم حفظ الحقول الإضافية للصنف.' });
+    } catch (error) {
+      setNotice({ kind: 'danger', text: error instanceof ApiError ? error.message : String(error) });
+    } finally {
+      setCustomBusy(false);
     }
   }
 
@@ -586,6 +610,21 @@ export default function ItemsPage() {
                       {selected.trackSerial ?? selected.track_serial ? 'نعم' : 'لا'}
                     </DocField>
                   </DocHead>
+
+                  {customValues.length > 0 && (
+                    <section className="card tight" style={{ marginTop: 16 }}>
+                      <div className="section-title"><h3>الحقول الإضافية</h3><span className="muted small">قيم typed خاصة بهذا الصنف</span></div>
+                      <div className="form-grid">
+                        {customValues.map((field) => (
+                          <label className="field" key={field.id}>
+                            <span>{field.label}{field.required ? ' *' : ''}</span>
+                            {field.type === 'select' ? <select className="input" value={String(customDraft[field.key] ?? '')} onChange={(event) => setCustomDraft((current) => ({ ...current, [field.key]: event.target.value }))}><option value="">— اختر —</option>{field.options.map((option) => <option key={option} value={option}>{option}</option>)}</select> : field.type === 'boolean' ? <input type="checkbox" checked={Boolean(customDraft[field.key])} onChange={(event) => setCustomDraft((current) => ({ ...current, [field.key]: event.target.checked }))} /> : <input className="input" type={field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : 'text'} value={String(customDraft[field.key] ?? '')} onChange={(event) => setCustomDraft((current) => ({ ...current, [field.key]: field.type === 'number' ? Number(event.target.value) : event.target.value }))} />}
+                          </label>
+                        ))}
+                      </div>
+                      {can('custom_fields.manage') ? <button className="btn primary no-print" type="button" disabled={customBusy} onClick={() => void saveCustomValues()}>{customBusy ? 'جارٍ الحفظ…' : 'حفظ الحقول الإضافية'}</button> : null}
+                    </section>
+                  )}
 
                   <Totals
                     items={[

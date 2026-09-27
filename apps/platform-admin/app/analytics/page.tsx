@@ -59,18 +59,6 @@ const SIGNUP_WINDOW_OPTIONS: Array<{ value: string; label: string }> = [
   { value: '180', label: '١٨٠ يوماً' },
 ];
 
-const SEVERITY_LABEL: Record<AnalyticsAlert['severity'], string> = {
-  info: 'للعلم',
-  warning: 'تنبيه',
-  critical: 'عاجل',
-};
-
-const SEVERITY_CLASS: Record<AnalyticsAlert['severity'], string> = {
-  info: 'info',
-  warning: 'warn',
-  critical: 'danger',
-};
-
 function money(value: string | undefined): string {
   if (value === undefined) return '—';
   // اسم المتغيّر ليس مالياً عمداً: قاعدة المال في eslint تصطاد المعرّفات المسمّاة بمفردات
@@ -507,9 +495,9 @@ function utilizationTone(value: number | null): string {
 }
 
 /** Cohort heat: from white to violet by retention rate. */
-function heatColor(rate: number | null): string {
-  if (rate === null) return 'transparent';
-  const t = Math.max(0, Math.min(1, rate / 100));
+function heatColor(retention: number | null): string {
+  if (retention === null) return 'transparent';
+  const t = Math.max(0, Math.min(1, retention / 100));
   const alpha = (0.04 + t * 0.4).toFixed(2);
   return `rgb(124 58 237 / ${alpha})`;
 }

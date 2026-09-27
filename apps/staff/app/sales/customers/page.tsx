@@ -1,9 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 import { Directory } from '../../../components/directory';
 import { apiDelete, apiList, apiPost, apiPut } from '../../../lib/api';
+import { getCustomFieldValues, saveCustomFieldValues, type CustomFieldValue } from '../../../lib/custom-fields';
 import { listParties, money, type Party } from '../../../lib/lookups';
 import { useSession } from '../../../lib/session';
 import { useQuery } from '../../../lib/use-query';
@@ -20,6 +22,7 @@ export default function CustomersPage() {
   };
 
   return (
+    <>
     <Directory<Party>
       title="بطاقة عميل"
       subtitle="ملف العميل: الرمز، الرقم الضريبي، سقف الائتمان — يُستخدم في الفواتير وكشف الحساب."
@@ -106,5 +109,28 @@ export default function CustomersPage() {
         },
       ]}
     />
+    <PartyCustomFields parties={parties.data ?? []} canManage={can('custom_fields.manage')} />
+    </>
   );
+}
+
+function PartyCustomFields({ parties, canManage }: { parties: Party[]; canManage: boolean }) {
+  const [partyId, setPartyId] = useState('');
+  const [fields, setFields] = useState<CustomFieldValue[]>([]);
+  const [draft, setDraft] = useState<Record<string, unknown>>({});
+  const [notice, setNotice] = useState<string>();
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    if (!partyId) { setFields([]); setDraft({}); return; }
+    void getCustomFieldValues('party', partyId).then((values) => {
+      setFields(values); setDraft(Object.fromEntries(values.map((field) => [field.key, field.value ?? (field.type === 'boolean' ? false : '')])));
+    }).catch((cause: unknown) => setNotice(cause instanceof Error ? cause.message : String(cause)));
+  }, [partyId]);
+  const save = async (): Promise<void> => {
+    setBusy(true); setNotice(undefined);
+    try { await saveCustomFieldValues('party', partyId, draft); setNotice('تم حفظ الحقول الإضافية للعميل.'); }
+    catch (cause) { setNotice(cause instanceof Error ? cause.message : String(cause)); }
+    finally { setBusy(false); }
+  };
+  return <section className="card" style={{ marginTop: 16 }}><div className="section-title"><h2>الحقول الإضافية في بطاقة العميل</h2><span className="muted small">اختر بطاقة ثم احفظ قيم الحقول typed</span></div><label className="field" style={{ maxWidth: 360 }}><span>العميل</span><select className="input" value={partyId} onChange={(event) => setPartyId(event.target.value)}><option value="">— اختر عميلاً —</option>{parties.map((party) => <option key={party.id} value={party.id}>{party.code} — {party.name}</option>)}</select></label>{partyId && fields.length === 0 ? <p className="muted">لا توجد حقول إضافية معرفة للعملاء.</p> : null}{fields.length > 0 ? <><div className="form-grid">{fields.map((field) => <label className="field" key={field.id}><span>{field.label}{field.required ? ' *' : ''}</span>{field.type === 'select' ? <select className="input" value={String(draft[field.key] ?? '')} onChange={(event) => setDraft((current) => ({ ...current, [field.key]: event.target.value }))}><option value="">— اختر —</option>{field.options.map((option) => <option key={option} value={option}>{option}</option>)}</select> : field.type === 'boolean' ? <input type="checkbox" checked={Boolean(draft[field.key])} onChange={(event) => setDraft((current) => ({ ...current, [field.key]: event.target.checked }))} /> : <input className="input" type={field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : 'text'} value={String(draft[field.key] ?? '')} onChange={(event) => setDraft((current) => ({ ...current, [field.key]: field.type === 'number' ? Number(event.target.value) : event.target.value }))} />}</label>)}</div>{canManage ? <button className="btn primary" type="button" disabled={busy} onClick={() => void save()}>حفظ الحقول الإضافية</button> : null}</> : null}{notice ? <p className="muted">{notice}</p> : null}</section>;
 }

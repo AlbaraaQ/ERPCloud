@@ -124,12 +124,18 @@ export class NeoleapGateway implements PaymentGateway {
         signal: AbortSignal.timeout(TIMEOUT_MS),
       });
       const bodyText = await response.text();
+      if (!response.ok) {
+        return {
+          ...emptyResult(request.reference, 'error', `تعذّر الوصول إلى بوابة NeoLeap (HTTP ${response.status}).`),
+          raw: { ...raw, httpStatus: response.status, body: bodyText.slice(0, 1000) },
+        };
+      }
       let payload: NeoleapResponse = {};
       try {
         payload = parseNeoleapResponse(bodyText);
       } catch {
         return {
-          ...emptyResult(request.reference, 'error', 'ردّ غير مفهوم من بوابة NeoLeap.'),
+          ...emptyResult(request.reference, 'error', 'تعذّر الوصول إلى بوابة NeoLeap: ردّ غير مفهوم.'),
           raw: { ...raw, httpStatus: response.status, body: bodyText.slice(0, 1000) },
         };
       }

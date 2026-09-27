@@ -47,6 +47,7 @@ import {
   type Unit,
 } from '../../../../lib/lookups';
 import { useSession } from '../../../../lib/session';
+import { type ApprovalRequest } from '../../../../lib/approvals';
 import { useQuery } from '../../../../lib/use-query';
 import {
   ATTACHMENT_STATUS_LABELS,
@@ -143,6 +144,7 @@ export default function SalesInvoiceDetailPage() {
   const { can } = useSession();
 
   const invoice = useQuery<Invoice>(() => apiData<Invoice>(`/sales/invoices/${invoiceId}`), [invoiceId]);
+  const approval = useQuery<ApprovalRequest | null>(() => apiData<ApprovalRequest | null>(`/sales/invoices/${invoiceId}/approval`), [invoiceId]);
   const items = useQuery<Item[]>(() => listItems(), []);
   const parties = useQuery<Party[]>(() => listParties('customer'), []);
   const cashLocations = useQuery<CashLocation[]>(() => listCashLocations(), []);
@@ -319,6 +321,8 @@ export default function SalesInvoiceDetailPage() {
                       {doc.paymentStatus === 'paid' ? 'مسدّدة' : 'غير مسدّدة'}
                     </Badge>
                   ) : null}
+                  {approval.data?.status === 'pending' ? <Badge tone="purple" dot>بانتظار موافقة</Badge> : null}
+                  {approval.data?.status === 'rejected' ? <Badge tone="red" dot>رُفضت — ما زالت مسودة</Badge> : null}
                 </div>
                 <p className="m-0 mt-2 text-[13px] text-slate-500">
                   {partyName} · {shortDate(doc.createdAt)}

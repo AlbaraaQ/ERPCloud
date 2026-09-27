@@ -42,7 +42,7 @@
 
 ## ملاحظات تنفيذ
 
-- كل ترحيل يبدأ من 0096 (آخر ترحيل حالي 0095)
+- الترحيل `0096` استُخدم لـ Bank Feeds و`0097` لـ OCR و`0098` لتحصين RLS؛ تكامل التجارة الإلكترونية يبدأ من `0099`.
 - كل صلاحية جديدة تُضاف في `packages/contracts/src/permissions.ts` + ترحيل idempotent + اختبار `permission-codes.spec.ts`
 - كل شاشة جديدة يجب أن تكون مسار حقيقي ويقيسها `navigation.spec.ts`
 - لا `git add -A` — مسارات صريحة فقط
@@ -51,7 +51,10 @@
 
 ## الحالة الحالية (للتذكير)
 
-- 01-10 مكتملة 100% (R17 أغلق 10)
+- **01 Bank Feeds مكتملة 100%**: migration `0096_bank_feeds.sql`، API، 3 شاشات Staff، اختبار 8 حالات، وسكربت تحقق حي 15 نقطة.
+- **02 OCR قيد التحقق بمزود خارجي**: migration `0097_ocr_purchase_invoices.sql`، API/worker، شاشة مراجعة Staff، اختبار 6 حالات، و`verify-ocr.mjs`؛ يلزم ضبط endpoint حقيقي لاختبار دقة العربية.
+- **03 Ecommerce منفذة**: migration `0099_ecommerce_stores_orders.sql`، مزودو Salla/Zid/Shopify مع mock transport، عاملَا `ecommerce.import` و`ecommerce.stock` على طابور `maintenance`، 11 حالة mock + اختبار API، و`verify-ecommerce.mjs` بأكثر من 15 نقطة؛ اختبار sandbox خارجي يبقى اختيارياً.
+- **04 Approval Workflow منفذة**: migration `0100_approval_workflows.sql`، مسارات tenant-scoped وخطوات متسلسلة وinbox/history، بوابة ترحيل المبيعات والمشتريات، إشعارات داخل التطبيق، 13 حالة API و`verify-approvals.mjs` بأكثر من 20 نقطة.
 - P-C1..12 مكتملة
 - P-M1..10 مكتملة
 - 232 شاشة ready + 1 planned مستبعدة

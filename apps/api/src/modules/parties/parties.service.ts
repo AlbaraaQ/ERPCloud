@@ -7,6 +7,7 @@ import { DomainError, errorCodes, newId } from '@erp/contracts';
 import { journalEntries, journalEntryLines, parties, partyContacts, paymentAllocations, paymentMethods, withTenantTx, type DatabaseHandle } from '@erp/database';
 
 import { DATABASE_HANDLE } from '../../database/database.module.js';
+import { CustomFieldsService } from '../custom-fields/custom-fields.service.js';
 import { isUniqueViolation } from '../organization/shared/org-support.js';
 
 export type PaymentMethodInput = { code: string; nameAr: string; nameEn?: string; kind?: 'cash' | 'card' | 'transfer' | 'cheque' | 'credit'; dueDays?: number; cashLocationId?: string; isActive?: boolean; isDefault?: boolean };
@@ -16,8 +17,14 @@ export type AllocationInput = { partyId: string; voucherId?: string; invoiceKind
 
 @Injectable()
 export class PartiesService {
-  constructor(@Inject(DATABASE_HANDLE) private readonly database: DatabaseHandle) {}
-  async list(tenantId: string, kind?: string) { return withTenantTx(this.database.db, tenantId, (tx) => tx.select().from(parties).where(and(eq(parties.tenantId, tenantId), isNull(parties.deletedAt), kind ? eq(parties.kind, kind) : undefined)).orderBy(desc(parties.createdAt)).limit(100)); }
+  constructor(
+    @Inject(DATABASE_HANDLE) private readonly database: DatabaseHandle,
+    private readonly customFields: CustomFieldsService,
+  ) {}
+  async list(tenantId: string, kind?: string) {
+    const rows = await withTenantTx(this.database.db, tenantId, (tx) => tx.select().from(parties).where(and(eq(parties.tenantId, tenantId), isNull(parties.deletedAt), kind ? eq(parties.kind, kind) : undefined)).orderBy(desc(parties.createdAt)).limit(100));
+    return this.customFields.decorate(tenantId, 'party', rows);
+  }
   /**
    * 🔑 R6 — «عميل/مورد» بمعرّفٍ لا وجود له كان يعيد `undefined`، فيخرج الردّ **200 بجسمٍ
    * فارغ**: لا هو نجاحٌ يفهمه العميل ولا خطأٌ يشرح السبب. والغياب يُعلَن: `PARTY_NOT_FOUND`
@@ -26,7 +33,8 @@ export class PartiesService {
   async get(tenantId: string, id: string) {
     const [row] = await withTenantTx(this.database.db, tenantId, (tx) => tx.select().from(parties).where(and(eq(parties.tenantId, tenantId), eq(parties.id, id), isNull(parties.deletedAt))));
     if (!row) throw new DomainError(errorCodes.PARTY_NOT_FOUND, 'Party was not found', 404);
-    return row;
+    const [decorated] = await this.customFields.decorate(tenantId, 'party', [row]);
+    return decorated ?? row;
   }
   async update(tenantId: string, id: string, input: Partial<PartyInput>) { await withTenantTx(this.database.db, tenantId, (tx) => tx.update(parties).set({ ...input, updatedAt: new Date(), version: sql`${parties.version} + 1` }).where(and(eq(parties.tenantId, tenantId), eq(parties.id, id), isNull(parties.deletedAt)))); return this.get(tenantId, id); }
   async create(tenantId: string, input: PartyInput) { const id = newId(); const code = await withTenantTx(this.database.db, tenantId, async (tx) => { const result = await tx.execute(sql`SELECT COALESCE(MAX(CAST(code AS INTEGER)), 0) + 1 AS next FROM parties WHERE tenant_id = ${tenantId} AND code ~ '^[0-9]+$'`); return String(Number((result.rows[0] as { next: string }).next).toString().padStart(6, '0')); }); await withTenantTx(this.database.db, tenantId, (tx) => tx.insert(parties).values({ id, tenantId, code, ...input, creditLimit: input.creditLimit ?? '0' })); return this.get(tenantId, id); }

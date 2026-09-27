@@ -199,6 +199,14 @@ const accounting: ModuleNode = {
           permission: 'reporting.view',
           endpoint: '/reports',
         }),
+        screen('custom-report-builder', 'منشئ التقارير المخصص', 'Custom report builder', '/reports/builder', 'ready', {
+          permission: 'reporting.view',
+          endpoint: 'GET/POST /custom-reports · POST /custom-reports/:id/run',
+        }),
+        screen('custom-reports', 'التقارير المحفوظة', 'Saved custom reports', '/reports/custom', 'ready', {
+          permission: 'reporting.view',
+          endpoint: 'GET /custom-reports',
+        }),
         // 📒 الجزء الخامس — تقارير المحاسبة
         screen(
           'account-balances',
@@ -549,6 +557,10 @@ const purchases: ModuleNode = {
       items: [
         screen('purchase-invoice', 'فاتورة المشتريات', 'Purchase invoice', '/purchases/invoices', 'ready', {
           endpoint: '/purchase-invoices',
+        }),
+        screen('purchase-ocr', 'قراءة فاتورة بالـ OCR', 'OCR purchase invoice', '/purchases/invoices/ocr', 'ready', {
+          permission: 'purchase.ocr.use',
+          endpoint: 'POST /ocr/jobs',
         }),
         screen(
           'purchase-return',
@@ -1117,6 +1129,10 @@ const sales: ModuleNode = {
           'ready',
           { permission: 'parties.view', endpoint: '/portal-access' },
         ),
+        screen('ecommerce-orders', 'طلبات المتجر الإلكتروني', 'E-commerce orders', '/sales/ecommerce-orders', 'ready', {
+          permission: 'ecommerce.manage',
+          endpoint: 'GET /ecommerce/orders?store_id=&status=',
+        }),
       ],
     },
   ],
@@ -1614,6 +1630,18 @@ const settings: ModuleNode = {
           endpoint:
             'GET /email/messages · GET /email/templates · PUT /email/templates/:event · GET/PUT /email/settings',
         }),
+        screen('ecommerce', 'التجارة الإلكترونية — سلة · زد · Shopify', 'E-commerce', '/settings/ecommerce', 'ready', {
+          permission: 'ecommerce.manage',
+          endpoint: 'GET /ecommerce/providers · POST/GET /ecommerce/stores · POST /ecommerce/stores/:id/sync',
+        }),
+        screen('approval-settings', 'مسارات الموافقات', 'Approval workflows', '/settings/approvals', 'ready', {
+          permission: 'approval.manage',
+          endpoint: 'GET/POST/PATCH /approval-workflows · GET/POST /approval-workflows/:id/steps',
+        }),
+        screen('custom-fields', 'الحقول الإضافية', 'Custom fields', '/settings/custom-fields', 'ready', {
+          permission: 'custom_fields.view',
+          endpoint: 'GET/POST/PUT/DELETE /custom-fields',
+        }),
       ],
     },
     {
@@ -1716,6 +1744,14 @@ const settings: ModuleNode = {
           endpoint: 'GET /notifications · POST /notifications/:id/read',
           description:
             'PLATFORM_CONSOLE_PLAN.md §4 (P-C7) — كل ما وُجّه للعضويّة: إعلانات المنصة ونصوصها (ar/en) وإشعارات النظام، مع وسم المقروء وعدد غير المقروء نفسه الذي يعرضه الجرس.',
+        }),
+        screen('approval-inbox', 'وارد الموافقات', 'Approval inbox', '/approvals/inbox', 'ready', {
+          permission: 'approval.approve',
+          endpoint: 'GET /approvals/inbox · POST /approvals/requests/:id/approve|reject',
+        }),
+        screen('approval-history', 'سجل الموافقات', 'Approval history', '/approvals/history', 'ready', {
+          permission: 'approval.approve',
+          endpoint: 'GET /approvals/history',
         }),
         screen('usage', 'الاستخدام والحصص', 'Usage & quotas', '/settings/usage', 'ready', {
           permission: 'tenant.view',
@@ -1865,6 +1901,25 @@ const treasury: ModuleNode = {
         screen('expense-card', '📒 بطاقة حساب المصاريف', 'Expense card', '/accounting/expenses', 'ready', {
           permission: 'treasury.view',
           endpoint: '/expense-types',
+        }),
+      ],
+    },
+    {
+      key: 'treasury-bank-feeds',
+      labelAr: 'التغذية البنكية',
+      labelEn: 'Bank feeds',
+      items: [
+        screen('bank-accounts', 'الحسابات البنكية', 'Bank accounts', '/treasury/bank-accounts', 'ready', {
+          permission: 'treasury.bank.view',
+          endpoint: 'GET/POST /treasury/bank-accounts',
+        }),
+        screen('bank-statements', 'كشوف الحساب البنكي', 'Bank statements', '/treasury/bank-statements', 'ready', {
+          permission: 'treasury.bank.view',
+          endpoint: 'POST /treasury/bank-statements/import · GET /treasury/bank-statements',
+        }),
+        screen('bank-reconciliation', 'التسوية البنكية', 'Bank reconciliation', '/treasury/bank-reconciliation', 'ready', {
+          permission: 'treasury.bank.view',
+          endpoint: 'GET /treasury/bank-reconciliation · POST /treasury/bank-statements/:id/auto-match',
         }),
       ],
     },
