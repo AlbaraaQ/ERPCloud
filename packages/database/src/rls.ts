@@ -184,6 +184,14 @@ export const rlsProtectedTables = [
   'employee_requests',
   'employee_push_subscriptions',
   'employee_push_outbox',
+  // Future enhancement 10 — warehouse bins and light manufacturing.
+  'warehouse_bins',
+  'bin_balances',
+  'bin_transfers',
+  'boms',
+  'bom_lines',
+  'manufacturing_orders',
+  'manufacturing_moves',
 ] as const;
 
 export type QueryRowsOf<T> = QueryRows<T>;

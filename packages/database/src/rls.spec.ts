@@ -102,6 +102,13 @@ describe('RLS SQL builders (MULTI_TENANCY §3.5)', () => {
       'employee_requests',
       'employee_push_subscriptions',
       'employee_push_outbox',
+      'warehouse_bins',
+      'bin_balances',
+      'bin_transfers',
+      'boms',
+      'bom_lines',
+      'manufacturing_orders',
+      'manufacturing_moves',
     ]);
   });
 

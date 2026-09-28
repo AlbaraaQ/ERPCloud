@@ -199,7 +199,13 @@ export const permissionRegistry: readonly PermissionDefinition[] = [
     'inventory.production.complete',
     'Complete production orders: consume components and receive the finished item.',
   ),
+  perm('inventory.bins.manage', 'Create warehouse bins and move quantities between them.'),
   perm('inventory.negative.override', 'Allow negative stock movements.'),
+
+  // manufacturing (PHASE_10)
+  perm('manufacturing.view', 'Read bills of materials and manufacturing orders.'),
+  perm('manufacturing.manage', 'Create bills of materials and manufacturing orders.'),
+  perm('manufacturing.produce', 'Produce a manufacturing order: consume components and receive the finished item.'),
 
   // sales / purchases (PHASE_13)
   perm('sales.view', 'List and read sales documents.'),

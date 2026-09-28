@@ -521,6 +521,21 @@ const inventory: ModuleNode = {
       ],
     },
     {
+      key: 'inventory-bins',
+      labelAr: 'الرفوف',
+      labelEn: 'Bins',
+      items: [
+        screen('warehouse-bins', 'رفوف المستودع', 'Warehouse bins', '/inventory/bins', 'ready', {
+          permission: 'inventory.view',
+          endpoint: 'GET/POST /inventory/bins',
+        }),
+        screen('bin-balances', 'أرصدة الرفوف', 'Bin balances', '/inventory/bin-balances', 'ready', {
+          permission: 'inventory.view',
+          endpoint: 'GET /inventory/bin-balances · POST /inventory/bin-transfers',
+        }),
+      ],
+    },
+    {
       key: 'inventory-salla',
       labelAr: 'متجر سلة',
       labelEn: 'Salla store',
@@ -2120,10 +2135,37 @@ const employeeApp: ModuleNode = {
   ],
 };
 
+const manufacturing: ModuleNode = {
+  key: 'manufacturing',
+  icon: '⚙️',
+  labelAr: 'التصنيع',
+  labelEn: 'Manufacturing',
+  href: '/manufacturing/orders',
+  permission: 'manufacturing.view',
+  groups: [
+    {
+      key: 'manufacturing-ops',
+      labelAr: 'أوامر التصنيع',
+      labelEn: 'Manufacturing orders',
+      items: [
+        screen('manufacturing-boms', 'قوائم المواد', 'Bills of materials', '/manufacturing/boms', 'ready', {
+          permission: 'manufacturing.view',
+          endpoint: 'GET/POST /manufacturing/boms',
+        }),
+        screen('manufacturing-orders', 'أوامر التصنيع', 'Manufacturing orders', '/manufacturing/orders', 'ready', {
+          permission: 'manufacturing.view',
+          endpoint: 'POST /manufacturing/orders/:id/produce',
+        }),
+      ],
+    },
+  ],
+};
+
 export const modules: ModuleNode[] = [
   accounting,
   treasury,
   inventory,
+  manufacturing,
   purchases,
   sales,
   tailoring,

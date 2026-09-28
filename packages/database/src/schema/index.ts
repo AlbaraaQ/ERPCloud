@@ -30,3 +30,4 @@ export * from './approvals.js';
 export * from './custom-fields.js';
 export * from './ai.js';
 export * from './employee-mobile.js';
+export * from './wms.js';

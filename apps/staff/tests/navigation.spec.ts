@@ -44,6 +44,8 @@ describe('staff navigation tree', () => {
       'accounting',
       'treasury',
       'inventory',
+      // Cloud light manufacturing. It is not a desktop window.
+      'manufacturing',
       'purchases',
       'sales',
       'tailoring',
@@ -290,6 +292,11 @@ describe('staff navigation tree', () => {
   it('exposes Mudad alerts and online payment settings', () => {
     expect(allScreens.find((screen) => screen.key === 'hrm-compliance')?.href).toBe('/hrm/compliance');
     expect(allScreens.find((screen) => screen.key === 'online-payments')?.href).toBe('/settings/payments');
+  });
+
+  it('exposes warehouse bins and light manufacturing', () => {
+    expect(allScreens.find((screen) => screen.key === 'warehouse-bins')?.href).toBe('/inventory/bins');
+    expect(allScreens.find((screen) => screen.key === 'manufacturing-orders')?.href).toBe('/manufacturing/orders');
   });
 
   it('exposes the employee mobile app', () => {

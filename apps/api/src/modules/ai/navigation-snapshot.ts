@@ -1319,6 +1319,41 @@ export const NAVIGATION_SNAPSHOT: readonly HelpArticle[] = [
     "source": "navigation"
   },
   {
+    "id": "nav:warehouse-bins",
+    "title": "رفوف المستودع",
+    "href": "/inventory/bins",
+    "keywords": [
+      "رفوف",
+      "المستودع",
+      "Warehouse",
+      "bins",
+      "inventory"
+    ],
+    "steps": [
+      "افتح «رفوف المستودع» من قائمة النظام.",
+      "أدخل البيانات ثم احفظ. أي ترحيل يتم من الشاشة بعد المراجعة، لا من المساعد."
+    ],
+    "source": "navigation"
+  },
+  {
+    "id": "nav:bin-balances",
+    "title": "أرصدة الرفوف",
+    "href": "/inventory/bin-balances",
+    "keywords": [
+      "أرصدة",
+      "الرفوف",
+      "Bin",
+      "balances",
+      "inventory",
+      "bin"
+    ],
+    "steps": [
+      "افتح «أرصدة الرفوف» من قائمة النظام.",
+      "أدخل البيانات ثم احفظ. أي ترحيل يتم من الشاشة بعد المراجعة، لا من المساعد."
+    ],
+    "source": "navigation"
+  },
+  {
     "id": "nav:salla-products",
     "title": "المنتجات",
     "href": "/integrations/salla/products",
@@ -1424,7 +1459,7 @@ export const NAVIGATION_SNAPSHOT: readonly HelpArticle[] = [
       "invoices",
       "new",
       "kind",
-      "purchase_return"
+      "purchase"
     ],
     "steps": [
       "افتح «مردود المشتريات» من قائمة النظام.",
@@ -3197,6 +3232,43 @@ export const NAVIGATION_SNAPSHOT: readonly HelpArticle[] = [
     "source": "navigation"
   },
   {
+    "id": "nav:hrm-leaves",
+    "title": "إجازات الموظفين",
+    "href": "/hrm/leaves",
+    "keywords": [
+      "إجازات",
+      "الموظفين",
+      "Approved",
+      "leave",
+      "hrm",
+      "leaves"
+    ],
+    "steps": [
+      "افتح «إجازات الموظفين» من قائمة النظام.",
+      "أدخل البيانات ثم احفظ. أي ترحيل يتم من الشاشة بعد المراجعة، لا من المساعد."
+    ],
+    "source": "navigation"
+  },
+  {
+    "id": "nav:hrm-geofences",
+    "title": "نطاق حضور الفروع",
+    "href": "/hrm/geofences",
+    "keywords": [
+      "نطاق",
+      "حضور",
+      "الفروع",
+      "Attendance",
+      "geofence",
+      "hrm",
+      "geofences"
+    ],
+    "steps": [
+      "افتح «نطاق حضور الفروع» من قائمة النظام.",
+      "أدخل البيانات ثم احفظ. أي ترحيل يتم من الشاشة بعد المراجعة، لا من المساعد."
+    ],
+    "source": "navigation"
+  },
+  {
     "id": "nav:salary-payments",
     "title": "دفع الرواتب",
     "href": "/hrm/salary-payments",
@@ -4742,6 +4814,126 @@ export const NAVIGATION_SNAPSHOT: readonly HelpArticle[] = [
     ],
     "steps": [
       "افتح «🏦 حركة الصندوق» من قائمة النظام.",
+      "أدخل البيانات ثم احفظ. أي ترحيل يتم من الشاشة بعد المراجعة، لا من المساعد."
+    ],
+    "source": "navigation"
+  },
+  {
+    "id": "nav:employee-home",
+    "title": "تطبيق الموظف",
+    "href": "/m",
+    "keywords": [
+      "تطبيق",
+      "الموظف",
+      "Employee",
+      "app"
+    ],
+    "steps": [
+      "افتح «تطبيق الموظف» من قائمة النظام.",
+      "أدخل البيانات ثم احفظ. أي ترحيل يتم من الشاشة بعد المراجعة، لا من المساعد."
+    ],
+    "source": "navigation"
+  },
+  {
+    "id": "nav:employee-attendance",
+    "title": "حضور وانصراف",
+    "href": "/m/attendance",
+    "keywords": [
+      "حضور",
+      "وانصراف",
+      "Attendance",
+      "attendance"
+    ],
+    "steps": [
+      "افتح «حضور وانصراف» من قائمة النظام.",
+      "أدخل البيانات ثم احفظ. أي ترحيل يتم من الشاشة بعد المراجعة، لا من المساعد."
+    ],
+    "source": "navigation"
+  },
+  {
+    "id": "nav:employee-request",
+    "title": "طلب جديد",
+    "href": "/m/requests/new",
+    "keywords": [
+      "طلب",
+      "جديد",
+      "New",
+      "request",
+      "requests",
+      "new"
+    ],
+    "steps": [
+      "افتح «طلب جديد» من قائمة النظام.",
+      "أدخل البيانات ثم احفظ. أي ترحيل يتم من الشاشة بعد المراجعة، لا من المساعد."
+    ],
+    "source": "navigation"
+  },
+  {
+    "id": "nav:employee-profile",
+    "title": "راتبي وإجازاتي",
+    "href": "/m/profile",
+    "keywords": [
+      "راتبي",
+      "وإجازاتي",
+      "Payslips",
+      "and",
+      "leave",
+      "profile"
+    ],
+    "steps": [
+      "افتح «راتبي وإجازاتي» من قائمة النظام.",
+      "أدخل البيانات ثم احفظ. أي ترحيل يتم من الشاشة بعد المراجعة، لا من المساعد."
+    ],
+    "source": "navigation"
+  },
+  {
+    "id": "nav:employee-approvals",
+    "title": "موافقات الفريق",
+    "href": "/m/approvals",
+    "keywords": [
+      "موافقات",
+      "الفريق",
+      "Team",
+      "approvals"
+    ],
+    "steps": [
+      "افتح «موافقات الفريق» من قائمة النظام.",
+      "أدخل البيانات ثم احفظ. أي ترحيل يتم من الشاشة بعد المراجعة، لا من المساعد."
+    ],
+    "source": "navigation"
+  },
+  {
+    "id": "nav:manufacturing-boms",
+    "title": "قوائم المواد",
+    "href": "/manufacturing/boms",
+    "keywords": [
+      "قوائم",
+      "المواد",
+      "Bills",
+      "of",
+      "materials",
+      "manufacturing",
+      "boms"
+    ],
+    "steps": [
+      "افتح «قوائم المواد» من قائمة النظام.",
+      "أدخل البيانات ثم احفظ. أي ترحيل يتم من الشاشة بعد المراجعة، لا من المساعد."
+    ],
+    "source": "navigation"
+  },
+  {
+    "id": "nav:manufacturing-orders",
+    "title": "أوامر التصنيع",
+    "href": "/manufacturing/orders",
+    "keywords": [
+      "أوامر",
+      "التصنيع",
+      "Manufacturing",
+      "orders",
+      "manufacturing"
+    ],
+    "steps": [
+      "افتح «أوامر التصنيع» من قائمة النظام.",
       "أدخل البيانات ثم احفظ. أي ترحيل يتم من الشاشة بعد المراجعة، لا من المساعد."
     ],
     "source": "navigation"
