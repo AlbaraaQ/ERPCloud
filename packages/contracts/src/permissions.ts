@@ -281,6 +281,8 @@ export const permissionRegistry: readonly PermissionDefinition[] = [
   perm('hrm.adjust.approve', 'Approve salary additions and deductions.'),
   perm('payroll.wps.export', 'Preview and export Mudad WPS and GOSI payroll files.'),
   perm('payments.links.manage', 'Connect online payment providers and manage invoice payment links.'),
+  perm('ai.assistant.use', 'Ask the accounting assistant and read own conversations.'),
+  perm('ai.settings.manage', 'Enable the assistant and set tenant provider, model and monthly limits.'),
 
   // installments and contracting/projects packs (PHASE_21)
   perm('installments.view', 'Read installment contracts, schedules, overdue aging and contract statements.'),

@@ -21,7 +21,7 @@
 | 5 | `05_REPORT_BUILDER_CUSTOM_FIELDS` | تقرير Builder + حقول مخصصة | P2 | 2.5 أسبوع | يقلل تخصيص 70% |
 | 6 | `06_OFFLINE_POS_PWA` | POS أوفلاين + مسح كاميرا | P2 | 2 أسبوع | يفتح المرسى بلا نت |
 | 7 | `07_MUDAD_MOYASAR` | مدد + ميسر + تأمينات (منفذة) | P2 | 2 أسبوع | ميزة HR قاتلة |
-| 8 | `08_AI_ACCOUNTING_ASSISTANT` | مساعد محاسبي AI | P2 | 2 أسبوع | تسويق قوي |
+| 8 | `08_AI_ACCOUNTING_ASSISTANT` | مساعد محاسبي AI (منفذة) | P2 | 2 أسبوع | تسويق قوي |
 | 9 | `09_MOBILE_EMPLOYEE_APP` | تطبيق موظف GPS + إجازات | P2 | 2 أسبوع | مطلوب لكل شركة |
 | 10 | `10_WMS_BOM` | مستودعات متقدمة + تصنيع | P3 | 3 أسابيع | للمستودعات الكبيرة |
 | 11 | `11_SUPPLIER_PORTAL_E_SIGNATURE` | بوابة موردين + توقيع | P3 | 2 أسبوع | ميزة B2B |
@@ -55,6 +55,7 @@
 - **02 OCR قيد التحقق بمزود خارجي**: migration `0097_ocr_purchase_invoices.sql`، API/worker، شاشة مراجعة Staff، اختبار 6 حالات، و`verify-ocr.mjs`؛ يلزم ضبط endpoint حقيقي لاختبار دقة العربية.
 - **03 Ecommerce منفذة**: migration `0099_ecommerce_stores_orders.sql`، مزودو Salla/Zid/Shopify مع mock transport، عاملَا `ecommerce.import` و`ecommerce.stock` على طابور `maintenance`، 11 حالة mock + اختبار API، و`verify-ecommerce.mjs` بأكثر من 15 نقطة؛ اختبار sandbox خارجي يبقى اختيارياً.
 - **04 Approval Workflow منفذة**: migration `0100_approval_workflows.sql`، مسارات tenant-scoped وخطوات متسلسلة وinbox/history، بوابة ترحيل المبيعات والمشتريات، إشعارات داخل التطبيق، 13 حالة API و`verify-approvals.mjs` بأكثر من 20 نقطة.
+- **08 المساعد المحاسبي منفذ**: migration `0104_ai_assistant.sql`، دردشة `/assistant` وزر عائم، مجاميع المستأجر فقط، و`verify-ai.mjs` بـ 13 نقطة.
 - P-C1..12 مكتملة
 - P-M1..10 مكتملة
 - 232 شاشة ready + 1 planned مستبعدة

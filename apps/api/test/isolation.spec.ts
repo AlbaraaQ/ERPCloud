@@ -212,6 +212,10 @@ describe('tenant isolation (TESTING_STRATEGY §6)', () => {
       'payroll_gosi_files',
       'payment_provider_configs',
       'payment_links',
+      'ai_settings',
+      'ai_conversations',
+      'ai_usage_logs',
+      'ai_suggestions',
     ]);
   });
 

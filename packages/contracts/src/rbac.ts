@@ -245,6 +245,8 @@ export const tenantAdminRoleCatalog: readonly RoleCatalogEntry[] = [
       // P-C6: the tenant administrator owns the wording of its own mail and reads its log.
       'tenant.email.template.manage',
       'tenant.email.log.view',
+      'ai.assistant.use',
+      'ai.settings.manage',
     ],
   },
   {
@@ -268,6 +270,7 @@ export const tenantAdminRoleCatalog: readonly RoleCatalogEntry[] = [
       'treasury.shift.post',
       'reporting.view',
       'pos.view',
+      'ai.assistant.use',
     ],
   },
   {
@@ -282,6 +285,7 @@ export const tenantAdminRoleCatalog: readonly RoleCatalogEntry[] = [
       'compat.manage',
       'compat.sync',
       'organization.branch.view',
+      'ai.assistant.use',
     ],
   },
   {
@@ -295,6 +299,7 @@ export const tenantAdminRoleCatalog: readonly RoleCatalogEntry[] = [
       'tenant.role.manage',
       'tenant.audit.view',
       'tenant.settings.manage',
+      'ai.assistant.use',
     ],
   },
   {
@@ -318,6 +323,7 @@ export const tenantAdminRoleCatalog: readonly RoleCatalogEntry[] = [
       'reporting.view',
       // P-C6: an auditor may see what left the tenant in its name.
       'tenant.email.log.view',
+      'ai.assistant.use',
     ],
   },
 ] as const;
@@ -385,6 +391,7 @@ export const erpFunctionalRoleCatalog: readonly RoleCatalogEntry[] = [
       'reporting.view',
       'payroll.wps.export',
       'payments.links.manage',
+      'ai.assistant.use',
     ],
   },
   {
@@ -417,6 +424,7 @@ export const erpFunctionalRoleCatalog: readonly RoleCatalogEntry[] = [
       'ecommerce.manage',
       'payments.links.manage',
       'reporting.view',
+      'ai.assistant.use',
     ],
   },
   {
@@ -434,6 +442,7 @@ export const erpFunctionalRoleCatalog: readonly RoleCatalogEntry[] = [
       'sales.view',
       'sales.invoice.create',
       'reporting.view',
+      'ai.assistant.use',
     ],
   },
   {
@@ -459,6 +468,7 @@ export const erpFunctionalRoleCatalog: readonly RoleCatalogEntry[] = [
       'purchase.adjustment.create',
       'approval.approve',
       'reporting.view',
+      'ai.assistant.use',
     ],
   },
   {
@@ -475,6 +485,7 @@ export const erpFunctionalRoleCatalog: readonly RoleCatalogEntry[] = [
       'purchase.invoice.create',
       'purchase.ocr.use',
       'reporting.view',
+      'ai.assistant.use',
     ],
   },
   {
@@ -501,6 +512,7 @@ export const erpFunctionalRoleCatalog: readonly RoleCatalogEntry[] = [
       'inventory.production.complete',
       'inventory.negative.override',
       'reporting.view',
+      'ai.assistant.use',
     ],
   },
   {
@@ -518,6 +530,7 @@ export const erpFunctionalRoleCatalog: readonly RoleCatalogEntry[] = [
       'inventory.request.manage',
       'inventory.delivery.manage',
       'reporting.view',
+      'ai.assistant.use',
     ],
   },
   {
@@ -544,6 +557,7 @@ export const erpFunctionalRoleCatalog: readonly RoleCatalogEntry[] = [
       'payments.links.manage',
       'pos.view',
       'pos.operate',
+      'ai.assistant.use',
     ],
   },
   {
@@ -565,6 +579,7 @@ export const erpFunctionalRoleCatalog: readonly RoleCatalogEntry[] = [
       'treasury.expensetype.manage',
       'payments.links.manage',
       'reporting.view',
+      'ai.assistant.use',
     ],
   },
   {
@@ -580,6 +595,7 @@ export const erpFunctionalRoleCatalog: readonly RoleCatalogEntry[] = [
       'hrm.adjust.approve',
       'payroll.wps.export',
       'reporting.view',
+      'ai.assistant.use',
     ],
   },
   {
@@ -595,6 +611,7 @@ export const erpFunctionalRoleCatalog: readonly RoleCatalogEntry[] = [
       'projects.contractor.pay',
       'projects.stage.accredit',
       'reporting.view',
+      'ai.assistant.use',
     ],
   },
   {
@@ -621,6 +638,7 @@ export const erpFunctionalRoleCatalog: readonly RoleCatalogEntry[] = [
       'reporting.view',
       'hrm.view',
       'projects.view',
+      'ai.assistant.use',
     ],
   },
   {
@@ -637,6 +655,7 @@ export const erpFunctionalRoleCatalog: readonly RoleCatalogEntry[] = [
       'accounting.reports.view',
       'reporting.view',
       'reporting.export.execute',
+      'ai.assistant.use',
     ],
   },
 ] as const;

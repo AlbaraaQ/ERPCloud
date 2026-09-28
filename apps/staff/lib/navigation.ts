@@ -1750,6 +1750,21 @@ const settings: ModuleNode = {
       ],
     },
     {
+      key: 'settings-ai',
+      labelAr: 'المساعد الذكي',
+      labelEn: 'Assistant',
+      items: [
+        screen('ai-assistant', 'المساعد المحاسبي', 'Accounting assistant', '/assistant', 'ready', {
+          permission: 'ai.assistant.use',
+          endpoint: 'POST /ai/chat · GET /ai/conversations · GET /ai/skills · POST /ai/suggest',
+        }),
+        screen('ai-settings', 'إعدادات المساعد', 'Assistant settings', '/settings/ai', 'ready', {
+          permission: 'ai.settings.manage',
+          endpoint: 'GET/PUT /ai/settings',
+        }),
+      ],
+    },
+    {
       key: 'settings-users',
       labelAr: 'إعدادات المستخدمين',
       labelEn: 'Users',

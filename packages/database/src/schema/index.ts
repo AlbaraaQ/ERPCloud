@@ -28,3 +28,4 @@ export * from './niche.js';
 export * from './ecommerce.js';
 export * from './approvals.js';
 export * from './custom-fields.js';
+export * from './ai.js';

@@ -173,6 +173,11 @@ export const rlsProtectedTables = [
   'payroll_gosi_files',
   'payment_provider_configs',
   'payment_links',
+  // Future enhancement 08 — assistant conversations, settings, usage and suggestions.
+  'ai_settings',
+  'ai_conversations',
+  'ai_usage_logs',
+  'ai_suggestions',
 ] as const;
 
 export type QueryRowsOf<T> = QueryRows<T>;

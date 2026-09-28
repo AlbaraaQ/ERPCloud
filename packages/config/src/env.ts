@@ -192,6 +192,15 @@ const envSchema = z.object({
    */
   CONSOLE_PUBLIC_URL: z.string().default(''),
 
+  /**
+   * PHASE_08 — fallback when the platform has not stored an assistant key.
+   * `local` answers from tenant aggregates without calling a model.
+   */
+  AI_PROVIDER: z.enum(['openai', 'anthropic', 'local']).optional(),
+  AI_API_KEY: z.string().optional(),
+  AI_MODEL: z.string().optional(),
+  AI_BASE_URL: z.union([z.literal(''), z.string().url()]).optional(),
+
   /** AES-256-GCM data-encryption key, base64 (SECURITY_ARCHITECTURE §9). */
   DATA_ENC_KEY: z.string().optional(),
   /** HMAC secret for app-signed file download URLs; derived from DATA_ENC_KEY when unset. */
@@ -342,4 +351,8 @@ export const REDACTED_LOG_PATHS = [
   '*.secret',
   'key',
   '*.key',
+  'apiKey',
+  '*.apiKey',
+  'api_key',
+  '*.api_key',
 ] as const;

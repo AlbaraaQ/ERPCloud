@@ -8,6 +8,7 @@ import { useLang, type Lang } from '../lib/i18n';
 import { useSession } from '../lib/session';
 import { visibleModules, type ModuleNode, type ScreenItem } from '../lib/navigation';
 
+import { AssistantLauncher } from './assistant-launcher';
 import { ImpersonationBanner } from './impersonation-banner';
 import { NotificationBell } from './notification-bell';
 
@@ -212,6 +213,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </header>
         {children}
       </main>
+      <AssistantLauncher />
     </div>
   );
 }

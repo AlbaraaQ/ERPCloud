@@ -1798,3 +1798,95 @@ tr.opening td {
     grid-template-columns: 1fr;
   }
 }
+
+/* PHASE_08 — accounting assistant */
+.assistant-fab {
+  position: fixed;
+  z-index: 40;
+  inset-inline-end: 20px;
+  bottom: 20px;
+  border-radius: 999px;
+  box-shadow: var(--shadow-2, 0 8px 24px rgb(15 23 42 / 18%));
+}
+.assistant-drawer {
+  position: fixed;
+  z-index: 45;
+  inset-inline-end: 20px;
+  bottom: 76px;
+  width: min(400px, calc(100vw - 32px));
+  max-height: min(680px, calc(100vh - 110px));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+}
+.assistant-panel,
+.assistant-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+.chat-log {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: auto;
+  max-height: 420px;
+  padding-inline-end: 4px;
+}
+.assistant-compact .chat-log {
+  max-height: 280px;
+}
+.chat-bubble {
+  white-space: pre-wrap;
+  border-radius: 14px;
+  padding: 10px 12px;
+  line-height: 1.6;
+}
+.chat-bubble.user {
+  align-self: flex-start;
+  background: var(--color-brand-600, #2563eb);
+  color: white;
+  max-width: 85%;
+}
+.chat-bubble.assistant {
+  align-self: stretch;
+  background: var(--surface, white);
+  border: 1px solid var(--line, #e2e8f0);
+}
+.chat-bubble a {
+  font-weight: 700;
+}
+.assistant-layout {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
+  gap: 12px;
+  min-height: 0;
+}
+.assistant-side {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 520px;
+  overflow: auto;
+}
+.assistant-side .btn {
+  justify-content: flex-start;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.assistant-suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+@media (max-width: 800px) {
+  .assistant-layout {
+    grid-template-columns: 1fr;
+  }
+  .assistant-side {
+    max-height: 140px;
+  }
+}

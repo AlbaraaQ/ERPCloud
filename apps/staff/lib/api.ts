@@ -231,6 +231,23 @@ export type ApiOptions = RequestInit & {
   idempotencyKey?: string;
 };
 
+/** Authenticated fetch that leaves the body unread so a caller can stream SSE. */
+export async function apiOpen(path: string, init: RequestInit = {}): Promise<Response> {
+  const session = readSession();
+  const call = async (token?: string): Promise<Response> => {
+    const headers = new Headers(init.headers ?? {});
+    if (!headers.has('content-type') && init.body !== undefined) headers.set('content-type', 'application/json');
+    if (token) headers.set('authorization', `Bearer ${token}`);
+    return fetch(`${apiBaseUrl}${path}`, { ...init, headers });
+  };
+  let response = await call(session?.accessToken);
+  if (response.status === 401 && session && !session.impersonation) {
+    const refreshed = await refreshSession();
+    if (refreshed) response = await call(refreshed.accessToken);
+  }
+  return response;
+}
+
 export async function apiFetch<T>(path: string, options: ApiOptions = {}): Promise<T> {
   const { anonymous, branchId, idempotencyKey, ...init } = options;
 

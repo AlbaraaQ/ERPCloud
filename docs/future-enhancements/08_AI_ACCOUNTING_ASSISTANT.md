@@ -24,7 +24,8 @@
 
 ## التصميم التقني
 
-### ترحيل 0102
+### ترحيل 0104
+0102 مستخدم لأوفلاين نقطة البيع، لذلك الترحيل الفعلي هو `0104_ai_assistant.sql`.
 ```sql
 ai_conversations (id, tenant_id, user_id, title, messages jsonb, created_at)
 ai_settings (tenant_id, provider, model, enabled, limits)
@@ -72,12 +73,21 @@ answer = llm.chat({ system: "أنت مساعد ERP سعودي...", context, tool
 - `ai.assistant.use` — كل المستخدمين، `ai.settings.manage` — أدمن
 
 ## معايير القبول
-- [ ] سؤال "كيف أنشئ فاتورة مبيعات؟" → يجيب بالخطوات + رابط `/sales/invoices/new`
-- [ ] سؤال "مبيعات اليوم" → يرقم حقيقي من DB
-- [ ] اقتراح يومي "عندك 3 أصناف ستنفد"
-- [ ] لا يجيب عن بيانات مستأجر آخر (عزل)
-- [ ] اختبار `ai-assistant.spec.ts` 8 حالات mock LLM
-- [ ] `verify-ai.mjs` 12 نقطة
+- [x] سؤال "كيف أنشئ فاتورة مبيعات؟" → يجيب بالخطوات + رابط `/sales/invoices/new`
+- [x] سؤال "مبيعات اليوم" → يرقم حقيقي من DB
+- [x] اقتراح يومي "عندك 3 أصناف ستنفد"
+- [x] لا يجيب عن بيانات مستأجر آخر (عزل)
+- [x] اختبار `ai-assistant.spec.ts` 8 حالات mock LLM
+- [x] `verify-ai.mjs` 13 نقطة (تغطي الاثنتي عشرة المطلوبة)
+
+## حالة التنفيذ
+
+- الترحيل `0104_ai_assistant.sql`: `ai_conversations` و`ai_settings` و`ai_usage_logs` و`ai_suggestions` مع RLS، و`ai_platform_settings` بمفتاح مشفر لا يراه المستأجر.
+- `POST /ai/chat` يصنّف النية ثم يجيب ببث SSE من مجاميع المنشأة أو من دليل الشاشات والتقارير. الرقم الذي يخترعه النموذج يُستبدل بالإجابة الموثوقة.
+- الأدوات: `get_sales_summary` و`get_overdue_invoices` و`get_low_stock` و`search_help`. لا تُرسل هوية أو رواتب، ولا يُرحَّل قيد.
+- الواجهات: `/assistant` يعرض تنبيهات اليوم ومحادثات المستخدم، وزر عائم و`/settings/ai` و`/ai` في لوحة المنصة لإيقاف منشأة أو حفظ المزود.
+- دليل المساعدة يقرأ شاشات `navigation.ts` (ولقطة منها في صورة الإنتاج) ودليل النظام المضمّن، بالإضافة إلى كتالوج التقارير.
+- التحقق: `apps/api/src/modules/ai/ai-assistant.spec.ts` و`node scripts/verify-ai.mjs`.
 
 ## الجهد
 - Backend: 5 أيام (RAG + أدوات + streaming)

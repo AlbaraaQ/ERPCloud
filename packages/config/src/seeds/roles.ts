@@ -83,6 +83,7 @@ export const baselineRoles: readonly BaselineRoleSeed[] = [
       'reporting.view',
       'payroll.wps.export',
       'payments.links.manage',
+      'ai.assistant.use',
     ],
   },
   {
@@ -106,6 +107,7 @@ export const baselineRoles: readonly BaselineRoleSeed[] = [
       'treasury.voucher.create',
       'treasury.shift.close',
       'payments.links.manage',
+      'ai.assistant.use',
     ],
   },
 ] as const;

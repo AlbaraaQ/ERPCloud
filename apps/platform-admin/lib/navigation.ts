@@ -282,6 +282,14 @@ export const consoleGroups: readonly ConsoleGroup[] = [
         'console.tenants.view',
         'GET /platform/settings',
       ),
+      item(
+        'ai-assistant',
+        'المساعد المحاسبي',
+        'Accounting assistant',
+        '/ai',
+        'console.settings.manage',
+        'GET/PUT /platform/ai/settings',
+      ),
     ],
   },
 ] as const;

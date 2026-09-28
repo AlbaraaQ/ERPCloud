@@ -289,6 +289,11 @@ describe('staff navigation tree', () => {
     expect(allScreens.find((screen) => screen.key === 'online-payments')?.href).toBe('/settings/payments');
   });
 
+  it('exposes the accounting assistant', () => {
+    expect(allScreens.find((screen) => screen.key === 'ai-assistant')?.href).toBe('/assistant');
+    expect(allScreens.find((screen) => screen.key === 'ai-settings')?.href).toBe('/settings/ai');
+  });
+
   it('reports honest implementation counts', () => {
     const counts = screenCounts();
     expect(counts.total).toBe(counts.ready + counts.api + counts.planned);

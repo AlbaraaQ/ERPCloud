@@ -89,6 +89,8 @@ export const jobTypes = {
   // Future enhancement 03 — order imports and stock pushes share the existing maintenance queue.
   ECOMMERCE_IMPORT: 'ecommerce.import',
   ECOMMERCE_STOCK: 'ecommerce.stock',
+  // Future enhancement 08 — daily assistant suggestions. Same frozen maintenance queue.
+  AI_SUGGEST: 'ai.suggest',
 } as const;
 
 export type JobType = (typeof jobTypes)[keyof typeof jobTypes];
