@@ -97,6 +97,11 @@ describe('RLS SQL builders (MULTI_TENANCY §3.5)', () => {
       'ai_conversations',
       'ai_usage_logs',
       'ai_suggestions',
+      'employee_geofences',
+      'employee_attendance',
+      'employee_requests',
+      'employee_push_subscriptions',
+      'employee_push_outbox',
     ]);
   });
 

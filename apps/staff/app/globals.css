@@ -1890,3 +1890,37 @@ tr.opening td {
     max-height: 140px;
   }
 }
+
+.employee-app {
+  min-height: 100vh;
+  padding: 16px;
+  background: #f8fafc;
+}
+.employee-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.employee-bar nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.employee-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px;
+}
+.employee-actions {
+  display: grid;
+  gap: 10px;
+}
+.punch {
+  min-height: 64px;
+  font-size: 20px;
+}

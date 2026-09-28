@@ -1,5 +1,5 @@
-const CACHE_NAME = 'erpcloud-staff-shell-v1';
-const APP_SHELL = ['/pos/offline', '/pos/offline-queue', '/manifest.webmanifest'];
+const CACHE_NAME = 'erpcloud-staff-shell-v2';
+const APP_SHELL = ['/pos/offline', '/pos/offline-queue', '/m', '/m/attendance', '/m/requests/new', '/m/approvals', '/m/profile', '/manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -19,6 +19,16 @@ self.addEventListener('activate', (event) => {
       .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
       .then(() => self.clients.claim()),
   );
+});
+
+self.addEventListener('push', (event) => {
+  let payload = { title: 'تنبيه', body: '' };
+  try {
+    payload = event.data ? event.data.json() : payload;
+  } catch {
+    payload = { title: 'تنبيه', body: event.data ? event.data.text() : '' };
+  }
+  event.waitUntil(self.registration.showNotification(payload.title || 'تنبيه', { body: payload.body || '', dir: 'rtl', lang: 'ar' }));
 });
 
 self.addEventListener('fetch', (event) => {

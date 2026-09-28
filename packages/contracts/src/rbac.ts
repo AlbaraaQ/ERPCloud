@@ -247,6 +247,9 @@ export const tenantAdminRoleCatalog: readonly RoleCatalogEntry[] = [
       'tenant.email.log.view',
       'ai.assistant.use',
       'ai.settings.manage',
+      'employee.self.view',
+      'employee.self.manage',
+      'employee.team.approve',
     ],
   },
   {
@@ -271,6 +274,9 @@ export const tenantAdminRoleCatalog: readonly RoleCatalogEntry[] = [
       'reporting.view',
       'pos.view',
       'ai.assistant.use',
+      'employee.self.view',
+      'employee.self.manage',
+      'employee.team.approve',
     ],
   },
   {
@@ -286,6 +292,8 @@ export const tenantAdminRoleCatalog: readonly RoleCatalogEntry[] = [
       'compat.sync',
       'organization.branch.view',
       'ai.assistant.use',
+      'employee.self.view',
+      'employee.self.manage',
     ],
   },
   {
@@ -300,6 +308,8 @@ export const tenantAdminRoleCatalog: readonly RoleCatalogEntry[] = [
       'tenant.audit.view',
       'tenant.settings.manage',
       'ai.assistant.use',
+      'employee.self.view',
+      'employee.self.manage',
     ],
   },
   {
@@ -324,6 +334,8 @@ export const tenantAdminRoleCatalog: readonly RoleCatalogEntry[] = [
       // P-C6: an auditor may see what left the tenant in its name.
       'tenant.email.log.view',
       'ai.assistant.use',
+      'employee.self.view',
+      'employee.self.manage',
     ],
   },
 ] as const;
@@ -392,6 +404,8 @@ export const erpFunctionalRoleCatalog: readonly RoleCatalogEntry[] = [
       'payroll.wps.export',
       'payments.links.manage',
       'ai.assistant.use',
+      'employee.self.view',
+      'employee.self.manage',
     ],
   },
   {
@@ -425,6 +439,8 @@ export const erpFunctionalRoleCatalog: readonly RoleCatalogEntry[] = [
       'payments.links.manage',
       'reporting.view',
       'ai.assistant.use',
+      'employee.self.view',
+      'employee.self.manage',
     ],
   },
   {
@@ -443,6 +459,8 @@ export const erpFunctionalRoleCatalog: readonly RoleCatalogEntry[] = [
       'sales.invoice.create',
       'reporting.view',
       'ai.assistant.use',
+      'employee.self.view',
+      'employee.self.manage',
     ],
   },
   {
@@ -469,6 +487,8 @@ export const erpFunctionalRoleCatalog: readonly RoleCatalogEntry[] = [
       'approval.approve',
       'reporting.view',
       'ai.assistant.use',
+      'employee.self.view',
+      'employee.self.manage',
     ],
   },
   {
@@ -486,6 +506,8 @@ export const erpFunctionalRoleCatalog: readonly RoleCatalogEntry[] = [
       'purchase.ocr.use',
       'reporting.view',
       'ai.assistant.use',
+      'employee.self.view',
+      'employee.self.manage',
     ],
   },
   {
@@ -513,6 +535,8 @@ export const erpFunctionalRoleCatalog: readonly RoleCatalogEntry[] = [
       'inventory.negative.override',
       'reporting.view',
       'ai.assistant.use',
+      'employee.self.view',
+      'employee.self.manage',
     ],
   },
   {
@@ -531,6 +555,8 @@ export const erpFunctionalRoleCatalog: readonly RoleCatalogEntry[] = [
       'inventory.delivery.manage',
       'reporting.view',
       'ai.assistant.use',
+      'employee.self.view',
+      'employee.self.manage',
     ],
   },
   {
@@ -558,6 +584,8 @@ export const erpFunctionalRoleCatalog: readonly RoleCatalogEntry[] = [
       'pos.view',
       'pos.operate',
       'ai.assistant.use',
+      'employee.self.view',
+      'employee.self.manage',
     ],
   },
   {
@@ -580,6 +608,8 @@ export const erpFunctionalRoleCatalog: readonly RoleCatalogEntry[] = [
       'payments.links.manage',
       'reporting.view',
       'ai.assistant.use',
+      'employee.self.view',
+      'employee.self.manage',
     ],
   },
   {
@@ -596,6 +626,9 @@ export const erpFunctionalRoleCatalog: readonly RoleCatalogEntry[] = [
       'payroll.wps.export',
       'reporting.view',
       'ai.assistant.use',
+      'employee.self.view',
+      'employee.self.manage',
+      'employee.team.approve',
     ],
   },
   {
@@ -612,6 +645,8 @@ export const erpFunctionalRoleCatalog: readonly RoleCatalogEntry[] = [
       'projects.stage.accredit',
       'reporting.view',
       'ai.assistant.use',
+      'employee.self.view',
+      'employee.self.manage',
     ],
   },
   {
@@ -639,6 +674,8 @@ export const erpFunctionalRoleCatalog: readonly RoleCatalogEntry[] = [
       'hrm.view',
       'projects.view',
       'ai.assistant.use',
+      'employee.self.view',
+      'employee.self.manage',
     ],
   },
   {
@@ -656,6 +693,8 @@ export const erpFunctionalRoleCatalog: readonly RoleCatalogEntry[] = [
       'reporting.view',
       'reporting.export.execute',
       'ai.assistant.use',
+      'employee.self.view',
+      'employee.self.manage',
     ],
   },
 ] as const;

@@ -1351,6 +1351,14 @@ const hrm: ModuleNode = {
           permission: 'hrm.view',
           endpoint: 'GET /hrm/compliance/alerts',
         }),
+        screen('hrm-leaves', 'إجازات الموظفين', 'Approved leave', '/hrm/leaves', 'ready', {
+          permission: 'hrm.view',
+          endpoint: 'GET /hrm/employee-leaves',
+        }),
+        screen('hrm-geofences', 'نطاق حضور الفروع', 'Attendance geofence', '/hrm/geofences', 'ready', {
+          permission: 'hrm.manage',
+          endpoint: 'GET/PUT /hrm/geofences',
+        }),
         // 💵 `Form_WPF/frmSalaryPay.xaml` «دفع الرواتب» — one إذن صرف per employee per
         // month. The row under «التقارير» with the same name is the report
         // (`frmRptSalary`); the window itself belongs here, next to the مسيّر it pays.
@@ -2068,6 +2076,50 @@ const treasury: ModuleNode = {
   ],
 };
 
+const employeeApp: ModuleNode = {
+  key: 'employee-app',
+  icon: '📱',
+  labelAr: 'تطبيق الموظف',
+  labelEn: 'Employee app',
+  href: '/m',
+  groups: [
+    {
+      key: 'employee-self',
+      labelAr: 'حسابي',
+      labelEn: 'Self service',
+      items: [
+        screen('employee-home', 'تطبيق الموظف', 'Employee app', '/m', 'ready', {
+          permission: 'employee.self.view',
+          endpoint: 'GET /employee/me',
+        }),
+        screen('employee-attendance', 'حضور وانصراف', 'Attendance', '/m/attendance', 'ready', {
+          permission: 'employee.self.manage',
+          endpoint: 'POST /employee/attendance',
+        }),
+        screen('employee-request', 'طلب جديد', 'New request', '/m/requests/new', 'ready', {
+          permission: 'employee.self.manage',
+          endpoint: 'POST /employee/requests',
+        }),
+        screen('employee-profile', 'راتبي وإجازاتي', 'Payslips and leave', '/m/profile', 'ready', {
+          permission: 'employee.self.view',
+          endpoint: 'GET /employee/payslips',
+        }),
+      ],
+    },
+    {
+      key: 'employee-team',
+      labelAr: 'الفريق',
+      labelEn: 'Team',
+      items: [
+        screen('employee-approvals', 'موافقات الفريق', 'Team approvals', '/m/approvals', 'ready', {
+          permission: 'employee.team.approve',
+          endpoint: 'POST /employee/requests/:id/approve',
+        }),
+      ],
+    },
+  ],
+};
+
 export const modules: ModuleNode[] = [
   accounting,
   treasury,
@@ -2077,6 +2129,7 @@ export const modules: ModuleNode[] = [
   tailoring,
   optics,
   hrm,
+  employeeApp,
   marina,
   projects,
   settings,

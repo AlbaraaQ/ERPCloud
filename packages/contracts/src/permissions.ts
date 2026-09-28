@@ -283,6 +283,9 @@ export const permissionRegistry: readonly PermissionDefinition[] = [
   perm('payments.links.manage', 'Connect online payment providers and manage invoice payment links.'),
   perm('ai.assistant.use', 'Ask the accounting assistant and read own conversations.'),
   perm('ai.settings.manage', 'Enable the assistant and set tenant provider, model and monthly limits.'),
+  perm('employee.self.view', 'Read own attendance, requests, payslips and custodies.'),
+  perm('employee.self.manage', 'Punch attendance and submit own employee requests.'),
+  perm('employee.team.approve', 'Approve or reject team leave, permission, custody and advance requests.'),
 
   // installments and contracting/projects packs (PHASE_21)
   perm('installments.view', 'Read installment contracts, schedules, overdue aging and contract statements.'),

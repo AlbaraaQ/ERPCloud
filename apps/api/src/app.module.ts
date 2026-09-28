@@ -60,6 +60,7 @@ import { SallaModule } from './modules/integrations/salla/salla.module.js';
 import { EcommerceModule } from './modules/ecommerce/ecommerce.module.js';
 import { TailoringModule } from './modules/tailoring/tailoring.module.js';
 import { AiModule } from './modules/ai/ai.module.js';
+import { EmployeeModule } from './modules/employee/employee.module.js';
 import { PaymentsModule } from './modules/payments/payments.module.js';
 import { WhatsappModule } from './modules/integrations/whatsapp/whatsapp.module.js';
 import { AuditInterceptor, PlatformServicesModule } from './modules/platform-services/index.js';
@@ -142,6 +143,7 @@ import { OpsModule } from './ops/ops.module.js';
     EcommerceModule,
     PaymentsModule,
     AiModule,
+    EmployeeModule,
     WhatsappModule,
   ],
   controllers: [HealthController],

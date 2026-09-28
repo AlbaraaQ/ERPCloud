@@ -178,6 +178,12 @@ export const rlsProtectedTables = [
   'ai_conversations',
   'ai_usage_logs',
   'ai_suggestions',
+  // Future enhancement 09 — mobile attendance, requests and push notices.
+  'employee_geofences',
+  'employee_attendance',
+  'employee_requests',
+  'employee_push_subscriptions',
+  'employee_push_outbox',
 ] as const;
 
 export type QueryRowsOf<T> = QueryRows<T>;

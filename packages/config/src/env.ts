@@ -201,6 +201,10 @@ const envSchema = z.object({
   AI_MODEL: z.string().optional(),
   AI_BASE_URL: z.union([z.literal(''), z.string().url()]).optional(),
 
+  /** PHASE_09 — optional Web Push. Empty means notices stay in the in-app outbox. */
+  WEB_PUSH_VAPID_PUBLIC: z.string().optional(),
+  WEB_PUSH_VAPID_PRIVATE: z.string().optional(),
+
   /** AES-256-GCM data-encryption key, base64 (SECURITY_ARCHITECTURE §9). */
   DATA_ENC_KEY: z.string().optional(),
   /** HMAC secret for app-signed file download URLs; derived from DATA_ENC_KEY when unset. */

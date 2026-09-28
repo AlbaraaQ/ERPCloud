@@ -49,6 +49,9 @@ describe('staff navigation tree', () => {
       'tailoring',
       'optics',
       'hrm',
+      // Cloud employee PWA. It is not a desktop window; it sits beside HR so a
+      // clerk with `employee.self.view` can open it without `hrm.view`.
+      'employee-app',
       'marina',
       'projects',
       'settings',
@@ -287,6 +290,11 @@ describe('staff navigation tree', () => {
   it('exposes Mudad alerts and online payment settings', () => {
     expect(allScreens.find((screen) => screen.key === 'hrm-compliance')?.href).toBe('/hrm/compliance');
     expect(allScreens.find((screen) => screen.key === 'online-payments')?.href).toBe('/settings/payments');
+  });
+
+  it('exposes the employee mobile app', () => {
+    expect(allScreens.find((screen) => screen.key === 'employee-attendance')?.href).toBe('/m/attendance');
+    expect(allScreens.find((screen) => screen.key === 'hrm-leaves')?.href).toBe('/hrm/leaves');
   });
 
   it('exposes the accounting assistant', () => {
