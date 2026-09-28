@@ -226,6 +226,8 @@ export const permissionRegistry: readonly PermissionDefinition[] = [
   perm('purchase.invoice.pay', 'Record supplier payment hooks on purchase invoices.'),
   perm('purchase.cost.manage', 'Create, update and allocate purchase landed costs.'),
   perm('purchase.adjustment.create', 'Issue credit and debit notes against posted purchase invoices.'),
+  perm('supplier_portal.access', 'Invite suppliers and read their portal submissions.'),
+  perm('esign.manage', 'Send a document for a simple drawn signature.'),
 
   // treasury (PHASE_13)
   perm('treasury.view', 'List and read vouchers and shifts.'),

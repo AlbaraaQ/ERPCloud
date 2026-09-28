@@ -109,6 +109,12 @@ describe('RLS SQL builders (MULTI_TENANCY §3.5)', () => {
       'bom_lines',
       'manufacturing_orders',
       'manufacturing_moves',
+      'supplier_portal_users',
+      'supplier_portal_sessions',
+      'supplier_rfqs',
+      'supplier_invoice_uploads',
+      'esign_requests',
+      'esign_events',
     ]);
   });
 

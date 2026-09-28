@@ -44,6 +44,7 @@ import { BankFeedsModule } from './modules/treasury/bank-feeds.module.js';
 import { EinvoicingModule } from './modules/einvoicing/einvoicing.module.js';
 import { OperationsModule } from './modules/operations/operations.module.js';
 import { PortalModule } from './modules/portal/portal.module.js';
+import { SupplierPortalModule } from './modules/supplier-portal/supplier-portal.module.js';
 import { ReportingModule } from './modules/reporting/reporting.module.js';
 import { CustomFieldsModule } from './modules/custom-fields/custom-fields.module.js';
 import { MigrationModule } from './modules/migration/migration.module.js';
@@ -126,6 +127,7 @@ import { OpsModule } from './ops/ops.module.js';
     EinvoicingModule,
     OperationsModule,
     PortalModule,
+    SupplierPortalModule,
     ReportingModule,
     CustomFieldsModule,
     MigrationModule,

@@ -192,6 +192,13 @@ export const rlsProtectedTables = [
   'bom_lines',
   'manufacturing_orders',
   'manufacturing_moves',
+  // Future enhancement 11 — supplier portal and a drawn signature.
+  'supplier_portal_users',
+  'supplier_portal_sessions',
+  'supplier_rfqs',
+  'supplier_invoice_uploads',
+  'esign_requests',
+  'esign_events',
 ] as const;
 
 export type QueryRowsOf<T> = QueryRows<T>;

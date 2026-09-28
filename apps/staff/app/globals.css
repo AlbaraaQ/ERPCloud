@@ -874,6 +874,68 @@ th.num {
   display: grid;
   place-items: center;
 }
+.public-page {
+  min-height: 100vh;
+  background: var(--bg);
+  padding: 28px 16px 64px;
+}
+.public-wrap {
+  width: min(920px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: 16px;
+}
+.logo-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--brand);
+  color: white;
+  font-weight: 700;
+}
+.sign-pad {
+  width: 100%;
+  height: 180px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 12px;
+  background: #fff;
+  touch-action: none;
+  cursor: crosshair;
+}
+.sign-sheet {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow-3);
+  padding: 28px;
+  display: grid;
+  gap: 16px;
+}
+.sign-letterhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 2px solid var(--brand);
+  padding-bottom: 14px;
+}
+.sign-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.sign-table th,
+.sign-table td {
+  border-bottom: 1px solid var(--line);
+  padding: 8px 4px;
+  text-align: start;
+}
+.sign-table .num {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
 .boot-card {
   display: grid;
   gap: 10px;

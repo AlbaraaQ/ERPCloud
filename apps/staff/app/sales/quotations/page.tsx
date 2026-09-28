@@ -41,7 +41,12 @@ type Quotation = {
   createdAt: string;
 };
 
-const STATUS_LABELS: Record<string, string> = { draft: 'مفتوح', converted: 'حُوِّل إلى فاتورة', voided: 'ملغى' };
+const STATUS_LABELS: Record<string, string> = {
+  draft: 'مفتوح',
+  converted: 'حُوِّل إلى فاتورة',
+  voided: 'ملغى',
+  signed: 'موقّع',
+};
 
 /**
  * Quotations (عرض سعر).
@@ -218,18 +223,29 @@ export default function QuotationsPage() {
                 {
                   key: 'actions',
                   header: '',
-                  cell: (row: Quotation) =>
-                    row.status === 'converted' && row.convertedInvoiceId ? (
-                      <button type="button" className="btn sm" onClick={() => router.push(`/sales/invoices/${row.convertedInvoiceId}`)}>
-                        الفاتورة
+                  cell: (row: Quotation) => (
+                    <span className="row">
+                      <button type="button" className="btn sm" onClick={() => router.push(`/sales/quotations/${row.id}`)}>
+                        فتح
                       </button>
-                    ) : row.status === 'draft' && can('sales.invoice.create') ? (
-                      <button type="button" className="btn sm primary" disabled={busy} onClick={() => convert(row)}>
-                        تحويل إلى فاتورة
-                      </button>
-                    ) : (
-                      <span className="muted">—</span>
-                    ),
+                      {row.status === 'draft' && can('esign.manage') ? (
+                        <button type="button" className="btn sm" disabled={busy} onClick={() => router.push(`/sales/quotations/${row.id}/esign`)}>
+                          إرسال للتوقيع
+                        </button>
+                      ) : null}
+                      {row.status === 'converted' && row.convertedInvoiceId ? (
+                        <button type="button" className="btn sm" onClick={() => router.push(`/sales/invoices/${row.convertedInvoiceId}`)}>
+                          الفاتورة
+                        </button>
+                      ) : row.status === 'draft' && can('sales.invoice.create') ? (
+                        <button type="button" className="btn sm primary" disabled={busy} onClick={() => convert(row)}>
+                          تحويل إلى فاتورة
+                        </button>
+                      ) : row.status !== 'draft' ? (
+                        <span className="muted">—</span>
+                      ) : null}
+                    </span>
+                  ),
                 },
               ]}
               rows={rows}

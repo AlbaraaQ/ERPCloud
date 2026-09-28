@@ -32,6 +32,7 @@ const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 /** Endpoints whose request body must never be captured, mapped to a CRITICAL action. */
 const AUTH_AUDIT_ACTIONS: Record<string, string> = {
   'POST auth/login': auditActions.LOGIN,
+  'POST supplier-portal/auth': auditActions.LOGIN,
   'POST auth/refresh': auditActions.REFRESH,
   'POST auth/logout': auditActions.LOGOUT,
   'POST auth/change-password': auditActions.PASSWORD_CHANGE,
@@ -126,6 +127,10 @@ export class AuditInterceptor implements NestInterceptor {
     if (IGNORED_RESOURCES.has(route.resource)) return next.handle();
     if (READ_ONLY_POSTS.has(`${method} ${route.resource}/${route.entityId ?? ''}`)) return next.handle();
     if (ANONYMOUS_POSTS.has(`${method} ${route.resource}/${route.entityId ?? ''}`)) return next.handle();
+
+    // The public sign path carries the secret in the URL and the one-time code in the body.
+    // `esign_events` is the trail; the audit row would keep both.
+    if (route.resource === 'esign' && route.subResource === 'sign') return next.handle();
 
     const authAction = AUTH_AUDIT_ACTIONS[`${method} ${route.resource}/${route.entityId ?? ''}`];
 

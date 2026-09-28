@@ -599,6 +599,14 @@ const purchases: ModuleNode = {
           'ready',
           { permission: 'purchase.invoice.create', endpoint: 'POST /purchase-invoices' },
         ),
+        screen(
+          'supplier-portal-admin',
+          'بوابة الموردين',
+          'Supplier portal',
+          '/purchases/supplier-portal',
+          'ready',
+          { permission: 'supplier_portal.access', endpoint: '/supplier-portal/users' },
+        ),
       ],
     },
     {

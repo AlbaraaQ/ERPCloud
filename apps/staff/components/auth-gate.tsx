@@ -15,7 +15,9 @@ import { LoginScreen } from './login-screen';
  */
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const { status, error } = useSession();
-  const pathname = usePathname();
+  const pathname = usePathname() ?? '';
+  // The supplier portal and the public signature page authenticate themselves.
+  if (pathname.startsWith('/supplier-portal') || pathname.startsWith('/esign')) return children;
 
   if (status === 'loading') {
     return (
