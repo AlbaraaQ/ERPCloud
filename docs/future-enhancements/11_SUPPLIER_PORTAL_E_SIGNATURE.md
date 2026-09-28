@@ -73,6 +73,7 @@ esign_events (id, request_id, event: sent|viewed|signed, at, ip)
 - الواجهات: `/purchases/supplier-portal` للدعوة، و`/supplier-portal` للمورد، و`/sales/quotations/[id]/esign` للإرسال، و`/esign/[token]` لصفحة التوقيع العامة.
 - الصلاحيات: `supplier_portal.access` و`esign.manage`.
 - التحقق: `apps/api/src/modules/supplier-portal/supplier-esign.spec.ts` (8 حالات).
+- الوثائق المرافقة: `docs/STATUS.md` صف `FE-11`، و`docs/DATABASE_DESIGN.md` §18، و`docs/API_CONTRACT.md` §19، و`apps/api/src/modules/supplier-portal/README.md`.
 
 ## الجهد
 - Backend: 5 أيام (بوابة + توقيع)

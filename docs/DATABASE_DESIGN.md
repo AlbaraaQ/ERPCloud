@@ -318,3 +318,21 @@ The P21 vertical pack tables are implemented by `packages/database/migrations/00
 ### Phase 22 implementation notes
 
 The niche verticals and Salla integration are implemented by `packages/database/migrations/0018_niche_verticals_salla.sql` and exported from `packages/database/src/schema/niche.ts`. Token-bearing Salla columns store encrypted payloads only; legacy optics/tailoring/marina additive fields use typed JSONB to avoid core invoice-kind expansion.
+
+## 18. Supplier portal and simple e-sign (future enhancement 11)
+
+Implemented by `packages/database/migrations/0107_supplier_portal_esign.sql` and exported from `packages/database/src/schema/supplier-portal.ts`. Every table is tenant-scoped with `ENABLE` + `FORCE` RLS. A supplier login is not a staff membership and holds no ERP permissions.
+
+**supplier_portal_users** — `tenant_id`, `party_id FK`, `email`, `password_hash`, `is_active`. Unique `(tenant_id, email)`.
+**supplier_portal_sessions** — `user_id FK`, `token_hash`, `expires_at`. Unique `(tenant_id, token_hash)`. The bearer token is never stored in the clear.
+**supplier_rfqs** — `party_id`, `number`, `title`, `note`, `status CHECK(open,responded,closed)`, `offer`, `response_note`, `responded_at`. Unique `(tenant_id, number)`.
+**supplier_invoice_uploads** — supplier-declared bill: `party_id`, `reference_no`, `declared_total > 0`, `note`, `status` default `submitted`. This is not a posted purchase invoice.
+**esign_requests** — `entity_type CHECK(sales_quotation,sales_invoice,contract)`, `entity_id`, `signer_name`, `signer_email`, `token_hash`, `otp_hash`, `status CHECK(sent,viewed,signed,declined)`, `signed_file_id`, `signed_pdf bytea`, `signed_at`, `expires_at`, `ip`, `payload`. Unique `(tenant_id, token_hash)`. The link secret and the one-time code are stored only as hashes. This is a drawn signature, not XAdES.
+**esign_events** — `request_id FK`, `event CHECK(sent,viewed,signed,declined)`, `at`, `ip`.
+
+## 19. Personal BI dashboards (future enhancement 12)
+
+Implemented by `packages/database/migrations/0108_bi_dashboards.sql` and exported from `packages/database/src/schema/bi-dashboards.ts`. Both tables are tenant-scoped with `ENABLE` + `FORCE` RLS. A board is personal: `owner_user_id` plus the tenant policy. It is not shared across tenants.
+
+**dashboards** — `tenant_id`, `owner_user_id FK users`, `name` (1–80), `is_default`, `created_at`, `updated_at`. Partial unique index `(tenant_id, owner_user_id) WHERE is_default` so a user has at most one default board.
+**dashboard_widgets** — `dashboard_id FK`, `widget_key` (catalog key, never a SQL string), `title_ar`, `kind CHECK(kpi,chart,table,list)`, `config jsonb` default `{}`, `position_x/y`, `width` 2–12, `height` 2–8, and `position_x + width <= 12`.

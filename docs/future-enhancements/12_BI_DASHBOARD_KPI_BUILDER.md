@@ -69,6 +69,7 @@ dashboard_widgets (id, dashboard_id, type, title, config jsonb, position jsonb)
 - الواجهات: `/dashboards` و`/dashboards/[id]`، والرئيسية `/` تعرض اللوحة الافتراضية.
 - الصلاحيات: `dashboards.view` و`dashboards.manage`.
 - التحقق: `apps/api/src/modules/dashboards/bi-dashboard.spec.ts` (8 حالات).
+- الوثائق المرافقة: `docs/STATUS.md` صف `FE-12`، و`docs/DATABASE_DESIGN.md` §19، و`docs/API_CONTRACT.md` §20، و`apps/api/src/modules/dashboards/README.md`.
 
 ## الجهد
 - Backend: 4 أيام (لوحات + ويدجتس + cache)

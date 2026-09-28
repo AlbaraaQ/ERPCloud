@@ -57,8 +57,8 @@
 - **04 Approval Workflow منفذة**: migration `0100_approval_workflows.sql`، مسارات tenant-scoped وخطوات متسلسلة وinbox/history، بوابة ترحيل المبيعات والمشتريات، إشعارات داخل التطبيق، 13 حالة API و`verify-approvals.mjs` بأكثر من 20 نقطة.
 - **09 تطبيق الموظف منفذ**: migration `0105_employee_mobile.sql`، حضور GPS مع نطاق الفرع، طلبات وموافقات، و`/m` يعمل أوفلاين. `verify-employee-mobile.mjs` بـ 10 نقاط.
 - **10 مستودعات وتصنيع منفذ**: migration `0106_wms_bom.sql`، رفوف وأرصدة ونقل وجرد، قوائم مواد وأوامر تصنيع بالتكلفة المتوسطة. `verify-wms-bom.mjs`.
-- **11 بوابة الموردين والتوقيع منفذة**: migration `0107_supplier_portal_esign.sql`، دخول مورد بلا صلاحيات ERP، فواتيره ومدفوعاته وطلبات العرض فقط، وتوقيع مرسوم مع رمز لمرة واحدة (ليس XAdES). `supplier-esign.spec.ts` بـ 8 حالات.
-- **12 لوحات المؤشرات منفذة**: migration `0108_bi_dashboards.sql`، كتالوج 20 ويدجت بلا SQL من المستخدم، لوحة افتراضية لكل مستخدم، سحب يحفظ الترتيب، وتصدير PDF. `bi-dashboard.spec.ts` بـ 8 حالات.
+- **11 بوابة الموردين والتوقيع منفذة**: migration `0107_supplier_portal_esign.sql`، دخول مورد بلا صلاحيات ERP، فواتيره ومدفوعاته وطلبات العرض فقط، وتوقيع مرسوم مع رمز لمرة واحدة (ليس XAdES). `supplier-esign.spec.ts` بـ 8 حالات. السجل في `docs/STATUS.md` صف `FE-11`، والجداول في `DATABASE_DESIGN` §18، والمسارات في `API_CONTRACT` §19.
+- **12 لوحات المؤشرات منفذة**: migration `0108_bi_dashboards.sql`، كتالوج 20 ويدجت بلا SQL من المستخدم، لوحة افتراضية لكل مستخدم، سحب يحفظ الترتيب، وتصدير PDF. `bi-dashboard.spec.ts` بـ 8 حالات. السجل في `docs/STATUS.md` صف `FE-12`، والجداول في `DATABASE_DESIGN` §19، والمسارات في `API_CONTRACT` §20.
 - **08 المساعد المحاسبي منفذ**: migration `0104_ai_assistant.sql`، دردشة `/assistant` وزر عائم، مجاميع المستأجر فقط، و`verify-ai.mjs` بـ 13 نقطة.
 - P-C1..12 مكتملة
 - P-M1..10 مكتملة

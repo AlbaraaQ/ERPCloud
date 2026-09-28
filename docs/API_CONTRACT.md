@@ -358,3 +358,30 @@ Ops endpoints are outside `/api/v1` and public for infrastructure probes/scraper
 - `GET /health/live`: process liveness only.
 - `GET /health/ready`: deep readiness with database, process, memory and uptime fields.
 - `GET /metrics`: Prometheus text exposition for request counts, latency buckets, queue depth placeholder, e-invoice failures and migration throughput.
+
+## 19. Supplier portal and simple e-sign (future enhancement 11)
+
+Staff routes require a tenant token. Supplier routes are public at the guard and authenticate a supplier bearer that is not an ERP membership. A supplier never sees another party's rows; a missing foreign invoice is hidden, not confirmed.
+
+Staff: `POST/GET /supplier-portal/users`, `POST/GET /supplier-portal/rfqs`, `GET /supplier-portal/uploads`, `POST/GET /esign/requests`.
+Supplier: `POST /supplier-portal/auth/login`, `GET /supplier-portal/invoices`, `GET /supplier-portal/invoices/{id}`, `GET /supplier-portal/payments`, `GET /supplier-portal/quotations`, `POST /supplier-portal/quotations/{id}/respond`, `POST /supplier-portal/invoices` (declared upload, not a posted bill).
+Public signature page: `GET /esign/{token}`, `POST /esign/{token}/sign` `{ signatureData, otp }`, `GET /esign/{token}/pdf`. An expired link is `410`. A wrong one-time code is `422`. The signed file is a simple PDF with the drawing, not an XAdES signature.
+
+Perms: `supplier_portal.access`, `esign.manage`.
+
+## 20. Personal BI dashboards (future enhancement 12)
+
+`GET /dashboards` ensures the caller has a personal default board named «لوحتي» with three starter widgets. Boards are filtered by `tenant_id` and `owner_user_id`.
+
+- `GET /dashboards/widgets/catalog` — 20 fixed widgets. The payload contains no SQL.
+- `POST /dashboards` `{ name }`.
+- `GET /dashboards/{id}`.
+- `POST /dashboards/{id}/widgets` `{ key, config }`. Unknown keys and any config that looks like SQL are `400`.
+- `PUT /dashboards/{id}/layout` `{ widgets: [{ widgetId, positionX, positionY, width, height }] }` — saved after a drag. Overlap or an unknown widget is `400`.
+- `GET /dashboards/{id}/data` — tenant-scoped figures for every widget, with a previous-period comparison on KPI widgets that have one.
+- `GET /dashboards/{id}/pdf` — attachment. Numbers are real; the embedded font cannot draw Arabic, so titles in the file are English.
+- `POST /dashboards/{id}/default`, `DELETE /dashboards/{id}`, `DELETE /dashboards/{id}/widgets/{widgetId}`.
+
+Widget figures are cached for five minutes under `dashboard:widget:{id}:data`. If Redis is absent or unreachable the same key and TTL are kept in process memory; the board still answers.
+
+Perms: `dashboards.view`, `dashboards.manage`.
