@@ -283,6 +283,14 @@ export const consoleGroups: readonly ConsoleGroup[] = [
         'GET /platform/settings',
       ),
       item(
+        'marketplace',
+        'سوق الإضافات',
+        'Marketplace',
+        '/marketplace',
+        'console.marketplace.manage',
+        'GET/PUT /platform/marketplace/apps',
+      ),
+      item(
         'ai-assistant',
         'المساعد المحاسبي',
         'Accounting assistant',

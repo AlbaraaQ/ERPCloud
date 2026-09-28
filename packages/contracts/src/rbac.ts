@@ -82,6 +82,7 @@ export const platformRoleCatalog: readonly RoleCatalogEntry[] = [
       // P-C1: the platform's own configuration belongs to the owner of the platform.
       // Operations reads it under `console.tenants.view`; nobody else writes it.
       'console.settings.manage',
+      'console.marketplace.manage',
       // P-C6: the mail service is operated daily — the owner holds it like everything else.
       'console.email.view',
       'console.email.manage',
@@ -216,6 +217,7 @@ export const tenantAdminRoleCatalog: readonly RoleCatalogEntry[] = [
       'tenant.manage',
       'tenant.membership.manage',
       'tenant.settings.manage',
+      'tenant.apps.manage',
       'tenant.audit.view',
       'tenant.file.upload',
       'tenant.file.manage',
@@ -313,6 +315,7 @@ export const tenantAdminRoleCatalog: readonly RoleCatalogEntry[] = [
       'tenant.role.manage',
       'tenant.audit.view',
       'tenant.settings.manage',
+      'tenant.apps.manage',
       'ai.assistant.use',
       'employee.self.view',
       'employee.self.manage',

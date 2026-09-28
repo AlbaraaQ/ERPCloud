@@ -77,6 +77,7 @@ export const permissionRegistry: readonly PermissionDefinition[] = [
   perm('tenant.membership.manage', 'Invite, update and remove tenant memberships.'),
   perm('tenant.role.manage', 'Create and maintain roles and their permission sets.'),
   perm('tenant.settings.manage', 'Read and write individual typed tenant settings.'),
+  perm('tenant.apps.manage', 'Install and remove marketplace apps and manage the tenant domain and brand.'),
   perm('tenant.audit.view', 'Read the tenant audit log.'),
   perm('tenant.file.upload', 'Request pre-signed uploads, attach and download files.'),
   // R7 — مدير الملفات: الإزالة فعلٌ مدمّر، فله رمزه ولا يُمنح تلقائياً لكل من يرفع.
@@ -352,6 +353,7 @@ export const platformPermissionRegistry: readonly PermissionDefinition[] = [
     'console.settings.manage',
     'Read and write the platform settings (support contacts, service domains, default limits, maintenance switch).',
   ),
+  perm('console.marketplace.manage', 'Price and activate reviewed marketplace apps. Third-party code is not accepted.'),
   perm('console.health.view', 'Read system health and readiness.'),
   perm('console.jobs.view', 'Read background-queue and outbox health.'),
   //

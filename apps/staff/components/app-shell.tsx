@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
+import { apiData } from '../lib/api';
 import { useLang, type Lang } from '../lib/i18n';
 import { useSession } from '../lib/session';
 import { visibleModules, type ModuleNode, type ScreenItem } from '../lib/navigation';
@@ -112,25 +113,71 @@ function ModuleBlock({
   );
 }
 
+type AppGate = { gatedHrefs: string[]; enabledHrefs: string[] };
+type BrandMark = { logoUrl: string; primaryColor: string; nameAr: string };
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { me, isPlatformAdmin, signOut } = useSession();
   const { lang, t } = useLang();
   const pathname = usePathname() ?? '/';
   const [filter, setFilter] = useState('');
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [appGate, setAppGate] = useState<AppGate | null>(null);
+  const [brand, setBrand] = useState<BrandMark | null>(null);
 
+  useEffect(() => {
+    if (!me) return;
+    let cancelled = false;
+    function loadApps() {
+      apiData<AppGate>('/marketplace/apps')
+        .then((gate) => {
+          if (!cancelled) setAppGate({ gatedHrefs: gate.gatedHrefs ?? [], enabledHrefs: gate.enabledHrefs ?? [] });
+        })
+        .catch(() => undefined);
+    }
+    function loadBrand() {
+      apiData<BrandMark>('/settings/white-label/branding')
+        .then((next) => {
+          if (!cancelled) setBrand(next);
+        })
+        .catch(() => undefined);
+    }
+    loadApps();
+    loadBrand();
+    window.addEventListener('erp:apps-changed', loadApps);
+    window.addEventListener('erp:brand-changed', loadBrand);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('erp:apps-changed', loadApps);
+      window.removeEventListener('erp:brand-changed', loadBrand);
+    };
+  }, [me]);
+
+  useEffect(() => {
+    const color = brand?.primaryColor ?? '';
+    if (/^#[0-9a-fA-F]{6}$/.test(color)) document.documentElement.style.setProperty('--brand', color);
+    return () => {
+      document.documentElement.style.removeProperty('--brand');
+    };
+  }, [brand?.primaryColor]);
+
+  const brandColor = brand?.primaryColor && /^#[0-9a-fA-F]{6}$/.test(brand.primaryColor) ? brand.primaryColor : undefined;
   const tree = useMemo(
-    () => visibleModules(me?.permissions ?? [], isPlatformAdmin),
-    [me?.permissions, isPlatformAdmin],
+    () => visibleModules(me?.permissions ?? [], isPlatformAdmin, appGate),
+    [me?.permissions, isPlatformAdmin, appGate],
   );
 
   return (
     <div className="shell">
       <aside className={`side ${mobileOpen ? 'open' : ''}`}>
         <div className="brand">
-          <span className="logo">ERP</span>
-          <span>
-            Cloud SaaS ERP
+          {brand?.logoUrl ? (
+            <img className="logo" src={brand.logoUrl} alt="شعار المنشأة" style={{ background: '#fff', objectFit: 'contain', padding: 2 }} />
+          ) : (
+            <span className="logo">ERP</span>
+          )}
+          <span style={brandColor ? { color: brandColor } : undefined}>
+            {brand?.nameAr || 'Cloud SaaS ERP'}
             <small>{me?.membership.tenantName ?? '—'}</small>
           </span>
         </div>

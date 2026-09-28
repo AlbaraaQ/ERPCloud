@@ -33,3 +33,4 @@ export * from './employee-mobile.js';
 export * from './wms.js';
 export * from './supplier-portal.js';
 export * from './bi-dashboards.js';
+export * from './marketplace.js';

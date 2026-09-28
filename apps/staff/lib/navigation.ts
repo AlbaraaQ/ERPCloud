@@ -1710,6 +1710,15 @@ const settings: ModuleNode = {
               'GET /ecommerce/providers · POST/GET /ecommerce/stores · POST /ecommerce/stores/:id/sync',
           },
         ),
+        screen('marketplace', 'سوق الإضافات', 'Marketplace', '/settings/marketplace', 'ready', {
+          permission: 'tenant.apps.manage',
+          endpoint: 'GET /marketplace/apps · POST /marketplace/apps/:code/install · DELETE /marketplace/apps/:code',
+        }),
+        screen('white-label', 'الدومين والشعار', 'White label', '/settings/white-label', 'ready', {
+          permission: 'tenant.apps.manage',
+          endpoint:
+            'GET/POST /settings/white-label/domains · POST /settings/white-label/domains/:id/verify · GET/PUT /settings/white-label/branding',
+        }),
         screen(
           'approval-settings',
           'مسارات الموافقات',
@@ -2244,16 +2253,34 @@ export function screenCounts() {
  * Filters the tree for the signed-in user. `permissions` is the effective list from
  * `GET /me`; the owner role receives `*`.
  */
-export function visibleModules(permissions: string[], isPlatformAdmin: boolean): ModuleNode[] {
+/**
+ * `enabledHrefs` is omitted until the marketplace answers, so a slow catalog does not
+ * flash-hide a screen. Once it answers, a href in `gatedHrefs` stays only if an
+ * installed app (or a legacy store that was never explicitly disabled) enables it.
+ * OCR, WMS and e-sign are not in that gate.
+ */
+export function visibleModules(
+  permissions: string[],
+  isPlatformAdmin: boolean,
+  appGate?: { gatedHrefs: readonly string[]; enabledHrefs: readonly string[] } | null,
+): ModuleNode[] {
   const allows = (permission?: string) =>
     !permission || permissions.includes('*') || permissions.includes(permission);
+  const gated = new Set(appGate?.gatedHrefs ?? []);
+  const enabled = new Set(appGate?.enabledHrefs ?? []);
+  const screenVisible = (item: ScreenItem) => {
+    if (!allows(item.permission)) return false;
+    if (!appGate) return true;
+    const href = item.href.split('?')[0] ?? item.href;
+    return !gated.has(href) || enabled.has(href);
+  };
 
   return modules
     .filter((module) => (module.platformAdminOnly ? isPlatformAdmin : allows(module.permission)))
     .map((module) => ({
       ...module,
       groups: module.groups
-        .map((group) => ({ ...group, items: group.items.filter((item) => allows(item.permission)) }))
+        .map((group) => ({ ...group, items: group.items.filter((item) => screenVisible(item)) }))
         .filter((group) => group.items.length > 0),
     }))
     .filter((module) => module.groups.length > 0);

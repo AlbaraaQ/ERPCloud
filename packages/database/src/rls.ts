@@ -202,6 +202,11 @@ export const rlsProtectedTables = [
   // Future enhancement 12 — personal BI dashboards.
   'dashboards',
   'dashboard_widgets',
+  // Future enhancement 13 — installed apps, custom domains and branding.
+  // `marketplace_apps` is a platform catalog (no tenant_id) and is not in this list.
+  'tenant_apps',
+  'tenant_domains',
+  'tenant_branding',
 ] as const;
 
 export type QueryRowsOf<T> = QueryRows<T>;

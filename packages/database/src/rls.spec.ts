@@ -117,6 +117,9 @@ describe('RLS SQL builders (MULTI_TENANCY §3.5)', () => {
       'esign_events',
       'dashboards',
       'dashboard_widgets',
+      'tenant_apps',
+      'tenant_domains',
+      'tenant_branding',
     ]);
   });
 

@@ -336,3 +336,15 @@ Implemented by `packages/database/migrations/0108_bi_dashboards.sql` and exporte
 
 **dashboards** — `tenant_id`, `owner_user_id FK users`, `name` (1–80), `is_default`, `created_at`, `updated_at`. Partial unique index `(tenant_id, owner_user_id) WHERE is_default` so a user has at most one default board.
 **dashboard_widgets** — `dashboard_id FK`, `widget_key` (catalog key, never a SQL string), `title_ar`, `kind CHECK(kpi,chart,table,list)`, `config jsonb` default `{}`, `position_x/y`, `width` 2–12, `height` 2–8, and `position_x + width <= 12`.
+
+## 20. Marketplace and white-label (future enhancement 13)
+
+Implemented by `packages/database/migrations/0109_marketplace_white_label.sql` and exported from `packages/database/src/schema/marketplace.ts`. Rules that do not touch the database live in `packages/database/src/marketplace.ts`.
+
+**marketplace_apps** — platform catalog, no `tenant_id`. Readable by any tenant session. Insert and update require `app.is_platform_admin`. `code` is a reviewed add-on key, not a module path. Seeded rows: `salla`, `zid`, `shopify`, `moyasar`, `ocr`, `esign`, `wms`. Core rows (`ocr`, `esign`, `wms`) do not gate a screen.
+
+**tenant_apps** — `tenant_id`, `app_code FK marketplace_apps.code`, `is_enabled`, `settings jsonb`, `installed_at`. Unique `(tenant_id, app_code)`. Disabling sets `is_enabled = false` and keeps `settings`. FORCE RLS on `app.tenant_id`.
+
+**tenant_domains** — `domain` unique while `deleted_at` is null, `status CHECK(pending,active,failed)`, `ssl_status` default `manual`, `verification_token`. A second policy allows `SELECT` of one active row when `app.lookup_host` equals that domain. An unset GUC matches nothing.
+
+**tenant_branding** — one row per tenant: `logo_file_id`, `primary_color`, `secondary_color`. The same host GUC can read the brand of that one active domain.

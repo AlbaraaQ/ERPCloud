@@ -2,10 +2,12 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Decimal } from 'decimal.js';
 import { sql } from 'drizzle-orm';
 import qrcode from 'qrcode-generator';
+import { env } from '@erp/config';
 import { DomainError } from '@erp/contracts';
-import { withTenantTx, type DatabaseHandle } from '@erp/database';
+import { brandMark, withTenantTx, type DatabaseHandle } from '@erp/database';
 
 import { DATABASE_HANDLE } from '../../database/database.module.js';
+import { signedContentUrl } from '../platform-services/files/download-token.js';
 
 import { amountInArabicWords } from './tafqeet.js';
 import { PrintSettingsService, type PrintSettings } from './print-settings.service.js';
@@ -475,8 +477,9 @@ export class PrintTemplatesService {
     const sheet = `
         <header class="doc-head">
           ${showHeader ? `<div class="company">
+            ${company.logoHtml}
             ${image(settings?.headerImageUrl ?? '', 'الترويـسة')}
-            <h1>${escapeHtml(company.nameAr)}</h1>
+            <h1${company.brandColor ? ` style="color:${company.brandColor}"` : ''}>${escapeHtml(company.nameAr)}</h1>
             ${company.nameEn ? `<div class="en">${escapeHtml(company.nameEn)}</div>` : ''}
             <div class="meta">${company.taxNo ? `<span>الرقم الضريبي: <b dir="ltr">${escapeHtml(company.taxNo)}</b></span>` : ''}${company.crNo ? `<span>السجل التجاري: <b dir="ltr">${escapeHtml(company.crNo)}</b></span>` : ''}</div>
             ${contact ? `<div class="meta">${escapeHtml(contact)}</div>` : ''}
@@ -552,6 +555,7 @@ export class PrintTemplatesService {
   private async company(tx: Tx, tenantId: string) {
     const profile = first(await tx.execute(sql`SELECT name_ar, name_en, tax_no, cr_no, address, phones, email FROM company_profiles WHERE tenant_id = ${tenantId}`));
     const tenant = first(await tx.execute(sql`SELECT name FROM tenants WHERE id = ${tenantId}`));
+    const brand = await this.brand(tx, tenantId);
     return {
       nameAr: str(profile?.name_ar) || str(tenant?.name) || 'المنشأة',
       nameEn: str(profile?.name_en),
@@ -560,7 +564,23 @@ export class PrintTemplatesService {
       email: str(profile?.email),
       phones: Array.isArray(profile?.phones) ? (profile?.phones as string[]) : [],
       address: profile?.address,
+      logoHtml: brand.logoHtml,
+      brandColor: brand.color,
     };
+  }
+
+  /** الشعار زينة. غيابه أو غياب سر التوقيع لا يُسقط الطباعة. */
+  private async brand(tx: Tx, tenantId: string) {
+    try {
+      const row = first(await tx.execute(sql`
+        SELECT logo_file_id, primary_color FROM tenant_branding WHERE tenant_id = ${tenantId}::uuid LIMIT 1
+      `));
+      const fileId = str(row?.logo_file_id);
+      const logoUrl = fileId ? signedContentUrl(fileId, tenantId, env.FILES_DOWNLOAD_URL_TTL_SECONDS) : '';
+      return brandMark(logoUrl, str(row?.primary_color));
+    } catch {
+      return brandMark('', '');
+    }
   }
 
   private header(
@@ -574,10 +594,12 @@ export class PrintTemplatesService {
     showCompany = true,
   ) {
     const contact = [company.phones.join(' / '), company.email, addressText(company.address)].filter(Boolean).join(' — ');
+    const titleStyle = company.brandColor ? ` style="color:${company.brandColor}"` : '';
     return `
       <header class="doc-head">
         ${showCompany ? `<div class="company">
-          <h1>${escapeHtml(company.nameAr)}</h1>
+          ${company.logoHtml}
+          <h1${titleStyle}>${escapeHtml(company.nameAr)}</h1>
           ${company.nameEn ? `<div class="en">${escapeHtml(company.nameEn)}</div>` : ''}
           <div class="meta">
             ${company.taxNo ? `<span>الرقم الضريبي: <b dir="ltr">${escapeHtml(company.taxNo)}</b></span>` : '<span class="warn">لم يُسجَّل الرقم الضريبي في بطاقة المنشأة</span>'}
@@ -830,6 +852,7 @@ export class PrintTemplatesService {
   .sheet.small .totals-strip { flex-direction: column; gap: 4px; font-size: 11px; }
   /* 🔢 عدد النسخ — every copy starts on its own sheet, the way Printing() loops. */
   .copy + .copy { page-break-before: always; }
+  .brand-logo { max-height: 56px; max-width: 160px; object-fit: contain; display: block; margin-bottom: 6px; }
   .doc-images { display: flex; flex-direction: column; gap: 4px; align-items: center; }
   .doc-images img { max-height: 90px; max-width: 100%; }
   .doc-stamp { position: relative; display: inline-block; }

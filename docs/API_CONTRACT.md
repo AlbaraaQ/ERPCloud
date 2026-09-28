@@ -385,3 +385,16 @@ Perms: `supplier_portal.access`, `esign.manage`.
 Widget figures are cached for five minutes under `dashboard:widget:{id}:data`. If Redis is absent or unreachable the same key and TTL are kept in process memory; the board still answers.
 
 Perms: `dashboards.view`, `dashboards.manage`.
+
+## 21. Marketplace and white-label (future enhancement 13)
+
+Reviewed apps only. `POST /marketplace/apps/{code}/install` rejects a code that is not in the fixed catalog (`422`). Disabling does not delete `settings` or store rows.
+
+- `GET /marketplace/apps` — catalog plus `gatedHrefs` and `enabledHrefs`. A legacy active Salla/Zid/Shopify store counts as enabled until that app is explicitly installed and then disabled. Perm: `tenant.view`.
+- `POST /marketplace/apps/{code}/install`, `DELETE /marketplace/apps/{code}`. Perm: `tenant.apps.manage`.
+- `GET/POST /settings/white-label/domains`, `POST /settings/white-label/domains/{id}/verify`, `DELETE /settings/white-label/domains/{id}`. Adding a domain returns the TXT host `_erpcloud-verify.{domain}` and the value `erpcloud-verify={token}`. Verify reads DNS and sets `status=active`. It does not issue a certificate; `ssl_status` stays `manual`. Perm: `tenant.apps.manage`.
+- `GET /settings/white-label/branding` (`tenant.view`), `PUT /settings/white-label/branding` `{ logoFileId, primaryColor, secondaryColor }` (`tenant.apps.manage`). Colors are `#RRGGBB`. The logo must be a finalized image. The printed invoice header includes `<img alt="شعار المنشأة">` when a logo is set. A missing signing secret leaves the invoice printable without the image.
+- `GET /public/branding?host=` — public. Returns the brand of one active domain, or `data: null`.
+- `GET /platform/marketplace/apps`, `PUT /platform/marketplace/apps/{code}` `{ monthlyPrice, isActive }`. Perm: `console.marketplace.manage`. The platform cannot register a third-party module.
+
+Staff hides a gated href only after this catalog answers. `/settings/ecommerce` and `/sales/ecommerce-orders` are gated by `salla`, `zid` or `shopify`. OCR, WMS and e-sign are not gated.

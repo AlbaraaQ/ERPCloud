@@ -1,5 +1,7 @@
 # 13 — سوق الإضافات + White-label بدومين خاص
 
+> الحالة: منفذة. التفاصيل في `docs/STATUS.md` صف `FE-13`، و`DATABASE_DESIGN` §20، و`API_CONTRACT` §21. الترحيل `0109`. لا كود طرف ثالث، والشهادة يدوية.
+
 > الأولوية: P3 - 3 أسابيع
 > السوق: Shopify App Store / Odoo Apps — يمنع Churn ويزيد LTV
 
