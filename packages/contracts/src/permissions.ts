@@ -251,6 +251,8 @@ export const permissionRegistry: readonly PermissionDefinition[] = [
 
   // reporting (PHASE_14)
   perm('reporting.view', 'Read the reporting catalogue.'),
+  perm('dashboards.view', 'Read personal dashboards and widget figures.'),
+  perm('dashboards.manage', 'Create dashboards and arrange widgets.'),
   perm('reporting.export.execute', 'Run asynchronous report exports.'),
   perm('reporting.layout.manage', 'Create and maintain saved report layouts (مصمم التقارير).'),
   // Future enhancement 05 — tenant-defined fields and the safe report builder.

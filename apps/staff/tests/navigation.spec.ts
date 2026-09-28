@@ -41,6 +41,8 @@ describe('staff navigation tree', () => {
     // Phase 09 part five gave النظارات its own module beside it: `frmGlasses` is one
     // window in `Desktop_ERP` («👓 بيانات النظارات»), and it is one module here.
     expect(modules.map((module) => module.key)).toEqual([
+      // Cloud BI dashboards. Not a desktop window.
+      'dashboards',
       'accounting',
       'treasury',
       'inventory',

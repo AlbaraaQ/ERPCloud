@@ -85,6 +85,8 @@ export const baselineRoles: readonly BaselineRoleSeed[] = [
       'einvoice.view',
       'einvoice.submit',
       'reporting.view',
+      'dashboards.view',
+      'dashboards.manage',
       'payroll.wps.export',
       'payments.links.manage',
       'ai.assistant.use',

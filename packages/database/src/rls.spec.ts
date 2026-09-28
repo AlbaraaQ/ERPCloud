@@ -115,6 +115,8 @@ describe('RLS SQL builders (MULTI_TENANCY §3.5)', () => {
       'supplier_invoice_uploads',
       'esign_requests',
       'esign_events',
+      'dashboards',
+      'dashboard_widgets',
     ]);
   });
 

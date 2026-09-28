@@ -2169,7 +2169,31 @@ const manufacturing: ModuleNode = {
   ],
 };
 
+const dashboards: ModuleNode = {
+  key: 'dashboards',
+  icon: '📈',
+  labelAr: 'لوحات المؤشرات',
+  labelEn: 'Dashboards',
+  href: '/dashboards',
+  permission: 'dashboards.view',
+  groups: [
+    {
+      key: 'mine',
+      labelAr: 'لوحاتي',
+      labelEn: 'My dashboards',
+      items: [
+        screen('bi-dashboards', 'لوحات المؤشرات', 'Dashboards', '/dashboards', 'ready', {
+          permission: 'dashboards.view',
+          endpoint: 'GET /dashboards',
+          description: 'لوحة شخصية: مؤشرات وتقارير تُسحب وتُرتَّب، وتظهر في الصفحة الرئيسية.',
+        }),
+      ],
+    },
+  ],
+};
+
 export const modules: ModuleNode[] = [
+  dashboards,
   accounting,
   treasury,
   inventory,

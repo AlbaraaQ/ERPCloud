@@ -199,6 +199,9 @@ export const rlsProtectedTables = [
   'supplier_invoice_uploads',
   'esign_requests',
   'esign_events',
+  // Future enhancement 12 — personal BI dashboards.
+  'dashboards',
+  'dashboard_widgets',
 ] as const;
 
 export type QueryRowsOf<T> = QueryRows<T>;
