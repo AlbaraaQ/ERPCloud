@@ -29,6 +29,7 @@
 ## التصميم التقني
 
 ### ترحيل 0107
+0107 مستخدم لبوابة الموردين و0108 للوحات المؤشرات، لذلك التنفيذ التالي يبدأ من `0109`.
 ```sql
 marketplace_apps (id, code unique, name_ar, name_en, description_ar, icon, version, price_monthly, is_core, config_schema jsonb)
 tenant_apps (tenant_id, app_code, is_enabled, settings jsonb, installed_at, unique(tenant_id,app_code))

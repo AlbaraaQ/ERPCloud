@@ -27,6 +27,7 @@
 ## التصميم التقني
 
 ### ترحيل 0105
+0105 مستخدم لتطبيق الموظف و0106 للمستودعات، لذلك الترحيل الفعلي هو `0107_supplier_portal_esign.sql`.
 ```sql
 supplier_portal_users (id, tenant_id, party_id, email, password_hash, is_active)
 supplier_portal_sessions ...
@@ -59,10 +60,19 @@ esign_events (id, request_id, event: sent|viewed|signed, at, ip)
 - `supplier_portal.access` + `esign.manage`
 
 ## معايير القبول
-- [ ] مورد يسجل دخول → يرى فواتيره فقط
-- [ ] إرسال عرض سعر للتوقيع → العميل يوقع → حالة تتغير + PDF موقع
-- [ ] رابط منتهي → 410
-- [ ] اختبار `supplier-esign.spec.ts` 8 حالات
+- [x] مورد يسجل دخول → يرى فواتيره فقط
+- [x] إرسال عرض سعر للتوقيع → العميل يوقع → حالة تتغير + PDF موقع
+- [x] رابط منتهي → 410
+- [x] اختبار `supplier-esign.spec.ts` 8 حالات
+
+## حالة التنفيذ
+
+- الترحيل `0107_supplier_portal_esign.sql`: `supplier_portal_users` و`supplier_portal_sessions` و`supplier_rfqs` و`supplier_invoice_uploads` و`esign_requests` و`esign_events` مع RLS. المورد ليس عضواً في الموظفين ولا يحمل صلاحيات ERP.
+- الدخول عبر `POST /supplier-portal/auth/login`. يرى فواتير الشراء ومدفوعاته وطلبات العرض الخاصة بطرفه فقط، ويرد على العرض، ويرفع فاتورة.
+- التوقيع رسم على اللوحة مع رمز لمرة واحدة، وسر الرابط 48 حرفاً يُحفظ مشفراً. الرابط المنتهي يجيب 410. هذا ليس توقيع XAdES معتمداً.
+- الواجهات: `/purchases/supplier-portal` للدعوة، و`/supplier-portal` للمورد، و`/sales/quotations/[id]/esign` للإرسال، و`/esign/[token]` لصفحة التوقيع العامة.
+- الصلاحيات: `supplier_portal.access` و`esign.manage`.
+- التحقق: `apps/api/src/modules/supplier-portal/supplier-esign.spec.ts` (8 حالات).
 
 ## الجهد
 - Backend: 5 أيام (بوابة + توقيع)
