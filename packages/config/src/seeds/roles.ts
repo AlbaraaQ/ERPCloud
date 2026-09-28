@@ -81,6 +81,8 @@ export const baselineRoles: readonly BaselineRoleSeed[] = [
       'einvoice.view',
       'einvoice.submit',
       'reporting.view',
+      'payroll.wps.export',
+      'payments.links.manage',
     ],
   },
   {
@@ -103,6 +105,7 @@ export const baselineRoles: readonly BaselineRoleSeed[] = [
       'treasury.view',
       'treasury.voucher.create',
       'treasury.shift.close',
+      'payments.links.manage',
     ],
   },
 ] as const;

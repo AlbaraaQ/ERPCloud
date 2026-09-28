@@ -53,6 +53,9 @@ export type EmployeeInput = {
   birthDate?: string | null;
   insuranceNo?: string | null;
   nationalId?: string | null;
+  iqamaExpiresOn?: string | null;
+  insuranceExpiresOn?: string | null;
+  gosiScheme?: 'old' | 'new' | null;
   maritalStatus?: string | null;
   nationality?: string | null;
   gender?: EmployeeGender | null;
@@ -428,7 +431,8 @@ export class HrmService implements OnModuleInit {
     if (!name) throw new DomainError('EMPLOYEE_NAME_REQUIRED', 'يجب إدخال اسم الموظف', 422);
     if (!input.employeeNo?.trim()) throw new DomainError('EMPLOYEE_NO_REQUIRED', 'يجب إدخال رقم الموظف', 422);
     validateComponents(input.salaryComponents ?? {});
-    const [row] = await withTenantTx(this.database.db, tenantId, (tx) => tx.insert(employees).values({ id: newId(), tenantId, employeeNo: input.employeeNo.trim(), name, branchId: input.branchId, departmentId: input.departmentId, jobId: input.jobId, membershipId: input.membershipId, status: input.status ?? 'active', hireDate: input.hireDate, birthDate: input.birthDate, insuranceNo: input.insuranceNo, nationalId: input.nationalId, maritalStatus: input.maritalStatus, nationality: input.nationality, gender: input.gender, phone: input.phone, mobile: input.mobile, email: input.email, address: input.address, notes: input.notes, salaryComponents: input.salaryComponents ?? {}, bank: input.bank ?? {}, salaryExpenseAccountId: input.salaryExpenseAccountId, salaryPayableAccountId: input.salaryPayableAccountId, costCenterId: input.costCenterId, photoFileId: input.photoFileId ?? null }).returning());
+    assertEmployeeDates(input);
+    const [row] = await withTenantTx(this.database.db, tenantId, (tx) => tx.insert(employees).values({ id: newId(), tenantId, employeeNo: input.employeeNo.trim(), name, branchId: input.branchId, departmentId: input.departmentId, jobId: input.jobId, membershipId: input.membershipId, status: input.status ?? 'active', hireDate: input.hireDate, birthDate: input.birthDate, insuranceNo: input.insuranceNo, nationalId: input.nationalId, maritalStatus: input.maritalStatus, nationality: input.nationality, gender: input.gender, phone: input.phone, mobile: input.mobile, email: input.email, address: input.address, notes: input.notes, salaryComponents: input.salaryComponents ?? {}, bank: input.bank ?? {}, salaryExpenseAccountId: input.salaryExpenseAccountId, salaryPayableAccountId: input.salaryPayableAccountId, costCenterId: input.costCenterId, photoFileId: input.photoFileId ?? null, iqamaExpiresOn: input.iqamaExpiresOn ?? null, insuranceExpiresOn: input.insuranceExpiresOn ?? null, gosiScheme: input.gosiScheme ?? null }).returning());
     if (!row) throw new DomainError('INTERNAL', 'Employee was not created', 500);
     if (input.branchIds?.length) {
       await this.syncEmployeeBranches(tenantId, row.id, input.branchIds);
@@ -441,6 +445,7 @@ export class HrmService implements OnModuleInit {
     await this.ensureEnabled(tenantId);
     if (patch.name !== undefined && !patch.name.trim()) throw new DomainError('EMPLOYEE_NAME_REQUIRED', 'يجب إدخال اسم الموظف', 422);
     if (patch.salaryComponents) validateComponents(patch.salaryComponents);
+    assertEmployeeDates(patch);
     const [current] = await withTenantTx(this.database.db, tenantId, (tx) => tx.select().from(employees).where(and(eq(employees.tenantId, tenantId), eq(employees.id, id), isNull(employees.deletedAt))).limit(1));
     if (!current) throw new DomainError('NOT_FOUND', 'Employee not found', 404);
     const nextName = patch.name?.trim();
@@ -455,6 +460,9 @@ export class HrmService implements OnModuleInit {
       ...(patch.birthDate === undefined ? {} : { birthDate: patch.birthDate }),
       ...(patch.insuranceNo === undefined ? {} : { insuranceNo: patch.insuranceNo }),
       ...(patch.nationalId === undefined ? {} : { nationalId: patch.nationalId }),
+      ...(patch.iqamaExpiresOn === undefined ? {} : { iqamaExpiresOn: patch.iqamaExpiresOn }),
+      ...(patch.insuranceExpiresOn === undefined ? {} : { insuranceExpiresOn: patch.insuranceExpiresOn }),
+      ...(patch.gosiScheme === undefined ? {} : { gosiScheme: patch.gosiScheme }),
       ...(patch.maritalStatus === undefined ? {} : { maritalStatus: patch.maritalStatus }),
       ...(patch.nationality === undefined ? {} : { nationality: patch.nationality }),
       ...(patch.gender === undefined ? {} : { gender: patch.gender }),
@@ -1495,6 +1503,20 @@ function movementTypeOf(kind: string, isPos: boolean) {
  */
 function modifiersTotal(modifiers: Array<Record<string, unknown>> | null | undefined) {
   return (modifiers ?? []).reduce((sum, entry) => sum.plus(new Decimal(String(entry.price ?? entry.amount ?? 0) || '0')), new Decimal(0));
+}
+
+function assertEmployeeDates(input: { iqamaExpiresOn?: string | null; insuranceExpiresOn?: string | null; gosiScheme?: string | null }) {
+  for (const [field, value] of [
+    ['iqamaExpiresOn', input.iqamaExpiresOn],
+    ['insuranceExpiresOn', input.insuranceExpiresOn],
+  ] as const) {
+    if (value && !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      throw new DomainError('VALIDATION_FAILED', `${field} must be YYYY-MM-DD`, 422, { field });
+    }
+  }
+  if (input.gosiScheme && input.gosiScheme !== 'old' && input.gosiScheme !== 'new') {
+    throw new DomainError('VALIDATION_FAILED', 'gosiScheme must be old or new', 422, { field: 'gosiScheme' });
+  }
 }
 
 function sumLines(values: string[]): string { return values.reduce((sum, valueText) => sum.plus(new Decimal(valueText)), new Decimal(0)).toFixed(4); }

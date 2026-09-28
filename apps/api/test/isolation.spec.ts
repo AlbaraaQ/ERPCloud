@@ -207,6 +207,11 @@ describe('tenant isolation (TESTING_STRATEGY §6)', () => {
       'custom_field_values',
       'custom_reports',
       'offline_queue',
+      'payroll_compliance_settings',
+      'payroll_wps_files',
+      'payroll_gosi_files',
+      'payment_provider_configs',
+      'payment_links',
     ]);
   });
 

@@ -54,7 +54,10 @@ function InvoiceDetail({ id }: { id: string }) {
           </div>
           <div className="toolbar">
             <span className={`badge ${invoice.payment_status === 'paid' ? 'paid' : 'open'}`}>{PAYMENT_AR[invoice.payment_status] ?? invoice.payment_status}</span>
-            <button className="btn primary" type="button" onClick={print}>
+            <Link className="btn primary" href={`/portal/invoices/${id}/pay`}>
+              ادفع
+            </Link>
+            <button className="btn" type="button" onClick={print}>
               طباعة / حفظ PDF
             </button>
           </div>

@@ -284,6 +284,11 @@ describe('staff navigation tree', () => {
     expect(dupes).toEqual([]);
   });
 
+  it('exposes Mudad alerts and online payment settings', () => {
+    expect(allScreens.find((screen) => screen.key === 'hrm-compliance')?.href).toBe('/hrm/compliance');
+    expect(allScreens.find((screen) => screen.key === 'online-payments')?.href).toBe('/settings/payments');
+  });
+
   it('reports honest implementation counts', () => {
     const counts = screenCounts();
     expect(counts.total).toBe(counts.ready + counts.api + counts.planned);

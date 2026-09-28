@@ -25,7 +25,7 @@ import { Input, Labeled } from '../../../../components/ui/input';
 import { Modal } from '../../../../components/ui/modal';
 import { SkeletonCard } from '../../../../components/ui/skeleton';
 import { Table } from '../../../../components/ui/table';
-import { ApiError, apiData, apiPatch, apiPost } from '../../../../lib/api';
+import { ApiError, apiData, apiList, apiPatch, apiPost } from '../../../../lib/api';
 import {
   arabicName,
   cashLocationLabel,
@@ -163,6 +163,11 @@ export default function SalesInvoiceDetailPage() {
   const [waMessage, setWaMessage] = useState('');
   const [waAttach, setWaAttach] = useState(true);
   const [waBusy, setWaBusy] = useState(false);
+  const [payProvider, setPayProvider] = useState('moyasar');
+  const paymentLinks = useQuery<Array<{ id: string; provider: string; amount: string; currency: string; linkUrl: string; status: string; voucherId: string | null }>>(
+    () => apiList(`/payments/links?invoice_id=${invoiceId}`),
+    [invoiceId],
+  );
   const [glassesLine, setGlassesLine] = useState<InvoiceLine | null>(null);
   const sent = useQuery<WhatsappMessageRow[]>(
     () => whatsappMessages({ invoiceId, limit: 20 }).then((view) => view.messages),
@@ -641,6 +646,79 @@ export default function SalesInvoiceDetailPage() {
           </div>
         </Reveal>
       </div>
+
+      {doc.status === 'posted' && can('payments.links.manage') ? (
+        <Reveal delay={0.18}>
+          <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-1">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+              <h3 className="m-0 text-[15px] font-bold text-slate-900">روابط الدفع</h3>
+              <div className="flex items-center gap-2">
+                <select className="h-10 px-3 rounded-[10px] border border-slate-300" value={payProvider} onChange={(event) => setPayProvider(event.target.value)}>
+                  <option value="moyasar">ميسر</option>
+                  <option value="hyperpay">HyperPay</option>
+                  <option value="tap">Tap</option>
+                </select>
+                <Button
+                  variant="primary"
+                  loading={busy}
+                  onClick={() =>
+                    void run(async () => {
+                      await apiPost('/payments/links', { invoice_id: doc.id, provider: payProvider });
+                      paymentLinks.reload();
+                    }, 'تم إنشاء رابط الدفع.')
+                  }
+                >
+                  💳 إنشاء رابط دفع
+                </Button>
+              </div>
+            </div>
+            {(paymentLinks.data ?? []).length === 0 ? (
+              <p className="m-0 text-[13px] text-slate-500">لا روابط بعد. اربط المزوّد من إعدادات المدفوعات ثم أنشئ الرابط.</p>
+            ) : (
+              <Table
+                rows={paymentLinks.data ?? []}
+                rowKey={(row) => row.id}
+                dense
+                columns={[
+                  { key: 'provider', header: 'المزوّد', cell: (row) => row.provider },
+                  { key: 'amount', header: 'المبلغ', ltr: true, cell: (row) => money(row.amount, row.currency) },
+                  { key: 'status', header: 'الحالة', cell: (row) => row.status },
+                  { key: 'voucher', header: 'سند القبض', ltr: true, cell: (row) => row.voucherId ? row.voucherId.slice(0, 8) : '—' },
+                  {
+                    key: 'url',
+                    header: 'الرابط',
+                    cell: (row) => (
+                      <a className="text-brand-700" href={row.linkUrl} target="_blank" rel="noreferrer">
+                        فتح
+                      </a>
+                    ),
+                  },
+                  {
+                    key: 'sim',
+                    header: '',
+                    cell: (row) =>
+                      row.status === 'pending' ? (
+                        <button
+                          className="text-[12px] font-bold text-brand-700"
+                          type="button"
+                          onClick={() =>
+                            void run(async () => {
+                              await apiPost(`/payments/links/${row.id}/simulate`, {});
+                              paymentLinks.reload();
+                              invoice.reload();
+                            }, 'تمت محاكاة الدفع وإنشاء سند القبض.')
+                          }
+                        >
+                          محاكاة دفع
+                        </button>
+                      ) : null,
+                  },
+                ]}
+              />
+            )}
+          </section>
+        </Reveal>
+      ) : null}
 
       {/* ------------------------------------------------ whatsapp */}
       <Reveal delay={0.2}>

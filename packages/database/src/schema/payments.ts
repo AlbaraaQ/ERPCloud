@@ -2,7 +2,10 @@ import { boolean, index, integer, jsonb, numeric, pgTable, text, timestamp, uniq
 
 import { baseAuditColumns } from '../columns.js';
 
-import { tenants } from './platform.js';
+import { tenants, users } from './platform.js';
+import { salesInvoices } from './sales.js';
+import { cashLocations } from './organization.js';
+import { vouchers } from './treasury.js';
 
 const money = { precision: 20, scale: 4, mode: 'string' as const };
 
@@ -104,5 +107,56 @@ export const paymentGatewayTransactions = pgTable(
   }),
 );
 
+/**
+ * Online invoice links — Moyasar, HyperPay and Tap. Distinct from the till gateways
+ * (`payment_gateway_settings`), which dial a local terminal rather than a hosted invoice.
+ */
+export const paymentProviderConfigs = pgTable(
+  'payment_provider_configs',
+  {
+    id: uuid('id').primaryKey(),
+    tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+    provider: text('provider').notNull(),
+    apiKeyEnc: text('api_key_enc'),
+    webhookSecretEnc: text('webhook_secret_enc'),
+    publishableKey: text('publishable_key'),
+    isActive: boolean('is_active').notNull().default(true),
+    simulation: boolean('simulation').notNull().default(true),
+    currency: text('currency').notNull().default('SAR'),
+    cashLocationId: uuid('cash_location_id').references(() => cashLocations.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantProvider: uniqueIndex('payment_provider_configs_tenant_provider_key').on(table.tenantId, table.provider),
+  }),
+);
+
+export const paymentLinks = pgTable(
+  'payment_links',
+  {
+    id: uuid('id').primaryKey(),
+    tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+    invoiceId: uuid('invoice_id').notNull().references(() => salesInvoices.id, { onDelete: 'cascade' }),
+    provider: text('provider').notNull(),
+    amount: numeric('amount', money).notNull(),
+    currency: text('currency').notNull().default('SAR'),
+    linkUrl: text('link_url').notNull(),
+    externalId: text('external_id'),
+    status: text('status').notNull().default('pending'),
+    paidAt: timestamp('paid_at', { withTimezone: true }),
+    voucherId: uuid('voucher_id').references(() => vouchers.id, { onDelete: 'set null' }),
+    payload: jsonb('payload').$type<Record<string, unknown>>().notNull().default({}),
+    createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    invoiceIdx: index('payment_links_invoice_idx').on(table.tenantId, table.invoiceId, table.createdAt),
+  }),
+);
+
 export type PaymentGatewaySetting = typeof paymentGatewaySettings.$inferSelect;
 export type PaymentGatewayTransaction = typeof paymentGatewayTransactions.$inferSelect;
+export type PaymentProviderConfig = typeof paymentProviderConfigs.$inferSelect;
+export type PaymentLink = typeof paymentLinks.$inferSelect;

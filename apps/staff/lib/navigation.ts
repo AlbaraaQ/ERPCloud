@@ -1347,6 +1347,10 @@ const hrm: ModuleNode = {
         screen('payroll-run', 'إستحقاق وصرف الرواتب', 'Payroll run and payment', '/hrm/payroll', 'ready', {
           endpoint: '/hrm/payroll/runs',
         }),
+        screen('hrm-compliance', 'تنبيهات الإقامة والتأمين', 'Iqama and insurance alerts', '/hrm/compliance', 'ready', {
+          permission: 'hrm.view',
+          endpoint: 'GET /hrm/compliance/alerts',
+        }),
         // 💵 `Form_WPF/frmSalaryPay.xaml` «دفع الرواتب» — one إذن صرف per employee per
         // month. The row under «التقارير» with the same name is the report
         // (`frmRptSalary`); the window itself belongs here, next to the مسيّر it pays.
@@ -1646,6 +1650,10 @@ const settings: ModuleNode = {
             endpoint: 'GET /payment-gateways · PUT · POST /:provider/test · POST /:provider/sale',
           },
         ),
+        screen('online-payments', 'روابط الدفع — ميسر', 'Online payment links', '/settings/payments', 'ready', {
+          permission: 'payments.links.manage',
+          endpoint: 'GET/POST /payments/providers · POST /payments/links · POST /payments/webhooks/:provider',
+        }),
         screen('whatsapp', 'واتساب — إرسال الفواتير', 'WhatsApp', '/settings/whatsapp', 'ready', {
           permission: 'tenant.settings.manage',
           endpoint:

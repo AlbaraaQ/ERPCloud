@@ -129,6 +129,13 @@ const envSchema = z.object({
   OCR_API_KEY: z.string().optional(),
   OCR_TIMEOUT_MS: z.coerce.number().int().positive().max(300_000).default(60_000),
 
+  /** Future enhancement 07 — hosted invoice providers. Empty means the built-in production base. */
+  MOYASAR_API_BASE: z.union([z.literal(''), z.string().url()]).optional(),
+  TAP_API_BASE: z.union([z.literal(''), z.string().url()]).optional(),
+  HYPERPAY_API_BASE: z.union([z.literal(''), z.string().url()]).optional(),
+  APP_PUBLIC_URL: z.union([z.literal(''), z.string().url()]).optional(),
+  API_PUBLIC_URL: z.union([z.literal(''), z.string().url()]).optional(),
+
   /**
    * P-C10 — أين تُكتب نسخة المنصّة حين لا اعتمادات تخزين كائنات. النسخة تُكتب دائماً إلى
    * ملفٍّ يُقرأ من مكانه (التحقّق يعيد قراءته ويحسب بصمته)، و`ObjectStoragePort` هو الوجهة

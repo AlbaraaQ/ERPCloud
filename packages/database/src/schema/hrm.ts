@@ -7,7 +7,7 @@ import { accounts, costCenters, fiscalPeriods, journalEntries } from './accounti
 import { branches, cashLocations } from './organization.js';
 import { memberships } from './tenancy.js';
 import { vouchers } from './treasury.js';
-import { tenants } from './platform.js';
+import { tenants, users } from './platform.js';
 
 const cashValue = { precision: 20, scale: 4, mode: 'string' as const };
 
@@ -28,7 +28,7 @@ export const jobs = pgTable('jobs', {
 }, (table) => ({ codeKey: uniqueIndex('jobs_tenant_code_key').on(table.tenantId, table.code).where(sql`deleted_at IS NULL`) }));
 
 export const employees = pgTable('employees', {
-  id: uuid('id').primaryKey(), tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }), employeeNo: text('employee_no').notNull(), name: text('name').notNull(), branchId: uuid('branch_id').references(() => branches.id, { onDelete: 'restrict' }), departmentId: uuid('department_id').references(() => departments.id, { onDelete: 'set null' }), jobId: uuid('job_id').references(() => jobs.id, { onDelete: 'set null' }), membershipId: uuid('membership_id').references(() => memberships.id, { onDelete: 'set null' }), status: text('status').notNull().default('active'), hireDate: date('hire_date'), birthDate: date('birth_date'), insuranceNo: text('insurance_no'), nationalId: text('national_id'), maritalStatus: text('marital_status'), nationality: text('nationality'), gender: text('gender'), phone: text('phone'), mobile: text('mobile'), email: text('email'), address: text('address'), notes: text('notes'), /** 👤 رقم الحساب — the account `frmEmployees.xaml.cs` L600 writes for the employee. */ employeeAccountId: uuid('employee_account_id').references(() => accounts.id, { onDelete: 'set null' }), salaryComponents: jsonb('salary_components').$type<Record<string, string>>().notNull().default({}), bank: jsonb('bank').$type<Record<string, string | undefined>>().notNull().default({}), salaryExpenseAccountId: uuid('salary_expense_account_id').references(() => accounts.id, { onDelete: 'restrict' }), salaryPayableAccountId: uuid('salary_payable_account_id').references(() => accounts.id, { onDelete: 'restrict' }), costCenterId: uuid('cost_center_id').references(() => costCenters.id, { onDelete: 'set null' }),
+  id: uuid('id').primaryKey(), tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }), employeeNo: text('employee_no').notNull(), name: text('name').notNull(), branchId: uuid('branch_id').references(() => branches.id, { onDelete: 'restrict' }), departmentId: uuid('department_id').references(() => departments.id, { onDelete: 'set null' }), jobId: uuid('job_id').references(() => jobs.id, { onDelete: 'set null' }), membershipId: uuid('membership_id').references(() => memberships.id, { onDelete: 'set null' }), status: text('status').notNull().default('active'), hireDate: date('hire_date'), birthDate: date('birth_date'), insuranceNo: text('insurance_no'), nationalId: text('national_id'), /** إقامة — used by the HR dashboard expiry alert. */ iqamaExpiresOn: date('iqama_expires_on'), /** تأمين طبي/تأمينات — expiry watched beside the iqama. */ insuranceExpiresOn: date('insurance_expires_on'), /** `old` = registered before 2024-07-03; `new` = the post-reform annuity schedule. Null follows hire date. */ gosiScheme: text('gosi_scheme'), maritalStatus: text('marital_status'), nationality: text('nationality'), gender: text('gender'), phone: text('phone'), mobile: text('mobile'), email: text('email'), address: text('address'), notes: text('notes'), /** 👤 رقم الحساب — the account `frmEmployees.xaml.cs` L600 writes for the employee. */ employeeAccountId: uuid('employee_account_id').references(() => accounts.id, { onDelete: 'set null' }), salaryComponents: jsonb('salary_components').$type<Record<string, string>>().notNull().default({}), bank: jsonb('bank').$type<Record<string, string | undefined>>().notNull().default({}), salaryExpenseAccountId: uuid('salary_expense_account_id').references(() => accounts.id, { onDelete: 'restrict' }), salaryPayableAccountId: uuid('salary_payable_account_id').references(() => accounts.id, { onDelete: 'restrict' }), costCenterId: uuid('cost_center_id').references(() => costCenters.id, { onDelete: 'set null' }),
   /** 🖼️ صورة الموظف — `frmEmployees.xaml` L195 `imgPersonal` + `btnImgAdd` / `btnImgDelete`. The desktop stores the image as a file path in `Employees.PhotoPath`; the cloud stores it as a file row (`files`) and keeps the id here, so the same upload flow (`/files/presign` → PUT → `/finalize`) works for employees as for company logos. */
   photoFileId: uuid('photo_file_id'),
   ...baseAuditColumns(), ...baseSoftDeleteColumns(), ...baseLegacyColumns(),
@@ -156,7 +156,58 @@ export const employeeBranches = pgTable('employee_branches', {
   employeeIdx: index('employee_branches_employee_idx').on(table.tenantId, table.employeeId),
 }));
 
+/** Defaults used by WPS/GOSI export when the request does not repeat them. */
+export const payrollComplianceSettings = pgTable('payroll_compliance_settings', {
+  tenantId: uuid('tenant_id').primaryKey().references(() => tenants.id, { onDelete: 'cascade' }),
+  establishmentId: text('establishment_id').notNull().default(''),
+  bankCode: text('bank_code').notNull().default(''),
+  gosiEstablishmentNo: text('gosi_establishment_no').notNull().default(''),
+  defaultCashLocationId: uuid('default_cash_location_id').references(() => cashLocations.id, { onDelete: 'set null' }),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/** Generated Mudad/bank wage file. `csv_text` is the download; status is updated after the manual upload. */
+export const payrollWpsFiles = pgTable('payroll_wps_files', {
+  id: uuid('id').primaryKey(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  payrollRunId: uuid('payroll_run_id').notNull().references(() => payrollRuns.id, { onDelete: 'cascade' }),
+  fileId: uuid('file_id').notNull(),
+  bankCode: text('bank_code').notNull(),
+  establishmentId: text('establishment_id').notNull().default(''),
+  status: text('status').notNull().default('generated'),
+  bankResponse: text('bank_response'),
+  fileName: text('file_name').notNull(),
+  csvText: text('csv_text').notNull(),
+  employeeCount: integer('employee_count').notNull(),
+  totalNet: numeric('total_net', cashValue).notNull(),
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  runIdx: index('payroll_wps_files_run_idx').on(table.tenantId, table.payrollRunId, table.createdAt),
+}));
+
+export const payrollGosiFiles = pgTable('payroll_gosi_files', {
+  id: uuid('id').primaryKey(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  payrollRunId: uuid('payroll_run_id').notNull().references(() => payrollRuns.id, { onDelete: 'cascade' }),
+  fileId: uuid('file_id').notNull(),
+  establishmentNo: text('establishment_no').notNull().default(''),
+  status: text('status').notNull().default('generated'),
+  fileName: text('file_name').notNull(),
+  csvText: text('csv_text').notNull(),
+  employeeCount: integer('employee_count').notNull(),
+  totalContribution: numeric('total_contribution', cashValue).notNull(),
+  createdBy: uuid('created_by'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  runIdx: index('payroll_gosi_files_run_idx').on(table.tenantId, table.payrollRunId, table.createdAt),
+}));
+
 export type Employee = typeof employees.$inferSelect;
 export type SalaryPayment = typeof salaryPayments.$inferSelect;
 export type PayrollRun = typeof payrollRuns.$inferSelect;
 export type EmployeeBranch = typeof employeeBranches.$inferSelect;
+export type PayrollWpsFile = typeof payrollWpsFiles.$inferSelect;
+export type PayrollGosiFile = typeof payrollGosiFiles.$inferSelect;

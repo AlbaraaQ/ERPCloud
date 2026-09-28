@@ -167,6 +167,12 @@ export const rlsProtectedTables = [
   'custom_reports',
   // Future enhancement 06 — durable idempotency ledger for offline POS invoices.
   'offline_queue',
+  // Future enhancement 07 — Mudad/GOSI files and online invoice payment links.
+  'payroll_compliance_settings',
+  'payroll_wps_files',
+  'payroll_gosi_files',
+  'payment_provider_configs',
+  'payment_links',
 ] as const;
 
 export type QueryRowsOf<T> = QueryRows<T>;
