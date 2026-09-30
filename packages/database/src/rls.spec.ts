@@ -120,6 +120,11 @@ describe('RLS SQL builders (MULTI_TENANCY §3.5)', () => {
       'tenant_apps',
       'tenant_domains',
       'tenant_branding',
+      'crm_pipelines',
+      'crm_deals',
+      'crm_activities',
+      'crm_whatsapp_templates',
+      'crm_settings',
     ]);
   });
 

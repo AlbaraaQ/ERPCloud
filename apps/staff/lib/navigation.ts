@@ -1185,6 +1185,18 @@ const sales: ModuleNode = {
             endpoint: 'GET /ecommerce/orders?store_id=&status=',
           },
         ),
+        screen('crm-pipelines', 'مسار المبيعات', 'CRM pipeline', '/crm/pipelines', 'ready', {
+          permission: 'crm.deals.view',
+          endpoint: 'GET/POST /crm/pipelines · GET/POST /crm/deals · PUT /crm/deals/:id/move',
+        }),
+        screen('crm-activities', 'أنشطة المبيعات', 'CRM activities', '/crm/activities', 'ready', {
+          permission: 'crm.deals.view',
+          endpoint: 'GET /crm/activities · POST /crm/deals/:id/activities',
+        }),
+        screen('crm-forecast', 'تنبؤ المبيعات', 'Sales forecast', '/crm/forecast', 'ready', {
+          permission: 'crm.deals.view',
+          endpoint: 'GET /crm/forecast',
+        }),
       ],
     },
   ],

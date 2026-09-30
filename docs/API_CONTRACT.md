@@ -398,3 +398,22 @@ Reviewed apps only. `POST /marketplace/apps/{code}/install` rejects a code that 
 - `GET /platform/marketplace/apps`, `PUT /platform/marketplace/apps/{code}` `{ monthlyPrice, isActive }`. Perm: `console.marketplace.manage`. The platform cannot register a third-party module.
 
 Staff hides a gated href only after this catalog answers. `/settings/ecommerce` and `/sales/ecommerce-orders` are gated by `salla`, `zid` or `shopify`. OCR, WMS and e-sign are not gated.
+
+## 22. Sales CRM and WhatsApp (future enhancement 14)
+
+Tenant routes require a token. The webhook is public and authenticates only by its query token. Screens live under the sales module (`/crm/pipelines`, `/crm/deals/{id}`, `/crm/activities`, `/crm/forecast`). There is no new navigation module.
+
+- `GET/POST /crm/pipelines`. The first read seeds a four-stage default pipeline and a greeting template. Perm: view / manage.
+- `GET/POST /crm/deals`. Filters accept `pipeline_id` or `pipelineId`, and the same pair for `stage_id` and `owner_id`. A new deal starts on the first stage unless `stage_id` is sent. Body value is `value` or `amount`.
+- `GET /crm/deals/{id}` — deal plus its activities.
+- `PUT /crm/deals/{id}/move` `{ stage_id }`. Unknown stage or a won/lost deal is `422`.
+- `PUT /crm/deals/{id}/status` `{ status: won|lost, lost_reason }`. A loss needs a reason.
+- `POST /crm/deals/{id}/activities` `{ type, description }`. `whatsapp` is not accepted here; that type is written only by send and by the webhook.
+- `POST /crm/deals/{id}/whatsapp` `{ template_id, message, to }`. Renders `{name}` and `{deal}`, then calls the existing WhatsApp gateway with `invoiceId` null. The sent text is stored as an activity with `direction=out`. The monthly cap is the same `whatsapp_per_month` limit. A gateway that is not configured, or is switched off, is refused; simulation mode is the local path.
+- `GET /crm/activities`.
+- `GET /crm/forecast` — `{ weighted, openCount, count, deals }`. `weighted` is the sum of open deal value × probability / 100, at four decimal places. Won and lost deals are excluded.
+- `GET/POST /crm/whatsapp/templates`.
+- `GET /crm/settings` — returns the webhook path. Perm: `crm.deals.manage`.
+- `POST /crm/webhooks/whatsapp?token=` — public. `{ from, text }` or a Meta `entry.changes.value.messages` payload. A matching open deal (party phone, last 9 digits, or a previous outbound number) gets an activity with `type=whatsapp` and `direction=in`. No match returns `{ matched: false }` and stores nothing. A bad token is `401`.
+
+Perms: `crm.deals.view`, `crm.deals.manage`, `crm.activities.manage`. `tenant_admin` and `sales_manager` receive all three. `sales_user` receives view and activities only. The migration also grants view and activities to any role that already has `sales.view`, and manage to any role that has `sales.offer.manage`.

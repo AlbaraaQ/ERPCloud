@@ -2,6 +2,7 @@
 
 > الأولوية: P3 - 2.5 أسبوع
 > السوق: Zoho CRM / HubSpot — مطلوب لفريق المبيعات
+> التنفيذ: الترحيل `0110_crm_whatsapp.sql` (رقم `0108` في هذه الوثيقة مستعمل للوحات). السجل في `docs/STATUS.md` صف `FE-14`.
 
 ## المشكلة
 عندك عملاء وفواتير لكن لا يوجد Pipeline مبيعات، ولا تتبع مكالمات/واتساب.
@@ -56,10 +57,10 @@ crm_whatsapp_templates (id, tenant_id, name, body, variables jsonb)
 - `crm.deals.view|manage` + `crm.activities.manage`
 
 ## معايير القبول
-- [ ] إنشاء pipeline 4 مراحل → إنشاء صفقة → سحبها لمرحلة ثانية → يتغير stage
-- [ ] إرسال واتساب من صفقة → يظهر في الأنشطة
-- [ ] تنبؤ = مجموع (amount * probability)
-- [ ] اختبار `crm.spec.ts` 10 حالات
+- [x] إنشاء pipeline 4 مراحل → إنشاء صفقة → سحبها لمرحلة ثانية → يتغير stage
+- [x] إرسال واتساب من صفقة → يظهر في الأنشطة
+- [x] تنبؤ = مجموع (amount * probability)
+- [x] اختبار `crm.spec.ts` 10 حالات
 
 ## الجهد
 - Backend: 5 أيام (pipeline + deals + أنشطة + واتساب)

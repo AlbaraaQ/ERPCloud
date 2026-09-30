@@ -9,6 +9,7 @@ export * from './ids.js';
 export * from './rls.js';
 export * from './schema/index.js';
 export * from './marketplace.js';
+export * from './crm.js';
 
 export {
   MIGRATIONS_TABLE,

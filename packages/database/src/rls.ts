@@ -207,6 +207,12 @@ export const rlsProtectedTables = [
   'tenant_apps',
   'tenant_domains',
   'tenant_branding',
+  // Future enhancement 14 — sales pipeline. `crm_settings` is tenant-scoped too.
+  'crm_pipelines',
+  'crm_deals',
+  'crm_activities',
+  'crm_whatsapp_templates',
+  'crm_settings',
 ] as const;
 
 export type QueryRowsOf<T> = QueryRows<T>;

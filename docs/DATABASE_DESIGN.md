@@ -348,3 +348,19 @@ Implemented by `packages/database/migrations/0109_marketplace_white_label.sql` a
 **tenant_domains** — `domain` unique while `deleted_at` is null, `status CHECK(pending,active,failed)`, `ssl_status` default `manual`, `verification_token`. A second policy allows `SELECT` of one active row when `app.lookup_host` equals that domain. An unset GUC matches nothing.
 
 **tenant_branding** — one row per tenant: `logo_file_id`, `primary_color`, `secondary_color`. The same host GUC can read the brand of that one active domain.
+
+## 21. Sales CRM and WhatsApp (future enhancement 14)
+
+Implemented by `packages/database/migrations/0110_crm_whatsapp.sql` and exported from `packages/database/src/schema/crm.ts`. Forecast and move rules live in `packages/database/src/crm.ts` and do not touch the database. The enhancement note named migration `0108`; that number is the BI dashboard migration, so this feature is `0110`.
+
+All five tables use `ENABLE` + `FORCE` RLS on `app.tenant_id`.
+
+**crm_pipelines** — `name` (1–80), `stages jsonb` as `[{ id, name, color, order }]`, `is_default`. Partial unique index so a tenant has at most one default pipeline. The application seeds four stages: lead, contact, offer, close.
+
+**crm_deals** — `pipeline_id`, `stage_id`, optional `party_id`, `title` (1–120), `amount numeric(20,4)` (the API calls this the deal value), `probability` 0–100, `expected_close`, `owner_id`, `status CHECK(open,won,lost)`, `lost_reason`. A won or lost deal is not moved. Only `open` deals enter the forecast.
+
+**crm_activities** — `deal_id`, optional `party_id`, `type CHECK(call,meeting,whatsapp,email,note)`, `subject`, `description`, `at`, `user_id`, `direction`, `meta jsonb`. WhatsApp in and out are rows here. There is no email open or click tracking, and no telephony provider.
+
+**crm_whatsapp_templates** — `name` unique per tenant, `body`, `variables jsonb`. `{name}` and `{deal}` are filled in the application.
+
+**crm_settings** — one row per tenant, `webhook_token` unique. This table is not in the original enhancement sketch. It exists because `POST /crm/webhooks/whatsapp` is public: a second `SELECT` policy matches `webhook_token` to `app.lookup_webhook`. An unset GUC matches nothing. A reply with no open deal is not stored.
