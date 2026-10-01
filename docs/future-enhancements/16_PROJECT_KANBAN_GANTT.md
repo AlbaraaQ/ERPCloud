@@ -2,6 +2,7 @@
 
 > الأولوية: P3 - 2.5 أسبوع
 > السوق: Asana / Monday / Odoo Project — مطلوب لشركات المقاولات
+> التنفيذ: الترحيل `0112_project_kanban.sql` (رقم `0110` في هذه الوثيقة مستعمل لـ CRM). السجل في `docs/STATUS.md` صف `FE-16`.
 
 ## المشكلة
 عندك `projects/stages` و `projects/boq` لكن لا يوجد Kanban، ولا Gantt، ولا تتبع وقت فعلي vs مخطط.
@@ -52,11 +53,11 @@ project_dependencies (id, task_id, depends_on_task_id, type: finish_to_start)
 - `projects.tasks.view|manage` + `projects.time_logs.manage`
 
 ## معايير القبول
-- [ ] إنشاء 5 مهام في مشروع → تظهر في Kanban 3 أعمدة → سحب مهمة → يتغير stage
-- [ ] Gantt يعرض مهام + dependencies + مسار حرج
-- [ ] تسجيل وقت 2 ساعة على مهمة → actual_hours = 2 → تكلفة تحسب
-- [ ] مقارنة BOQ vs فعلي
-- [ ] اختبار `project-kanban.spec.ts` 10 حالات
+- [x] إنشاء 5 مهام في مشروع → تظهر في Kanban 3 أعمدة → سحب مهمة → يتغير stage
+- [x] Gantt يعرض مهام + dependencies + مسار حرج
+- [x] تسجيل وقت 2 ساعة على مهمة → actual_hours = 2 → تكلفة تحسب
+- [x] مقارنة BOQ vs فعلي
+- [x] اختبار `project-kanban.spec.ts` 10 حالات
 
 ## الجهد
 - Backend: 5 أيام (مهام + وقت + Gantt)

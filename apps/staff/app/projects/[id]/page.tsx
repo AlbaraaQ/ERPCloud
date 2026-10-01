@@ -314,6 +314,12 @@ export default function ProjectDetailPage() {
           ]}
         />
       </div>
+      <div className="toolbar">
+        <Link className="btn" href={`/projects/${projectId}/board`}>لوحة كانبان</Link>
+        <Link className="btn" href={`/projects/${projectId}/gantt`}>جانت</Link>
+        <Link className="btn" href={`/projects/${projectId}/time`}>الوقت</Link>
+        <Link className="btn" href={`/projects/${projectId}/cost`}>التكلفة</Link>
+      </div>
       <CommentsPanel entityType="project" entityId={projectId} />
     </Screen>
   );

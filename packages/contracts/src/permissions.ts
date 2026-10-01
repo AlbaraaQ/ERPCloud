@@ -315,6 +315,9 @@ export const permissionRegistry: readonly PermissionDefinition[] = [
   perm('projects.bill.post', 'Post progress bills and release retention invoices.'),
   perm('projects.contractor.pay', 'Approve and pay contractor payment certificates.'),
   perm('projects.stage.accredit', 'Accredit or reject project stages assigned to a user.'),
+  perm('projects.tasks.view', 'Read project tasks, the board, the Gantt and the BOQ comparison.'),
+  perm('projects.tasks.manage', 'Create tasks, move a Kanban card, and edit dates or dependencies.'),
+  perm('projects.time_logs.manage', 'Log hours on a project task.'),
 
   // niche verticals and Salla integration pack (PHASE_22)
   perm('optics.view', 'Read optical prescriptions and invoice print sections.'),

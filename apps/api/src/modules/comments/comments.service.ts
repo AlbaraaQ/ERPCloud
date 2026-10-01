@@ -34,6 +34,7 @@ const ENTITY_TABLE: Record<CommentEntityType, string> = {
   party: 'parties',
   employee: 'employees',
   project: 'projects',
+  project_task: 'project_tasks',
 };
 
 const ENTITY_PERMISSION: Record<CommentEntityType, string> = {
@@ -42,6 +43,7 @@ const ENTITY_PERMISSION: Record<CommentEntityType, string> = {
   party: 'parties.view',
   employee: 'hrm.view',
   project: 'projects.view',
+  project_task: 'projects.tasks.view',
 };
 
 const ENTITY_HREF: Record<CommentEntityType, (id: string) => string> = {
@@ -50,6 +52,7 @@ const ENTITY_HREF: Record<CommentEntityType, (id: string) => string> = {
   party: () => '/sales/customers',
   employee: () => '/hrm/employees',
   project: (id) => `/projects/${id}`,
+  project_task: (id) => `/projects/tasks/${id}`,
 };
 
 type Colleague = MentionCandidate & { email: string; membershipId: string };

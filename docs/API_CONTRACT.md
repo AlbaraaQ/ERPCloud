@@ -420,7 +420,7 @@ Perms: `crm.deals.view`, `crm.deals.manage`, `crm.activities.manage`. `tenant_ad
 
 ## 23. Document comments and mentions (future enhancement 15)
 
-Comments sit on the document head, not on a line, and they are not a chat room. Seeing a comment also requires the document permission (`sales.view`, `purchase.view`, `parties.view`, `hrm.view`, or `projects.view`). `*` counts.
+Comments sit on the document head, not on a line, and they are not a chat room. Seeing a comment also requires the document permission (`sales.view`, `purchase.view`, `parties.view`, `hrm.view`, `projects.view`, or `projects.tasks.view` for a task). `*` counts.
 
 - `GET /comments?entity_type=&entity_id=&open=` — threaded roots and one level of replies. `open=true` hides resolved and deleted roots. Perm: `comment.view`.
 - `POST /comments` `{ entity_type, entity_id, body, parent_id }`. A reply to a reply, a reply on a resolved thread, or a reply on a deleted comment is `422`. Perm: `comment.manage`.
@@ -433,6 +433,26 @@ Comments sit on the document head, not on a line, and they are not a chat room. 
 
 Saving `@[uuid]` or a unique `@name` writes `comment_mentions`, an in-app notification `comment.mention` (shown by the bell and `/notifications`), and a tenant email of the same event. Email failure does not roll back the comment. There is no email open tracking.
 
-Staff: `CommentsPanel` on the sales invoice, the purchase invoice, a chosen customer, an open employee card, and the project card. Inbox: `/comments/mentions`. No new navigation module.
+Staff: `CommentsPanel` on the sales invoice, the purchase invoice, a chosen customer, an open employee card, the project card, and a project task. Inbox: `/comments/mentions`. No new navigation module.
 
 Perms: `comment.view`, `comment.manage`. The migration grants view to roles that already see those documents, and manage to roles that already create or edit them. The auditor receives view only.
+
+## 24. Project Kanban, Gantt and time (future enhancement 16)
+
+Tasks sit on the project's own stages. There is no resource workload and no MS Project export. The chart is drawn by the staff app; dates are saved through the API, not by a third-party Gantt runtime.
+
+- `GET /projects/{id}/tasks?stage_id=&assignee_id=&status=` — stages, tasks, assignees, dependencies and BOQ terms. Perm: `projects.tasks.view`.
+- `POST /projects/{id}/tasks` `{ title, stage_id?, assignee_id?, status?, priority?, start_date?, due_date?, estimated_hours?, expense_amount?, boq_term_id? }`. A project with no stage is `422`. Perm: `projects.tasks.manage`.
+- `GET /projects/tasks/{id}` — task, time logs and dependencies.
+- `PATCH /projects/tasks/{id}` — authoring fields. A due date before the start is `422`.
+- `PUT /projects/tasks/{id}/move` `{ stage_id, sort_order }` — Kanban drop. An unknown stage is `422`.
+- `POST /projects/tasks/{id}/time-logs` `{ hours, note?, log_date? }`. Hours must be greater than 0 and at most 24. `actual_hours` becomes the sum. Perm: `projects.time_logs.manage`.
+- `POST /projects/tasks/{id}/dependencies` `{ depends_on_task_id }` — finish-to-start. A self link or a cycle is `422`.
+- `DELETE /projects/dependencies/{id}`.
+- `GET /projects/{id}/gantt` — tasks, dependencies, `criticalTaskIds`, `lengthDays`.
+- `GET /projects/{id}/time` — estimated against actual.
+- `GET /projects/{id}/cost` — each BOQ term's planned value against task labour plus task expenses. Labour is `actual_hours` times the assignee hourly value (`salary_components.hourly`, otherwise `basic / 240`). Approved or paid contractor certificates are `relatedExpenses`, not allocated to a term.
+
+Staff: `/projects/board`, `/projects/gantt`, `/projects/time`, `/projects/cost`, and the same views under `/projects/{id}/…`. Task detail is `/projects/{id}/tasks/{taskId}` and uses `CommentsPanel` with `project_task`.
+
+Perms: `projects.tasks.view`, `projects.tasks.manage`, `projects.time_logs.manage`. `project_manager` receives all three. The auditor receives view only. The migration grants view to roles that already have `projects.view`, and manage plus time logs to roles that already have `projects.manage`.

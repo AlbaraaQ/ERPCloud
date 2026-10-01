@@ -1607,6 +1607,22 @@ const projects: ModuleNode = {
           permission: 'projects.view',
           endpoint: '/projects/{id}',
         }),
+        screen('project-board', 'لوحة كانبان', 'Kanban board', '/projects/board', 'ready', {
+          permission: 'projects.tasks.view',
+          endpoint: 'GET/POST /projects/{id}/tasks · PUT /projects/tasks/{id}/move',
+        }),
+        screen('project-gantt', 'مخطط جانت', 'Gantt', '/projects/gantt', 'ready', {
+          permission: 'projects.tasks.view',
+          endpoint: 'GET /projects/{id}/gantt',
+        }),
+        screen('project-time', 'تتبع الوقت', 'Time tracking', '/projects/time', 'ready', {
+          permission: 'projects.tasks.view',
+          endpoint: 'GET /projects/{id}/time · POST /projects/tasks/{id}/time-logs',
+        }),
+        screen('project-cost', 'تكلفة المشروع', 'Project cost', '/projects/cost', 'ready', {
+          permission: 'projects.tasks.view',
+          endpoint: 'GET /projects/{id}/cost',
+        }),
         screen('project-offers', 'عروض', 'Offers', '/projects/offers', 'ready', {
           permission: 'projects.manage',
           endpoint: '/contracting/offers',

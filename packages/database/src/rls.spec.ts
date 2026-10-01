@@ -127,6 +127,9 @@ describe('RLS SQL builders (MULTI_TENANCY §3.5)', () => {
       'crm_settings',
       'comments',
       'comment_mentions',
+      'project_tasks',
+      'project_time_logs',
+      'project_dependencies',
     ]);
   });
 

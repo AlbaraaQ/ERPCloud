@@ -4,7 +4,7 @@
  * Replies are one level deep. A resolved thread is closed.
  */
 
-export const COMMENT_ENTITY_TYPES = ['sales_invoice', 'purchase_invoice', 'party', 'employee', 'project'] as const;
+export const COMMENT_ENTITY_TYPES = ['sales_invoice', 'purchase_invoice', 'party', 'employee', 'project', 'project_task'] as const;
 export type CommentEntityType = (typeof COMMENT_ENTITY_TYPES)[number];
 
 export class CommentRuleError extends Error {

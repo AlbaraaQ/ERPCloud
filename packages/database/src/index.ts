@@ -11,6 +11,7 @@ export * from './schema/index.js';
 export * from './marketplace.js';
 export * from './crm.js';
 export * from './comments.js';
+export * from './project-kanban.js';
 
 export {
   MIGRATIONS_TABLE,

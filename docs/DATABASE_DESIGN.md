@@ -374,3 +374,17 @@ Both tables use `ENABLE` + `FORCE` RLS on `app.tenant_id`.
 **comments** — `entity_type CHECK(sales_invoice,purchase_invoice,party,employee,project)`, `entity_id`, `user_id`, `body` (1–4000), optional `parent_id` (one level only), `is_resolved`, `resolved_at`, `resolved_by`, `edited_at`, `deleted_at`. A deleted comment keeps the row so a reply still has a parent. There is no line-level comment and no general chat.
 
 **comment_mentions** — `comment_id`, `mentioned_user_id`, `is_read`, `read_at`. Unique `(comment_id, mentioned_user_id)`. A mention is `@[uuid]` from the picker, or a `@name` that matches exactly one colleague in the tenant. The author is never mentioned.
+
+`0112_project_kanban.sql` adds `project_task` to the entity check so a task card can use the same panel. The other five types are unchanged.
+
+## 23. Project Kanban, Gantt and time (future enhancement 16)
+
+Implemented by `packages/database/migrations/0112_project_kanban.sql` and exported from `packages/database/src/schema/project-kanban.ts`. Board placement, the critical path and the hourly value live in `packages/database/src/project-kanban.ts`. The enhancement note named migration `0110`; that number is the CRM migration, so this feature is `0112`.
+
+All three tables use `ENABLE` + `FORCE` RLS on `app.tenant_id`.
+
+**project_tasks** — `project_id`, `stage_id` (the Kanban column), optional `boq_term_id`, `assignee_id` (an employee), `status CHECK(todo,in_progress,done)`, `priority CHECK(low,normal,high)`, `start_date`, `due_date`, `estimated_hours`, `actual_hours` (sum of time logs), `expense_amount`, `sort_order`. A drop changes `stage_id` and renumbers the column.
+
+**project_time_logs** — `task_id`, `user_id`, `hours` greater than 0 and at most 24, `log_date`, `note`.
+
+**project_dependencies** — finish-to-start only, `task_id <> depends_on_task_id`, unique pair. A cycle is rejected in the application. The critical path is the longest chain by duration, not a second stored column.

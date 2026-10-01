@@ -216,6 +216,10 @@ export const rlsProtectedTables = [
   // Future enhancement 15 — comments on a document head.
   'comments',
   'comment_mentions',
+  // Future enhancement 16 — tasks, time and finish-to-start links.
+  'project_tasks',
+  'project_time_logs',
+  'project_dependencies',
 ] as const;
 
 export type QueryRowsOf<T> = QueryRows<T>;
