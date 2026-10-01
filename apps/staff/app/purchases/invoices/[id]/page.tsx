@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
+import { CommentsPanel } from '../../../../components/comments-panel';
 import { DataTable, Notice } from '../../../../components/data-view';
 import { ErrorBox, Loading, Screen } from '../../../../components/screen';
 import { Badge } from '../../../../components/ui/badge';
@@ -436,6 +437,8 @@ export default function PurchaseInvoiceDetailPage() {
           />
         </div>
       )}
+
+      <CommentsPanel entityType="purchase_invoice" entityId={doc.id} />
     </Screen>
   );
 }

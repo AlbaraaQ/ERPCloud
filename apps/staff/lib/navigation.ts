@@ -1858,6 +1858,10 @@ const settings: ModuleNode = {
         // 🔔 مركز الإشعارات — P-C7 (`PLATFORM_CONSOLE_PLAN.md` §4: «مركز إشعارات في staff:
         // جرس + شاشة» بلا نقاط نهاية جديدة، يستهلك `/notifications` القائم). لا مقابل له في
         // `Desktop_ERP`: المكتبي يعرض تنبيهاً عابراً ولا يُبقي صندوقاً دائماً لكل عضويّة.
+        screen('comment-mentions', 'إشارات التعليقات', 'Comment mentions', '/comments/mentions', 'ready', {
+          permission: 'comment.view',
+          endpoint: 'GET /comments/mentions · POST /comments/mentions/:id/read',
+        }),
         screen('notifications', 'مركز الإشعارات', 'Notification centre', '/notifications', 'ready', {
           permission: 'tenant.notification.view',
           endpoint: 'GET /notifications · POST /notifications/:id/read',

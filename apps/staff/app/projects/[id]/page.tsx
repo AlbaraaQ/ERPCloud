@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
 
+import { CommentsPanel } from '../../../components/comments-panel';
 import { DataTable, Notice } from '../../../components/data-view';
 import { ErrorBox, Loading, Screen } from '../../../components/screen';
 import { accountLabel, listAccounts, postableOf, type Account } from '../../../lib/accounts';
@@ -313,6 +314,7 @@ export default function ProjectDetailPage() {
           ]}
         />
       </div>
+      <CommentsPanel entityType="project" entityId={projectId} />
     </Screen>
   );
 }

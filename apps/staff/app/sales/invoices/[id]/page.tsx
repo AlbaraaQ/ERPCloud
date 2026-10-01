@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 
+import { CommentsPanel } from '../../../../components/comments-panel';
 import { Badge } from '../../../../components/ui/badge';
 import { Button } from '../../../../components/ui/button';
 import { DonutCardChart } from '../../../../components/ui/chart';
@@ -830,6 +831,7 @@ export default function SalesInvoiceDetailPage() {
 
       {/* ------------------------------------------------ glasses modal */}
       <GlassesModal line={glassesLine} onClose={() => setGlassesLine(null)} />
+      <CommentsPanel entityType="sales_invoice" entityId={invoiceId} />
     </div>
   );
 }

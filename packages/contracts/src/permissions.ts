@@ -222,6 +222,8 @@ export const permissionRegistry: readonly PermissionDefinition[] = [
   perm('crm.deals.view', 'Read sales pipelines, deals, activities and the forecast.'),
   perm('crm.deals.manage', 'Create pipelines and deals, and move or close a deal.'),
   perm('crm.activities.manage', 'Log a call, a note or a WhatsApp message on a deal.'),
+  perm('comment.view', 'Read comments on a document the caller can already see.'),
+  perm('comment.manage', 'Write, edit, resolve or delete a comment, and mention a colleague.'),
   perm('purchase.view', 'List and read purchase documents.'),
   perm('purchase.invoice.create', 'Create draft purchase invoices.'),
   perm('purchase.ocr.use', 'Upload purchase invoices and review OCR extraction results.'),

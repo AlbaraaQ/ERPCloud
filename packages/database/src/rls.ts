@@ -213,6 +213,9 @@ export const rlsProtectedTables = [
   'crm_activities',
   'crm_whatsapp_templates',
   'crm_settings',
+  // Future enhancement 15 — comments on a document head.
+  'comments',
+  'comment_mentions',
 ] as const;
 
 export type QueryRowsOf<T> = QueryRows<T>;

@@ -125,6 +125,8 @@ describe('RLS SQL builders (MULTI_TENANCY §3.5)', () => {
       'crm_activities',
       'crm_whatsapp_templates',
       'crm_settings',
+      'comments',
+      'comment_mentions',
     ]);
   });
 

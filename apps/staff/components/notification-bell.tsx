@@ -128,6 +128,9 @@ export function NotificationInbox({ locale }: { locale: 'ar' | 'en' }) {
                   <p className="muted" style={{ margin: '4px 0 0' }}>
                     {text.body}
                   </p>
+                  {typeof item.payload.href === 'string' ? (
+                    <a href={item.payload.href}>فتح المستند</a>
+                  ) : null}
                   <p className="muted" style={{ margin: '6px 0 0', fontSize: 12 }}>
                     {new Date(item.createdAt).toLocaleString(locale === 'ar' ? 'ar-SA' : 'en-GB')} ·{' '}
                     {item.type}
@@ -171,6 +174,12 @@ function notificationText(item: Notification, locale: 'ar' | 'en'): { title: str
     return {
       title: locale === 'ar' ? text(payload.titleAr, 'إعلان') : text(payload.titleEn, 'Announcement'),
       body: locale === 'ar' ? text(payload.bodyAr) : text(payload.bodyEn),
+    };
+  }
+  if (item.type === 'comment.mention') {
+    return {
+      title: text(payload.title, locale === 'ar' ? 'إشارة في تعليق' : 'Comment mention'),
+      body: text(payload.message),
     };
   }
   return { title: item.type, body: text(payload.message) };

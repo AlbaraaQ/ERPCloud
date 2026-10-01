@@ -417,3 +417,22 @@ Tenant routes require a token. The webhook is public and authenticates only by i
 - `POST /crm/webhooks/whatsapp?token=` — public. `{ from, text }` or a Meta `entry.changes.value.messages` payload. A matching open deal (party phone, last 9 digits, or a previous outbound number) gets an activity with `type=whatsapp` and `direction=in`. No match returns `{ matched: false }` and stores nothing. A bad token is `401`.
 
 Perms: `crm.deals.view`, `crm.deals.manage`, `crm.activities.manage`. `tenant_admin` and `sales_manager` receive all three. `sales_user` receives view and activities only. The migration also grants view and activities to any role that already has `sales.view`, and manage to any role that has `sales.offer.manage`.
+
+## 23. Document comments and mentions (future enhancement 15)
+
+Comments sit on the document head, not on a line, and they are not a chat room. Seeing a comment also requires the document permission (`sales.view`, `purchase.view`, `parties.view`, `hrm.view`, or `projects.view`). `*` counts.
+
+- `GET /comments?entity_type=&entity_id=&open=` — threaded roots and one level of replies. `open=true` hides resolved and deleted roots. Perm: `comment.view`.
+- `POST /comments` `{ entity_type, entity_id, body, parent_id }`. A reply to a reply, a reply on a resolved thread, or a reply on a deleted comment is `422`. Perm: `comment.manage`.
+- `PUT /comments/{id}` `{ body }` — author only.
+- `PUT /comments/{id}/resolve` — root comments only. A second resolve is `422`.
+- `DELETE /comments/{id}` — author only. The row stays, the text becomes «حُذف هذا التعليق».
+- `GET /comments/suggest?q=` — colleagues whose name contains `q`. Perm: `comment.manage`.
+- `GET /comments/mentions?is_read=false` — the caller's mentions.
+- `POST /comments/mentions/{id}/read`.
+
+Saving `@[uuid]` or a unique `@name` writes `comment_mentions`, an in-app notification `comment.mention` (shown by the bell and `/notifications`), and a tenant email of the same event. Email failure does not roll back the comment. There is no email open tracking.
+
+Staff: `CommentsPanel` on the sales invoice, the purchase invoice, a chosen customer, an open employee card, and the project card. Inbox: `/comments/mentions`. No new navigation module.
+
+Perms: `comment.view`, `comment.manage`. The migration grants view to roles that already see those documents, and manage to roles that already create or edit them. The auditor receives view only.

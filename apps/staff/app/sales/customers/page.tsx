@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
+import { CommentsPanel } from '../../../components/comments-panel';
 import { Directory } from '../../../components/directory';
 import { apiDelete, apiList, apiPost, apiPut } from '../../../lib/api';
 import { getCustomFieldValues, saveCustomFieldValues, type CustomFieldValue } from '../../../lib/custom-fields';
@@ -110,7 +111,28 @@ export default function CustomersPage() {
       ]}
     />
     <PartyCustomFields parties={parties.data ?? []} canManage={can('custom_fields.manage')} />
+    <CustomerComments parties={parties.data ?? []} />
     </>
+  );
+}
+
+function CustomerComments({ parties }: { parties: Party[] }) {
+  const [partyId, setPartyId] = useState('');
+  return (
+    <section className="card" style={{ marginTop: 16 }}>
+      <label className="field" style={{ maxWidth: 360 }}>
+        <span>تعليقات العميل</span>
+        <select className="input" value={partyId} onChange={(event) => setPartyId(event.target.value)}>
+          <option value="">— اختر عميلاً —</option>
+          {parties.map((party) => (
+            <option key={party.id} value={party.id}>
+              {party.name}
+            </option>
+          ))}
+        </select>
+      </label>
+      {partyId ? <CommentsPanel entityType="party" entityId={partyId} /> : null}
+    </section>
   );
 }
 

@@ -49,6 +49,7 @@ import { ReportingModule } from './modules/reporting/reporting.module.js';
 import { DashboardsModule } from './modules/dashboards/dashboards.module.js';
 import { MarketplaceModule } from './modules/marketplace/marketplace.module.js';
 import { CrmModule } from './modules/crm/crm.module.js';
+import { CommentsModule } from './modules/comments/comments.module.js';
 import { CustomFieldsModule } from './modules/custom-fields/custom-fields.module.js';
 import { MigrationModule } from './modules/migration/migration.module.js';
 import { CompatModule } from './modules/compat/compat.module.js';
@@ -135,6 +136,7 @@ import { OpsModule } from './ops/ops.module.js';
     DashboardsModule,
     MarketplaceModule,
     CrmModule,
+    CommentsModule,
     CustomFieldsModule,
     MigrationModule,
     CompatModule,

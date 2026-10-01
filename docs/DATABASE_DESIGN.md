@@ -364,3 +364,13 @@ All five tables use `ENABLE` + `FORCE` RLS on `app.tenant_id`.
 **crm_whatsapp_templates** — `name` unique per tenant, `body`, `variables jsonb`. `{name}` and `{deal}` are filled in the application.
 
 **crm_settings** — one row per tenant, `webhook_token` unique. This table is not in the original enhancement sketch. It exists because `POST /crm/webhooks/whatsapp` is public: a second `SELECT` policy matches `webhook_token` to `app.lookup_webhook`. An unset GUC matches nothing. A reply with no open deal is not stored.
+
+## 22. Document comments and mentions (future enhancement 15)
+
+Implemented by `packages/database/migrations/0111_comments_mentions.sql` and exported from `packages/database/src/schema/comments.ts`. Threading and mention parsing live in `packages/database/src/comments.ts`. The enhancement note named migration `0109`; that number is the marketplace migration, so this feature is `0111`.
+
+Both tables use `ENABLE` + `FORCE` RLS on `app.tenant_id`.
+
+**comments** — `entity_type CHECK(sales_invoice,purchase_invoice,party,employee,project)`, `entity_id`, `user_id`, `body` (1–4000), optional `parent_id` (one level only), `is_resolved`, `resolved_at`, `resolved_by`, `edited_at`, `deleted_at`. A deleted comment keeps the row so a reply still has a parent. There is no line-level comment and no general chat.
+
+**comment_mentions** — `comment_id`, `mentioned_user_id`, `is_read`, `read_at`. Unique `(comment_id, mentioned_user_id)`. A mention is `@[uuid]` from the picker, or a `@name` that matches exactly one colleague in the tenant. The author is never mentioned.
