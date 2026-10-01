@@ -71,6 +71,8 @@ export * from './zatca-qr.js';
 export * from './platform/index.js';
 export * from './organization/index.js';
 export * from './devices.js';
+export * from './approval.js';
+export * from './custom-fields.js';
 export * from './arabic-words.js';
 export * from './invoice-math.js';
 export * from './inventory-valuation.js';

@@ -141,7 +141,7 @@ export default function HealthPage() {
 
           {/* probes grid */}
           <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3">
-            {data.probes.map((probe, index) => {
+            {data.probes.map((probe, _index) => {
               const up = probe.status === 'up';
               const down = probe.status === 'down';
               return (

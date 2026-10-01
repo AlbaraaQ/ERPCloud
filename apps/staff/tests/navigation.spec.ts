@@ -41,14 +41,21 @@ describe('staff navigation tree', () => {
     // Phase 09 part five gave النظارات its own module beside it: `frmGlasses` is one
     // window in `Desktop_ERP` («👓 بيانات النظارات»), and it is one module here.
     expect(modules.map((module) => module.key)).toEqual([
+      // Cloud BI dashboards. Not a desktop window.
+      'dashboards',
       'accounting',
       'treasury',
       'inventory',
+      // Cloud light manufacturing. It is not a desktop window.
+      'manufacturing',
       'purchases',
       'sales',
       'tailoring',
       'optics',
       'hrm',
+      // Cloud employee PWA. It is not a desktop window; it sits beside HR so a
+      // clerk with `employee.self.view` can open it without `hrm.view`.
+      'employee-app',
       'marina',
       'projects',
       'settings',
@@ -86,6 +93,21 @@ describe('staff navigation tree', () => {
     expect(reports.length).toBeGreaterThan(40);
     expect(reports.every((item) => item.status === 'ready')).toBe(true);
     expect(reports.every((item) => item.permission === 'reporting.view')).toBe(true);
+  });
+
+  it('implements the bank-feeds screens from future enhancement 01', () => {
+    const expected: Record<string, string> = {
+      'bank-accounts': '/treasury/bank-accounts',
+      'bank-statements': '/treasury/bank-statements',
+      'bank-reconciliation': '/treasury/bank-reconciliation',
+    };
+    for (const [key, href] of Object.entries(expected)) {
+      const item = allScreens.find((screen) => screen.key === key);
+      expect(item, key).toBeDefined();
+      expect(item?.status, key).toBe('ready');
+      expect(item?.href, key).toBe(href);
+      expect(item?.permission, key).toBe('treasury.bank.view');
+    }
   });
 
   it('implements the Salla and synchronisation screens', () => {
@@ -267,6 +289,26 @@ describe('staff navigation tree', () => {
       else seen.set(screen.href, screen.key);
     }
     expect(dupes).toEqual([]);
+  });
+
+  it('exposes Mudad alerts and online payment settings', () => {
+    expect(allScreens.find((screen) => screen.key === 'hrm-compliance')?.href).toBe('/hrm/compliance');
+    expect(allScreens.find((screen) => screen.key === 'online-payments')?.href).toBe('/settings/payments');
+  });
+
+  it('exposes warehouse bins and light manufacturing', () => {
+    expect(allScreens.find((screen) => screen.key === 'warehouse-bins')?.href).toBe('/inventory/bins');
+    expect(allScreens.find((screen) => screen.key === 'manufacturing-orders')?.href).toBe('/manufacturing/orders');
+  });
+
+  it('exposes the employee mobile app', () => {
+    expect(allScreens.find((screen) => screen.key === 'employee-attendance')?.href).toBe('/m/attendance');
+    expect(allScreens.find((screen) => screen.key === 'hrm-leaves')?.href).toBe('/hrm/leaves');
+  });
+
+  it('exposes the accounting assistant', () => {
+    expect(allScreens.find((screen) => screen.key === 'ai-assistant')?.href).toBe('/assistant');
+    expect(allScreens.find((screen) => screen.key === 'ai-settings')?.href).toBe('/settings/ai');
   });
 
   it('reports honest implementation counts', () => {

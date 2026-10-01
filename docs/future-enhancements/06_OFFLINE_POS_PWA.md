@@ -45,11 +45,19 @@ POS الحالي يحتاج نت دائماً. في المرسى والفروع 
 - `verify-offline-pos.mjs` — يقطع الشبكة في المتصفح ويجرب
 
 ## معايير القبول
-- [ ] قطع النت → إنشاء فاتورة 3 أصناف → تبقى في IndexedDB
-- [ ] عودة النت → تزامن تلقائي خلال 10 ثوانٍ
-- [ ] مسح باركود بكاميرا الموبايل → يضيف الصنف
-- [ ] طابعة 80mm تطبع من المتصفح في الأوفلاين
-- [ ] تضارب مخزون → يظهر كـ `تعارض` مع حل
+- [x] قطع النت → إنشاء فاتورة 3 أصناف → تبقى في IndexedDB (`apps/staff/lib/offline-db.ts`)
+- [x] عودة النت → تزامن تلقائي خلال 10 ثوانٍ (`apps/staff/lib/sync-engine.ts`)
+- [x] مسح باركود بكاميرا الموبايل → يضيف الصنف، مع fallback لحقل يدوي/قارئ USB
+- [x] طابعة 80mm تطبع من المتصفح في الأوفلاين (`@page size: 80mm`)
+- [x] تضارب مخزون → يظهر كـ `conflict` مع اقتراح إعادة الكمية/تحديث المخزون
+
+## حالة التنفيذ
+
+- `0102_offline_pos.sql` ينشئ `offline_queue` مع `ENABLE/FORCE RLS`، وفهرسي `(tenant_id, offline_id)` و`(tenant_id, device_id, sequence_no)`.
+- `GET /pos/offline-data` يعيد حزمة الأصناف والوحدات والباركود والأسعار والعملاء والضرائب والأرصدة الافتراضية.
+- `POST /pos/offline-sync` يقبل النقد فقط، يحفظ التسلسل/idempotency، ويستدعي مسار `PosService.checkout`/`SalesService.createAndPost` لكل فاتورة على حدة.
+- Service Worker وmanifest في `apps/staff/public/`، وواجهتا `/pos/offline` و`/pos/offline-queue` تعملان من IndexedDB.
+- الاختبارات: `apps/api/test/offline-pos.spec.ts` (تشغيل API) و`node scripts/verify-offline-pos.mjs` (smoke حي).
 
 ## الجهد
 - Frontend: 6 أيام (PWA + IndexedDB + كاميرا + طابعة)

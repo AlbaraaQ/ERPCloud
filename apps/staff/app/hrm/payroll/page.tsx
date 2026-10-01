@@ -140,6 +140,7 @@ export default function PayrollPage() {
               { key: 'currency', header: 'العملة', align: 'ltr', cell: (row) => row.currency },
               { key: 'posted', header: 'مُرحّل', align: 'ltr', cell: (row) => (row.postedAt ? row.postedAt.slice(0, 10) : '—') },
               { key: 'paid', header: 'مدفوع', align: 'ltr', cell: (row) => (row.paidAt ? row.paidAt.slice(0, 10) : '—') },
+              { key: 'wps', header: 'حماية الأجور', cell: (row) => <Link href={`/hrm/payroll/${row.id}/wps`}>تصدير</Link> },
             ]}
           />
         )}

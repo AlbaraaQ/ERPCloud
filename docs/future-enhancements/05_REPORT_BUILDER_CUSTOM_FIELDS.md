@@ -22,7 +22,9 @@
 
 ## التصميم التقني
 
-### ترحيل 0100
+### ترحيل 0101
+
+> الترحيل `0100` محجوز فعلياً لمحرك مسارات الموافقات في Phase 04؛ لذلك تُطبّق هذه المرحلة في `0101_custom_fields_reports.sql` دون الكتابة فوقه.
 ```sql
 custom_fields (id, tenant_id, entity, key unique per tenant+entity, label_ar, label_en, type, options jsonb, is_required, is_active, sort_order)
 custom_field_values (id, tenant_id, entity_type, entity_id, field_id, value jsonb, unique(entity_type, entity_id, field_id))

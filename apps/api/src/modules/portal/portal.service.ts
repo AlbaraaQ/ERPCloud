@@ -2,7 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { and, eq, sql } from 'drizzle-orm';
 import { env } from '@erp/config';
 import { DomainError, newId } from '@erp/contracts';
-import { memberships, membershipRoles, parties, portalAccounts, roles, salesInvoices, users, withTenantTx, type DatabaseHandle, type DrizzleTx } from '@erp/database';
+import { companyProfiles, memberships, membershipRoles, parties, paymentLinks, portalAccounts, roles, salesInvoices, users, withTenantTx, type DatabaseHandle, type DrizzleTx } from '@erp/database';
 
 import { DATABASE_HANDLE } from '../../database/database.module.js';
 import { PasswordService } from '../platform/auth/password.service.js';
@@ -266,6 +266,55 @@ export class PortalService {
       );
       const payments = rowsOf(await tx.execute(sql`SELECT method, amount::text, reference, created_at FROM invoice_payments WHERE tenant_id = ${tenantId} AND invoice_id = ${invoiceId} ORDER BY created_at`));
       return { invoice, lines, payments };
+    });
+  }
+
+  /** The hosted payment link the merchant issued, never a link belonging to another customer. */
+  async paymentLink(tenantId: string, userId: string, invoiceId: string) {
+    const account = await this.accountFor(tenantId, userId);
+    return withTenantTx(this.database.db, tenantId, async (tx) => {
+      const [invoice] = await tx
+        .select()
+        .from(salesInvoices)
+        .where(and(eq(salesInvoices.tenantId, tenantId), eq(salesInvoices.id, invoiceId)));
+      if (!invoice || invoice.partyId !== account.partyId || invoice.status !== 'posted') {
+        throw new DomainError('NOT_FOUND', 'Invoice was not found', 404);
+      }
+      const [company] = await tx
+        .select({ nameAr: companyProfiles.nameAr, nameEn: companyProfiles.nameEn })
+        .from(companyProfiles)
+        .where(eq(companyProfiles.tenantId, tenantId))
+        .limit(1);
+      const links = await tx
+        .select()
+        .from(paymentLinks)
+        .where(and(eq(paymentLinks.tenantId, tenantId), eq(paymentLinks.invoiceId, invoiceId)));
+      const ranked = [...links].sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
+      const link = ranked.find((row) => row.status === 'pending') ?? ranked[0] ?? null;
+      const remaining = Number(invoice.total) - Number(invoice.paidTotal ?? 0);
+      return {
+        companyName: company?.nameAr || company?.nameEn || '',
+        invoice: {
+          id: invoice.id,
+          number: invoice.number,
+          currency: invoice.currency,
+          total: invoice.total,
+          paidTotal: invoice.paidTotal,
+          remaining: remaining.toFixed(4),
+          paymentStatus: invoice.paymentStatus,
+        },
+        link: link
+          ? {
+              id: link.id,
+              provider: link.provider,
+              amount: link.amount,
+              currency: link.currency,
+              url: link.linkUrl,
+              status: link.status,
+              paidAt: link.paidAt,
+            }
+          : null,
+      };
     });
   }
 

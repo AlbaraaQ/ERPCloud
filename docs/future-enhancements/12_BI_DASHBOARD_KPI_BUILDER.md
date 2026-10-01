@@ -23,6 +23,7 @@
 ## التصميم التقني
 
 ### ترحيل 0106
+0106 مستخدم للمستودعات و0107 لبوابة الموردين، لذلك الترحيل الفعلي هو `0108_bi_dashboards.sql`.
 ```sql
 dashboards (id, tenant_id, user_id, name, is_default, layout jsonb, created_at)
 dashboard_widgets (id, dashboard_id, type, title, config jsonb, position jsonb)
@@ -52,11 +53,23 @@ dashboard_widgets (id, dashboard_id, type, title, config jsonb, position jsonb)
 - تحديث خلفية عبر طابور
 
 ## معايير القبول
-- [ ] إنشاء لوحة + إضافة 3 ويدجتس + سحبها → يحفظ الترتيب
-- [ ] ويدجت KPI يعرض رقم حقيقي + مقارنة
-- [ ] لوحة افتراضية لكل مستخدم
-- [ ] تصدير PDF
-- [ ] اختبار `bi-dashboard.spec.ts` 8 حالات
+- [x] إنشاء لوحة + إضافة 3 ويدجتس + سحبها → يحفظ الترتيب
+- [x] ويدجت KPI يعرض رقم حقيقي + مقارنة
+- [x] لوحة افتراضية لكل مستخدم
+- [x] تصدير PDF
+- [x] اختبار `bi-dashboard.spec.ts` 8 حالات
+
+## حالة التنفيذ
+
+- الترحيل `0108_bi_dashboards.sql`: `dashboards` و`dashboard_widgets` مع RLS، وفهرس فريد للوحة الافتراضية لكل مستخدم. مفتاح الويدجت من كتالوج ثابت، وعمود الإعداد لا يخزن SQL.
+- الكتالوج 20 مؤشراً (مبيعات، ذمم، نقد، حضور، نواقص، قرب الانتهاء…). الأرقام تُحسب من جداول المستأجر نفسه، لا من جملة يكتبها المستخدم.
+- أول زيارة تنشئ «لوحتي» بثلاثة مؤشرات. السحب يعيد الرص ويحفظ عبر `PUT /dashboards/:id/layout`.
+- الكاش خمس دقائق بالمفتاح `dashboard:widget:{id}:data`. غياب Redis لا يوقف اللوحة: الأرقام تبقى في ذاكرة العملية.
+- تصدير PDF يضمّن الأرقام. الخط المضمّن لا يرسم العربية، فالعناوين في الملف إنجليزية.
+- الواجهات: `/dashboards` و`/dashboards/[id]`، والرئيسية `/` تعرض اللوحة الافتراضية.
+- الصلاحيات: `dashboards.view` و`dashboards.manage`.
+- التحقق: `apps/api/src/modules/dashboards/bi-dashboard.spec.ts` (8 حالات).
+- الوثائق المرافقة: `docs/STATUS.md` صف `FE-12`، و`docs/DATABASE_DESIGN.md` §19، و`docs/API_CONTRACT.md` §20، و`apps/api/src/modules/dashboards/README.md`.
 
 ## الجهد
 - Backend: 4 أيام (لوحات + ويدجتس + cache)

@@ -123,6 +123,19 @@ const envSchema = z.object({
   /** A `pending` file older than this is an abandoned upload and is collected. */
   FILES_ORPHAN_GC_HOURS: z.coerce.number().int().positive().default(24),
 
+  /** Future enhancement 02 — endpoint/provider may be overridden by platform settings; the API key remains an env secret. */
+  OCR_PROVIDER: z.enum(['http', 'mock']).default('http'),
+  OCR_ENDPOINT: z.union([z.literal(''), z.string().url()]).optional(),
+  OCR_API_KEY: z.string().optional(),
+  OCR_TIMEOUT_MS: z.coerce.number().int().positive().max(300_000).default(60_000),
+
+  /** Future enhancement 07 — hosted invoice providers. Empty means the built-in production base. */
+  MOYASAR_API_BASE: z.union([z.literal(''), z.string().url()]).optional(),
+  TAP_API_BASE: z.union([z.literal(''), z.string().url()]).optional(),
+  HYPERPAY_API_BASE: z.union([z.literal(''), z.string().url()]).optional(),
+  APP_PUBLIC_URL: z.union([z.literal(''), z.string().url()]).optional(),
+  API_PUBLIC_URL: z.union([z.literal(''), z.string().url()]).optional(),
+
   /**
    * P-C10 — أين تُكتب نسخة المنصّة حين لا اعتمادات تخزين كائنات. النسخة تُكتب دائماً إلى
    * ملفٍّ يُقرأ من مكانه (التحقّق يعيد قراءته ويحسب بصمته)، و`ObjectStoragePort` هو الوجهة
@@ -178,6 +191,19 @@ const envSchema = z.object({
    * than a dead absolute URL — the same rule as `STAFF_PUBLIC_URL`.
    */
   CONSOLE_PUBLIC_URL: z.string().default(''),
+
+  /**
+   * PHASE_08 — fallback when the platform has not stored an assistant key.
+   * `local` answers from tenant aggregates without calling a model.
+   */
+  AI_PROVIDER: z.enum(['openai', 'anthropic', 'local']).optional(),
+  AI_API_KEY: z.string().optional(),
+  AI_MODEL: z.string().optional(),
+  AI_BASE_URL: z.union([z.literal(''), z.string().url()]).optional(),
+
+  /** PHASE_09 — optional Web Push. Empty means notices stay in the in-app outbox. */
+  WEB_PUSH_VAPID_PUBLIC: z.string().optional(),
+  WEB_PUSH_VAPID_PRIVATE: z.string().optional(),
 
   /** AES-256-GCM data-encryption key, base64 (SECURITY_ARCHITECTURE §9). */
   DATA_ENC_KEY: z.string().optional(),
@@ -329,4 +355,8 @@ export const REDACTED_LOG_PATHS = [
   '*.secret',
   'key',
   '*.key',
+  'apiKey',
+  '*.apiKey',
+  'api_key',
+  '*.api_key',
 ] as const;

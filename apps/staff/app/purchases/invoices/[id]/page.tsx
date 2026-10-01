@@ -1,13 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
+import { CommentsPanel } from '../../../../components/comments-panel';
 import { DataTable, Notice } from '../../../../components/data-view';
 import { ErrorBox, Loading, Screen } from '../../../../components/screen';
+import { Badge } from '../../../../components/ui/badge';
 import { ApiError, apiData, apiPost } from '../../../../lib/api';
 import { accountLabel, listAccounts, postableOf, typeOf, type Account } from '../../../../lib/accounts';
+import { type ApprovalRequest } from '../../../../lib/approvals';
 import {
   arabicName,
   cashLocationLabel,
@@ -64,9 +67,12 @@ type Invoice = {
 
 export default function PurchaseInvoiceDetailPage() {
   const params = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
   const invoiceId = String(params.id);
+  const ocrJobId = searchParams.get('ocrJobId');
   const { can } = useSession();
   const invoice = useQuery<Invoice>(() => apiData<Invoice>(`/purchase-invoices/${invoiceId}`), [invoiceId]);
+  const approval = useQuery<ApprovalRequest | null>(() => apiData<ApprovalRequest | null>(`/purchases/invoices/${invoiceId}/approval`), [invoiceId]);
   const items = useQuery<Item[]>(() => listItems(), []);
   const suppliers = useQuery<Party[]>(() => listParties('supplier'), []);
   const cashLocations = useQuery<CashLocation[]>(() => listCashLocations(), []);
@@ -152,6 +158,11 @@ export default function PurchaseInvoiceDetailPage() {
           <Link className="btn primary" href={`/print/purchase-invoice/${doc.id}`}>
             🖨️ طباعة
           </Link>
+          {ocrJobId && doc.status === 'draft' && doc.lines.length === 0 && (
+            <Link className="btn" href={`/purchases/invoices/ocr?job=${encodeURIComponent(ocrJobId)}`}>
+              استكمال ربط بنود OCR
+            </Link>
+          )}
           <Link className="btn" href="/purchases/invoices">
             كل الفواتير
           </Link>
@@ -161,6 +172,8 @@ export default function PurchaseInvoiceDetailPage() {
       <div className="grid cols-2">
         <div className="card">
           <h2>بيانات الفاتورة</h2>
+          {approval.data?.status === 'pending' ? <Badge tone="purple" dot>بانتظار موافقة</Badge> : null}
+          {approval.data?.status === 'rejected' ? <Badge tone="red" dot>رُفضت — ما زالت مسودة</Badge> : null}
           <dl className="kv">
             <dt>📋 الحالة</dt>
             <dd>{statusLabel(doc.status)}</dd>
@@ -424,6 +437,8 @@ export default function PurchaseInvoiceDetailPage() {
           />
         </div>
       )}
+
+      <CommentsPanel entityType="purchase_invoice" entityId={doc.id} />
     </Screen>
   );
 }

@@ -22,9 +22,11 @@
 
 ## التصميم التقني
 
-### ترحيل 0103
+### ترحيل 0105
+0103 مستخدم لمدد/ميسر و0104 للمساعد، لذلك الترحيل الفعلي هو `0105_employee_mobile.sql`.
+جدول `attendance_logs` الحالي للبصمة لا يُمس.
 ```sql
-attendance_logs (id, tenant_id, employee_id, type: check_in|check_out, at, lat, lng, selfie_file_id, branch_id, status: valid|outside_geofence)
+employee_attendance (id, tenant_id, employee_id, type: check_in|check_out, at, lat, lng, selfie_file_id, branch_id, status: valid|outside_geofence)
 employee_requests (id, tenant_id, employee_id, type: leave|permission|custody|advance, data jsonb, status: pending|approved|rejected, approver_id)
 employee_geofences (id, branch_id, lat, lng, radius_meters)
 ```
@@ -56,12 +58,12 @@ employee_geofences (id, branch_id, lat, lng, radius_meters)
 - `employee.team.approve` — للمدير
 
 ## معايير القبول
-- [ ] حضور من جوال داخل نطاق الفرع → يسجل valid
-- [ ] حضور خارج النطاق → يسجل outside + تنبيه
-- [ ] طلب إجازة → يظهر في inbox المدير → موافقة → يظهر في HRM
-- [ ] PWA يعمل أوفلاين ويزامن الحضور
-- [ ] إشعار push عند موافقة
-- [ ] اختبار `mobile-employee.spec.ts` 10 حالات
+- [x] حضور من جوال داخل نطاق الفرع → يسجل valid
+- [x] حضور خارج النطاق → يسجل outside + تنبيه
+- [x] طلب إجازة → يظهر في inbox المدير → موافقة → يظهر في HRM
+- [x] PWA يعمل أوفلاين ويزامن الحضور
+- [x] إشعار push عند موافقة
+- [x] اختبار `employee-mobile.spec.ts` 10 حالات
 
 ## الجهد
 - Backend: 4 أيام (حضور + طلبات + geofence)

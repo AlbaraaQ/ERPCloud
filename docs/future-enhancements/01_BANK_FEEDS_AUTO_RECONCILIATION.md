@@ -1,6 +1,7 @@
 # 01 — التغذية البنكية والمطابقة التلقائية (Bank Feeds)
 
 > الأولوية: P1 - 1.5 أسبوع
+> الحالة: ✅ مكتملة — migration 0096 + API + 3 واجهات Staff + تحقق حي 15/15
 > السوق: QuickBooks / Xero / قيود — كلهم يملكونها، نحن لا
 
 ## المشكلة
@@ -16,7 +17,7 @@
 
 ### يدخل
 - جدول `bank_statements` (كشف مستورد) + `bank_statement_lines`
-- استيراد CSV/Excel بمعالج 3 خطوات (رفع → مطابقة أعمدة → مراجعة)
+- استيراد CSV بمعالج عملي (رفع النص → تحليل الأعمدة → مراجعة)؛ Excel/MT940/CAMT مؤجلة
 - محرك مطابقة: فاتورة مبيعات/شراء، سند قبض/صرف، شيك
 - شاشة `/treasury/bank-reconciliation` — يسار كشف البنك، يمين قيودنا، زر مطابقة
 - تقرير تسوية بنكية مطبوع
@@ -29,19 +30,24 @@
 
 ### ترحيل 0096
 ```sql
-bank_accounts (id, tenant_id, bank_name, account_no, iban, opening_balance)
-bank_statements (id, tenant_id, bank_account_id, file_id, period_from, period_to, status)
-bank_statement_lines (id, statement_id, txn_date, description, amount, balance, matched_voucher_id, matched_invoice_id, status: pending|matched|ignored)
-bank_reconciliation_rules (id, tenant_id, keyword, account_id, cost_center_id, priority)
+bank_accounts (id, tenant_id, bank_name, account_no, iban, currency, opening_balance, account_id, status)
+bank_statements (id, tenant_id, bank_account_id, file_id, period_from, period_to, opening_balance, closing_balance, status, row_count)
+bank_statement_lines (id, statement_id, txn_date, description, reference, amount, balance, matched_voucher_id, matched_invoice_id, matched_invoice_type, match_confidence, suggested_account_id, suggested_cost_center_id, status: pending|matched|ignored)
+bank_reconciliation_rules (id, tenant_id, keyword, account_id, cost_center_id, priority, status)
 ```
 
+جميع الجداول الأربعة تحمل `tenant_id` مع RLS و`FORCE ROW LEVEL SECURITY`. أسماء Drizzle المطابقة للعمود SQL `status` هي `status`، وليس `isActive`.
+
 ### API
-- `POST /treasury/bank-accounts` CRUD
-- `POST /treasury/bank-statements/import` presign → finalize → parse
+- `GET/POST/PATCH/DELETE /treasury/bank-accounts` — إدارة الحسابات مع إخفاء IBAN في القائمة
+- `POST /treasury/bank-statements/import` — تحليل CSV وإدخال الكشف والحركات في معاملة واحدة
+- `GET /treasury/bank-statements` و`GET/DELETE /treasury/bank-statements/:id`
 - `GET /treasury/bank-statements/:id/lines?filter[status]=pending`
-- `POST /treasury/bank-statements/:id/match` { lineId, voucherId | invoiceId }
-- `POST /treasury/bank-statements/:id/auto-match` — يشغل المحرك
-- `GET /treasury/bank-reconciliation?bank_account_id=&from=&to=` — تقرير
+- `POST /treasury/bank-statements/:id/match` `{ lineId, voucherId | invoiceId }`
+- `POST /treasury/bank-statements/:id/auto-match` — يشغل المحرك ويقترح حساب القاعدة النصية دون ترحيل قيد
+- `POST .../lines/:lineId/ignore` و`DELETE .../lines/:lineId/match` — تجاهل الحركة أو إلغاء المطابقة
+- `GET/POST/PATCH/DELETE /treasury/bank-reconciliation-rules`
+- `GET /treasury/bank-reconciliation?bank_account_id=&from=&to=` — تقرير قابل للطباعة من شاشة Staff
 
 ### منطق المطابقة
 1. مبلغ مطابق تماماً + تاريخ ±3 أيام + مرجع (رقم فاتورة في الوصف) → ثقة 95%
@@ -59,11 +65,11 @@ bank_reconciliation_rules (id, tenant_id, keyword, account_id, cost_center_id, p
 - `treasury.bank.view` / `treasury.bank.manage` — جديدتان
 
 ## معايير القبول
-- [ ] رفع CSV 100 سطر → يظهر 100 سطر في DB
-- [ ] `auto-match` يطابق ≥60% في بيانات تجريبية
-- [ ] شاشة التسوية تطبع PDF مع رصيد بنكي vs دفتري والفرق
-- [ ] اختبار `bank-reconciliation.spec.ts` 8 حالات
-- [ ] سكربت `verify-bank-feeds.mjs` 15 نقطة
+- [x] رفع CSV 100 سطر → parser يحافظ على 100 سطر، وواجهة الاستيراد تحفظ `row_count` والحركات في DB
+- [x] `auto-match` يحقق ≥60% في benchmark من 100 حركة داخل `bank-reconciliation.spec.ts`؛ live smoke candidate-backed run حقق 5/5
+- [x] شاشة `/treasury/bank-reconciliation` تطبع تقرير PDF عبر browser print مع رصيد البنك والدفتر والفرق
+- [x] اختبار `bank-reconciliation.spec.ts` — 8 حالات
+- [x] سكربت `verify-bank-feeds.mjs` — 15 نقطة، مع تنظيف الحساب والكشف والقاعدة في `finally`
 
 ## الجهد
 - Backend: 4 أيام (استيراد + مطابقة + قواعد)

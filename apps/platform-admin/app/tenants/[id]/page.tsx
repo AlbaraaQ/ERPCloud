@@ -5,7 +5,6 @@ import { useParams } from 'next/navigation';
 import {
   ArrowLeft,
   Building2,
-  FileText,
   Gauge,
   History,
   ListChecks,

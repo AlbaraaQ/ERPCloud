@@ -115,6 +115,13 @@ export class WorkerRunner {
         payload: { scheduled: true },
         jobId: `files-orphan-gc:${tenantId}:${new Date().toISOString().slice(0, 13)}`,
       });
+      await this.queue.publish({
+        queue: 'maintenance',
+        type: jobTypes.AI_SUGGEST,
+        tenantId,
+        payload: { scheduled: true },
+        jobId: `ai-suggest:${tenantId}:${new Date().toISOString().slice(0, 10)}`,
+      });
     }
     await this.queue.publish({
       queue: 'maintenance',

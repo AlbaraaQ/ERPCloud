@@ -318,3 +318,59 @@ The P21 vertical pack tables are implemented by `packages/database/migrations/00
 ### Phase 22 implementation notes
 
 The niche verticals and Salla integration are implemented by `packages/database/migrations/0018_niche_verticals_salla.sql` and exported from `packages/database/src/schema/niche.ts`. Token-bearing Salla columns store encrypted payloads only; legacy optics/tailoring/marina additive fields use typed JSONB to avoid core invoice-kind expansion.
+
+## 18. Supplier portal and simple e-sign (future enhancement 11)
+
+Implemented by `packages/database/migrations/0107_supplier_portal_esign.sql` and exported from `packages/database/src/schema/supplier-portal.ts`. Every table is tenant-scoped with `ENABLE` + `FORCE` RLS. A supplier login is not a staff membership and holds no ERP permissions.
+
+**supplier_portal_users** — `tenant_id`, `party_id FK`, `email`, `password_hash`, `is_active`. Unique `(tenant_id, email)`.
+**supplier_portal_sessions** — `user_id FK`, `token_hash`, `expires_at`. Unique `(tenant_id, token_hash)`. The bearer token is never stored in the clear.
+**supplier_rfqs** — `party_id`, `number`, `title`, `note`, `status CHECK(open,responded,closed)`, `offer`, `response_note`, `responded_at`. Unique `(tenant_id, number)`.
+**supplier_invoice_uploads** — supplier-declared bill: `party_id`, `reference_no`, `declared_total > 0`, `note`, `status` default `submitted`. This is not a posted purchase invoice.
+**esign_requests** — `entity_type CHECK(sales_quotation,sales_invoice,contract)`, `entity_id`, `signer_name`, `signer_email`, `token_hash`, `otp_hash`, `status CHECK(sent,viewed,signed,declined)`, `signed_file_id`, `signed_pdf bytea`, `signed_at`, `expires_at`, `ip`, `payload`. Unique `(tenant_id, token_hash)`. The link secret and the one-time code are stored only as hashes. This is a drawn signature, not XAdES.
+**esign_events** — `request_id FK`, `event CHECK(sent,viewed,signed,declined)`, `at`, `ip`.
+
+## 19. Personal BI dashboards (future enhancement 12)
+
+Implemented by `packages/database/migrations/0108_bi_dashboards.sql` and exported from `packages/database/src/schema/bi-dashboards.ts`. Both tables are tenant-scoped with `ENABLE` + `FORCE` RLS. A board is personal: `owner_user_id` plus the tenant policy. It is not shared across tenants.
+
+**dashboards** — `tenant_id`, `owner_user_id FK users`, `name` (1–80), `is_default`, `created_at`, `updated_at`. Partial unique index `(tenant_id, owner_user_id) WHERE is_default` so a user has at most one default board.
+**dashboard_widgets** — `dashboard_id FK`, `widget_key` (catalog key, never a SQL string), `title_ar`, `kind CHECK(kpi,chart,table,list)`, `config jsonb` default `{}`, `position_x/y`, `width` 2–12, `height` 2–8, and `position_x + width <= 12`.
+
+## 20. Marketplace and white-label (future enhancement 13)
+
+Implemented by `packages/database/migrations/0109_marketplace_white_label.sql` and exported from `packages/database/src/schema/marketplace.ts`. Rules that do not touch the database live in `packages/database/src/marketplace.ts`.
+
+**marketplace_apps** — platform catalog, no `tenant_id`. Readable by any tenant session. Insert and update require `app.is_platform_admin`. `code` is a reviewed add-on key, not a module path. Seeded rows: `salla`, `zid`, `shopify`, `moyasar`, `ocr`, `esign`, `wms`. Core rows (`ocr`, `esign`, `wms`) do not gate a screen.
+
+**tenant_apps** — `tenant_id`, `app_code FK marketplace_apps.code`, `is_enabled`, `settings jsonb`, `installed_at`. Unique `(tenant_id, app_code)`. Disabling sets `is_enabled = false` and keeps `settings`. FORCE RLS on `app.tenant_id`.
+
+**tenant_domains** — `domain` unique while `deleted_at` is null, `status CHECK(pending,active,failed)`, `ssl_status` default `manual`, `verification_token`. A second policy allows `SELECT` of one active row when `app.lookup_host` equals that domain. An unset GUC matches nothing.
+
+**tenant_branding** — one row per tenant: `logo_file_id`, `primary_color`, `secondary_color`. The same host GUC can read the brand of that one active domain.
+
+## 21. Sales CRM and WhatsApp (future enhancement 14)
+
+Implemented by `packages/database/migrations/0110_crm_whatsapp.sql` and exported from `packages/database/src/schema/crm.ts`. Forecast and move rules live in `packages/database/src/crm.ts` and do not touch the database. The enhancement note named migration `0108`; that number is the BI dashboard migration, so this feature is `0110`.
+
+All five tables use `ENABLE` + `FORCE` RLS on `app.tenant_id`.
+
+**crm_pipelines** — `name` (1–80), `stages jsonb` as `[{ id, name, color, order }]`, `is_default`. Partial unique index so a tenant has at most one default pipeline. The application seeds four stages: lead, contact, offer, close.
+
+**crm_deals** — `pipeline_id`, `stage_id`, optional `party_id`, `title` (1–120), `amount numeric(20,4)` (the API calls this the deal value), `probability` 0–100, `expected_close`, `owner_id`, `status CHECK(open,won,lost)`, `lost_reason`. A won or lost deal is not moved. Only `open` deals enter the forecast.
+
+**crm_activities** — `deal_id`, optional `party_id`, `type CHECK(call,meeting,whatsapp,email,note)`, `subject`, `description`, `at`, `user_id`, `direction`, `meta jsonb`. WhatsApp in and out are rows here. There is no email open or click tracking, and no telephony provider.
+
+**crm_whatsapp_templates** — `name` unique per tenant, `body`, `variables jsonb`. `{name}` and `{deal}` are filled in the application.
+
+**crm_settings** — one row per tenant, `webhook_token` unique. This table is not in the original enhancement sketch. It exists because `POST /crm/webhooks/whatsapp` is public: a second `SELECT` policy matches `webhook_token` to `app.lookup_webhook`. An unset GUC matches nothing. A reply with no open deal is not stored.
+
+## 22. Document comments and mentions (future enhancement 15)
+
+Implemented by `packages/database/migrations/0111_comments_mentions.sql` and exported from `packages/database/src/schema/comments.ts`. Threading and mention parsing live in `packages/database/src/comments.ts`. The enhancement note named migration `0109`; that number is the marketplace migration, so this feature is `0111`.
+
+Both tables use `ENABLE` + `FORCE` RLS on `app.tenant_id`.
+
+**comments** — `entity_type CHECK(sales_invoice,purchase_invoice,party,employee,project)`, `entity_id`, `user_id`, `body` (1–4000), optional `parent_id` (one level only), `is_resolved`, `resolved_at`, `resolved_by`, `edited_at`, `deleted_at`. A deleted comment keeps the row so a reply still has a parent. There is no line-level comment and no general chat.
+
+**comment_mentions** — `comment_id`, `mentioned_user_id`, `is_read`, `read_at`. Unique `(comment_id, mentioned_user_id)`. A mention is `@[uuid]` from the picker, or a `@name` that matches exactly one colleague in the tenant. The author is never mentioned.

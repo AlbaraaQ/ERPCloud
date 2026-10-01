@@ -49,6 +49,8 @@ export const emailEvents = [
   // (`{{subject}}` و`{{body}}`)، لأن نصّ الحملة محتوى تحريري يُحفظ في صفّ الحملة نفسه.
   // ونطاقه `platform` كما حدثا P-M6: لا يُحتسب على حصّة عميل، والمرسل إليه قد لا يكون عميلاً.
   'campaign.message',
+  // FE-15 — إشارة زميل داخل تعليق على مستند. نطاقه tenant فيُحتسب على حصّة المنشأة.
+  'comment.mention',
 ] as const;
 
 export type EmailEvent = (typeof emailEvents)[number];
@@ -287,6 +289,14 @@ export const emailEventRegistry: readonly EmailEventDefinition[] = [
     variables: ['name', 'email', 'link'],
     descriptionAr:
       'رابطُ التأكيد المزدوج للاشتراك في النشرة: لا يُضاف عنوانٌ إلى القائمة قبل أن يفتحه صاحبه (P-M6).',
+  },
+  {
+    event: 'comment.mention',
+    labelAr: 'إشارة في تعليق',
+    labelEn: 'Comment mention',
+    scope: 'tenant',
+    variables: ['name', 'author', 'excerpt', 'link'],
+    descriptionAr: 'زميلٌ أشار إليك في تعليق على مستند. الإشعار داخل التطبيق يُرسل حتى لو تعذر البريد.',
   },] as const;
 
 const eventByKey = new Map(emailEventRegistry.map((entry) => [entry.event, entry]));
@@ -636,6 +646,18 @@ export const emailTemplateSeeds: readonly EmailTemplateSeed[] = [
     locale: 'en',
     subject: 'Platform report — week of {{week}}',
     body: 'Hello,\n\nThe week of {{week}}:\n• Tenants: {{tenants}} (active {{active}} · trialing {{trialing}})\n• Joined {{new_this_week}}, churned {{churned_this_week}}\n• MRR: {{mrr}}\n• Outstanding: {{outstanding}} — overdue: {{overdue}}\n• Trials ending within a week: {{trials_ending}}\n\nAlerts needing a decision:\n{{alerts}}\n\nDetails: {{link}}',
+  },
+  {
+    event: 'comment.mention',
+    locale: 'ar',
+    subject: '{{author}} أشار إليك في تعليق',
+    body: 'مرحباً {{name}},\n\nأشار إليك {{author}} في تعليق:\n{{excerpt}}\n\nافتح المستند:\n{{link}}',
+  },
+  {
+    event: 'comment.mention',
+    locale: 'en',
+    subject: '{{author}} mentioned you in a comment',
+    body: 'Hello {{name}},\n\n{{author}} mentioned you in a comment:\n{{excerpt}}\n\nOpen the document:\n{{link}}',
   },] as const;
 
 export function emailTemplateSeed(event: EmailEvent, locale: EmailLocale): EmailTemplateSeed | undefined {

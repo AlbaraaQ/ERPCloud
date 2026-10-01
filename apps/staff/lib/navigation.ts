@@ -199,6 +199,21 @@ const accounting: ModuleNode = {
           permission: 'reporting.view',
           endpoint: '/reports',
         }),
+        screen(
+          'custom-report-builder',
+          'منشئ التقارير المخصص',
+          'Custom report builder',
+          '/reports/builder',
+          'ready',
+          {
+            permission: 'reporting.view',
+            endpoint: 'GET/POST /custom-reports · POST /custom-reports/:id/run',
+          },
+        ),
+        screen('custom-reports', 'التقارير المحفوظة', 'Saved custom reports', '/reports/custom', 'ready', {
+          permission: 'reporting.view',
+          endpoint: 'GET /custom-reports',
+        }),
         // 📒 الجزء الخامس — تقارير المحاسبة
         screen(
           'account-balances',
@@ -506,6 +521,21 @@ const inventory: ModuleNode = {
       ],
     },
     {
+      key: 'inventory-bins',
+      labelAr: 'الرفوف',
+      labelEn: 'Bins',
+      items: [
+        screen('warehouse-bins', 'رفوف المستودع', 'Warehouse bins', '/inventory/bins', 'ready', {
+          permission: 'inventory.view',
+          endpoint: 'GET/POST /inventory/bins',
+        }),
+        screen('bin-balances', 'أرصدة الرفوف', 'Bin balances', '/inventory/bin-balances', 'ready', {
+          permission: 'inventory.view',
+          endpoint: 'GET /inventory/bin-balances · POST /inventory/bin-transfers',
+        }),
+      ],
+    },
+    {
       key: 'inventory-salla',
       labelAr: 'متجر سلة',
       labelEn: 'Salla store',
@@ -551,12 +581,31 @@ const purchases: ModuleNode = {
           endpoint: '/purchase-invoices',
         }),
         screen(
+          'purchase-ocr',
+          'قراءة فاتورة بالـ OCR',
+          'OCR purchase invoice',
+          '/purchases/invoices/ocr',
+          'ready',
+          {
+            permission: 'purchase.ocr.use',
+            endpoint: 'POST /ocr/jobs',
+          },
+        ),
+        screen(
           'purchase-return',
           'مردود المشتريات',
           'Purchase return',
           '/purchases/invoices/new?kind=purchase_return',
           'ready',
           { permission: 'purchase.invoice.create', endpoint: 'POST /purchase-invoices' },
+        ),
+        screen(
+          'supplier-portal-admin',
+          'بوابة الموردين',
+          'Supplier portal',
+          '/purchases/supplier-portal',
+          'ready',
+          { permission: 'supplier_portal.access', endpoint: '/supplier-portal/users' },
         ),
       ],
     },
@@ -724,6 +773,14 @@ const sales: ModuleNode = {
         screen('pos', 'نقطة البيع', 'Point of sale', '/sales/pos', 'ready', {
           permission: 'sales.invoice.create',
           endpoint: 'POST /sales/invoices',
+        }),
+        screen('pos-offline', 'نقطة البيع أوفلاين', 'Offline POS', '/pos/offline', 'ready', {
+          permission: 'pos.operate',
+          endpoint: 'GET /pos/offline-data · POST /pos/offline-sync',
+        }),
+        screen('pos-offline-queue', 'طابور POS أوفلاين', 'Offline POS queue', '/pos/offline-queue', 'ready', {
+          permission: 'pos.operate',
+          endpoint: 'POST /pos/offline-sync',
         }),
         screen('sales-invoice', 'فاتورة مبيعات', 'Sales invoice', '/sales/invoices', 'ready', {
           endpoint: '/sales/invoices',
@@ -1117,6 +1174,29 @@ const sales: ModuleNode = {
           'ready',
           { permission: 'parties.view', endpoint: '/portal-access' },
         ),
+        screen(
+          'ecommerce-orders',
+          'طلبات المتجر الإلكتروني',
+          'E-commerce orders',
+          '/sales/ecommerce-orders',
+          'ready',
+          {
+            permission: 'ecommerce.manage',
+            endpoint: 'GET /ecommerce/orders?store_id=&status=',
+          },
+        ),
+        screen('crm-pipelines', 'مسار المبيعات', 'CRM pipeline', '/crm/pipelines', 'ready', {
+          permission: 'crm.deals.view',
+          endpoint: 'GET/POST /crm/pipelines · GET/POST /crm/deals · PUT /crm/deals/:id/move',
+        }),
+        screen('crm-activities', 'أنشطة المبيعات', 'CRM activities', '/crm/activities', 'ready', {
+          permission: 'crm.deals.view',
+          endpoint: 'GET /crm/activities · POST /crm/deals/:id/activities',
+        }),
+        screen('crm-forecast', 'تنبؤ المبيعات', 'Sales forecast', '/crm/forecast', 'ready', {
+          permission: 'crm.deals.view',
+          endpoint: 'GET /crm/forecast',
+        }),
       ],
     },
   ],
@@ -1301,6 +1381,18 @@ const hrm: ModuleNode = {
         }),
         screen('payroll-run', 'إستحقاق وصرف الرواتب', 'Payroll run and payment', '/hrm/payroll', 'ready', {
           endpoint: '/hrm/payroll/runs',
+        }),
+        screen('hrm-compliance', 'تنبيهات الإقامة والتأمين', 'Iqama and insurance alerts', '/hrm/compliance', 'ready', {
+          permission: 'hrm.view',
+          endpoint: 'GET /hrm/compliance/alerts',
+        }),
+        screen('hrm-leaves', 'إجازات الموظفين', 'Approved leave', '/hrm/leaves', 'ready', {
+          permission: 'hrm.view',
+          endpoint: 'GET /hrm/employee-leaves',
+        }),
+        screen('hrm-geofences', 'نطاق حضور الفروع', 'Attendance geofence', '/hrm/geofences', 'ready', {
+          permission: 'hrm.manage',
+          endpoint: 'GET/PUT /hrm/geofences',
         }),
         // 💵 `Form_WPF/frmSalaryPay.xaml` «دفع الرواتب» — one إذن صرف per employee per
         // month. The row under «التقارير» with the same name is the report
@@ -1601,6 +1693,10 @@ const settings: ModuleNode = {
             endpoint: 'GET /payment-gateways · PUT · POST /:provider/test · POST /:provider/sale',
           },
         ),
+        screen('online-payments', 'روابط الدفع — ميسر', 'Online payment links', '/settings/payments', 'ready', {
+          permission: 'payments.links.manage',
+          endpoint: 'GET/POST /payments/providers · POST /payments/links · POST /payments/webhooks/:provider',
+        }),
         screen('whatsapp', 'واتساب — إرسال الفواتير', 'WhatsApp', '/settings/whatsapp', 'ready', {
           permission: 'tenant.settings.manage',
           endpoint:
@@ -1613,6 +1709,42 @@ const settings: ModuleNode = {
           permission: 'tenant.email.log.view',
           endpoint:
             'GET /email/messages · GET /email/templates · PUT /email/templates/:event · GET/PUT /email/settings',
+        }),
+        screen(
+          'ecommerce',
+          'التجارة الإلكترونية — سلة · زد · Shopify',
+          'E-commerce',
+          '/settings/ecommerce',
+          'ready',
+          {
+            permission: 'ecommerce.manage',
+            endpoint:
+              'GET /ecommerce/providers · POST/GET /ecommerce/stores · POST /ecommerce/stores/:id/sync',
+          },
+        ),
+        screen('marketplace', 'سوق الإضافات', 'Marketplace', '/settings/marketplace', 'ready', {
+          permission: 'tenant.apps.manage',
+          endpoint: 'GET /marketplace/apps · POST /marketplace/apps/:code/install · DELETE /marketplace/apps/:code',
+        }),
+        screen('white-label', 'الدومين والشعار', 'White label', '/settings/white-label', 'ready', {
+          permission: 'tenant.apps.manage',
+          endpoint:
+            'GET/POST /settings/white-label/domains · POST /settings/white-label/domains/:id/verify · GET/PUT /settings/white-label/branding',
+        }),
+        screen(
+          'approval-settings',
+          'مسارات الموافقات',
+          'Approval workflows',
+          '/settings/approvals',
+          'ready',
+          {
+            permission: 'approval.manage',
+            endpoint: 'GET/POST/PATCH /approval-workflows · GET/POST /approval-workflows/:id/steps',
+          },
+        ),
+        screen('custom-fields', 'الحقول الإضافية', 'Custom fields', '/settings/custom-fields', 'ready', {
+          permission: 'custom_fields.view',
+          endpoint: 'GET/POST/PUT/DELETE /custom-fields',
         }),
       ],
     },
@@ -1670,6 +1802,21 @@ const settings: ModuleNode = {
       ],
     },
     {
+      key: 'settings-ai',
+      labelAr: 'المساعد الذكي',
+      labelEn: 'Assistant',
+      items: [
+        screen('ai-assistant', 'المساعد المحاسبي', 'Accounting assistant', '/assistant', 'ready', {
+          permission: 'ai.assistant.use',
+          endpoint: 'POST /ai/chat · GET /ai/conversations · GET /ai/skills · POST /ai/suggest',
+        }),
+        screen('ai-settings', 'إعدادات المساعد', 'Assistant settings', '/settings/ai', 'ready', {
+          permission: 'ai.settings.manage',
+          endpoint: 'GET/PUT /ai/settings',
+        }),
+      ],
+    },
+    {
       key: 'settings-users',
       labelAr: 'إعدادات المستخدمين',
       labelEn: 'Users',
@@ -1711,11 +1858,23 @@ const settings: ModuleNode = {
         // 🔔 مركز الإشعارات — P-C7 (`PLATFORM_CONSOLE_PLAN.md` §4: «مركز إشعارات في staff:
         // جرس + شاشة» بلا نقاط نهاية جديدة، يستهلك `/notifications` القائم). لا مقابل له في
         // `Desktop_ERP`: المكتبي يعرض تنبيهاً عابراً ولا يُبقي صندوقاً دائماً لكل عضويّة.
+        screen('comment-mentions', 'إشارات التعليقات', 'Comment mentions', '/comments/mentions', 'ready', {
+          permission: 'comment.view',
+          endpoint: 'GET /comments/mentions · POST /comments/mentions/:id/read',
+        }),
         screen('notifications', 'مركز الإشعارات', 'Notification centre', '/notifications', 'ready', {
           permission: 'tenant.notification.view',
           endpoint: 'GET /notifications · POST /notifications/:id/read',
           description:
             'PLATFORM_CONSOLE_PLAN.md §4 (P-C7) — كل ما وُجّه للعضويّة: إعلانات المنصة ونصوصها (ar/en) وإشعارات النظام، مع وسم المقروء وعدد غير المقروء نفسه الذي يعرضه الجرس.',
+        }),
+        screen('approval-inbox', 'وارد الموافقات', 'Approval inbox', '/approvals/inbox', 'ready', {
+          permission: 'approval.approve',
+          endpoint: 'GET /approvals/inbox · POST /approvals/requests/:id/approve|reject',
+        }),
+        screen('approval-history', 'سجل الموافقات', 'Approval history', '/approvals/history', 'ready', {
+          permission: 'approval.approve',
+          endpoint: 'GET /approvals/history',
         }),
         screen('usage', 'الاستخدام والحصص', 'Usage & quotas', '/settings/usage', 'ready', {
           permission: 'tenant.view',
@@ -1869,6 +2028,39 @@ const treasury: ModuleNode = {
       ],
     },
     {
+      key: 'treasury-bank-feeds',
+      labelAr: 'التغذية البنكية',
+      labelEn: 'Bank feeds',
+      items: [
+        screen('bank-accounts', 'الحسابات البنكية', 'Bank accounts', '/treasury/bank-accounts', 'ready', {
+          permission: 'treasury.bank.view',
+          endpoint: 'GET/POST /treasury/bank-accounts',
+        }),
+        screen(
+          'bank-statements',
+          'كشوف الحساب البنكي',
+          'Bank statements',
+          '/treasury/bank-statements',
+          'ready',
+          {
+            permission: 'treasury.bank.view',
+            endpoint: 'POST /treasury/bank-statements/import · GET /treasury/bank-statements',
+          },
+        ),
+        screen(
+          'bank-reconciliation',
+          'التسوية البنكية',
+          'Bank reconciliation',
+          '/treasury/bank-reconciliation',
+          'ready',
+          {
+            permission: 'treasury.bank.view',
+            endpoint: 'GET /treasury/bank-reconciliation · POST /treasury/bank-statements/:id/auto-match',
+          },
+        ),
+      ],
+    },
+    {
       key: 'treasury-ops',
       labelAr: 'العمليات',
       labelEn: 'Operations',
@@ -1913,7 +2105,8 @@ const treasury: ModuleNode = {
         screen('cheques', '🏦 كشف الشيكات', 'Cheque register', '/treasury/cheques', 'ready', {
           permission: 'treasury.view',
           endpoint: '/vouchers?filter[method]=cheque',
-          description: 'frmSandQ / frmPaymentVoucher — تحت التحصيل/محصّل/مرتجع مع تحصيل بقيد أوراق القبض→صندوق وارتجاع بقيد عكسي',
+          description:
+            'frmSandQ / frmPaymentVoucher — تحت التحصيل/محصّل/مرتجع مع تحصيل بقيد أوراق القبض→صندوق وارتجاع بقيد عكسي',
         }),
       ],
     },
@@ -1931,15 +2124,111 @@ const treasury: ModuleNode = {
   ],
 };
 
+const employeeApp: ModuleNode = {
+  key: 'employee-app',
+  icon: '📱',
+  labelAr: 'تطبيق الموظف',
+  labelEn: 'Employee app',
+  href: '/m',
+  groups: [
+    {
+      key: 'employee-self',
+      labelAr: 'حسابي',
+      labelEn: 'Self service',
+      items: [
+        screen('employee-home', 'تطبيق الموظف', 'Employee app', '/m', 'ready', {
+          permission: 'employee.self.view',
+          endpoint: 'GET /employee/me',
+        }),
+        screen('employee-attendance', 'حضور وانصراف', 'Attendance', '/m/attendance', 'ready', {
+          permission: 'employee.self.manage',
+          endpoint: 'POST /employee/attendance',
+        }),
+        screen('employee-request', 'طلب جديد', 'New request', '/m/requests/new', 'ready', {
+          permission: 'employee.self.manage',
+          endpoint: 'POST /employee/requests',
+        }),
+        screen('employee-profile', 'راتبي وإجازاتي', 'Payslips and leave', '/m/profile', 'ready', {
+          permission: 'employee.self.view',
+          endpoint: 'GET /employee/payslips',
+        }),
+      ],
+    },
+    {
+      key: 'employee-team',
+      labelAr: 'الفريق',
+      labelEn: 'Team',
+      items: [
+        screen('employee-approvals', 'موافقات الفريق', 'Team approvals', '/m/approvals', 'ready', {
+          permission: 'employee.team.approve',
+          endpoint: 'POST /employee/requests/:id/approve',
+        }),
+      ],
+    },
+  ],
+};
+
+const manufacturing: ModuleNode = {
+  key: 'manufacturing',
+  icon: '⚙️',
+  labelAr: 'التصنيع',
+  labelEn: 'Manufacturing',
+  href: '/manufacturing/orders',
+  permission: 'manufacturing.view',
+  groups: [
+    {
+      key: 'manufacturing-ops',
+      labelAr: 'أوامر التصنيع',
+      labelEn: 'Manufacturing orders',
+      items: [
+        screen('manufacturing-boms', 'قوائم المواد', 'Bills of materials', '/manufacturing/boms', 'ready', {
+          permission: 'manufacturing.view',
+          endpoint: 'GET/POST /manufacturing/boms',
+        }),
+        screen('manufacturing-orders', 'أوامر التصنيع', 'Manufacturing orders', '/manufacturing/orders', 'ready', {
+          permission: 'manufacturing.view',
+          endpoint: 'POST /manufacturing/orders/:id/produce',
+        }),
+      ],
+    },
+  ],
+};
+
+const dashboards: ModuleNode = {
+  key: 'dashboards',
+  icon: '📈',
+  labelAr: 'لوحات المؤشرات',
+  labelEn: 'Dashboards',
+  href: '/dashboards',
+  permission: 'dashboards.view',
+  groups: [
+    {
+      key: 'mine',
+      labelAr: 'لوحاتي',
+      labelEn: 'My dashboards',
+      items: [
+        screen('bi-dashboards', 'لوحات المؤشرات', 'Dashboards', '/dashboards', 'ready', {
+          permission: 'dashboards.view',
+          endpoint: 'GET /dashboards',
+          description: 'لوحة شخصية: مؤشرات وتقارير تُسحب وتُرتَّب، وتظهر في الصفحة الرئيسية.',
+        }),
+      ],
+    },
+  ],
+};
+
 export const modules: ModuleNode[] = [
+  dashboards,
   accounting,
   treasury,
   inventory,
+  manufacturing,
   purchases,
   sales,
   tailoring,
   optics,
   hrm,
+  employeeApp,
   marina,
   projects,
   settings,
@@ -1980,16 +2269,34 @@ export function screenCounts() {
  * Filters the tree for the signed-in user. `permissions` is the effective list from
  * `GET /me`; the owner role receives `*`.
  */
-export function visibleModules(permissions: string[], isPlatformAdmin: boolean): ModuleNode[] {
+/**
+ * `enabledHrefs` is omitted until the marketplace answers, so a slow catalog does not
+ * flash-hide a screen. Once it answers, a href in `gatedHrefs` stays only if an
+ * installed app (or a legacy store that was never explicitly disabled) enables it.
+ * OCR, WMS and e-sign are not in that gate.
+ */
+export function visibleModules(
+  permissions: string[],
+  isPlatformAdmin: boolean,
+  appGate?: { gatedHrefs: readonly string[]; enabledHrefs: readonly string[] } | null,
+): ModuleNode[] {
   const allows = (permission?: string) =>
     !permission || permissions.includes('*') || permissions.includes(permission);
+  const gated = new Set(appGate?.gatedHrefs ?? []);
+  const enabled = new Set(appGate?.enabledHrefs ?? []);
+  const screenVisible = (item: ScreenItem) => {
+    if (!allows(item.permission)) return false;
+    if (!appGate) return true;
+    const href = item.href.split('?')[0] ?? item.href;
+    return !gated.has(href) || enabled.has(href);
+  };
 
   return modules
     .filter((module) => (module.platformAdminOnly ? isPlatformAdmin : allows(module.permission)))
     .map((module) => ({
       ...module,
       groups: module.groups
-        .map((group) => ({ ...group, items: group.items.filter((item) => allows(item.permission)) }))
+        .map((group) => ({ ...group, items: group.items.filter((item) => screenVisible(item)) }))
         .filter((group) => group.items.length > 0),
     }))
     .filter((module) => module.groups.length > 0);

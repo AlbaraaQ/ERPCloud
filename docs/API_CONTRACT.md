@@ -358,3 +358,81 @@ Ops endpoints are outside `/api/v1` and public for infrastructure probes/scraper
 - `GET /health/live`: process liveness only.
 - `GET /health/ready`: deep readiness with database, process, memory and uptime fields.
 - `GET /metrics`: Prometheus text exposition for request counts, latency buckets, queue depth placeholder, e-invoice failures and migration throughput.
+
+## 19. Supplier portal and simple e-sign (future enhancement 11)
+
+Staff routes require a tenant token. Supplier routes are public at the guard and authenticate a supplier bearer that is not an ERP membership. A supplier never sees another party's rows; a missing foreign invoice is hidden, not confirmed.
+
+Staff: `POST/GET /supplier-portal/users`, `POST/GET /supplier-portal/rfqs`, `GET /supplier-portal/uploads`, `POST/GET /esign/requests`.
+Supplier: `POST /supplier-portal/auth/login`, `GET /supplier-portal/invoices`, `GET /supplier-portal/invoices/{id}`, `GET /supplier-portal/payments`, `GET /supplier-portal/quotations`, `POST /supplier-portal/quotations/{id}/respond`, `POST /supplier-portal/invoices` (declared upload, not a posted bill).
+Public signature page: `GET /esign/{token}`, `POST /esign/{token}/sign` `{ signatureData, otp }`, `GET /esign/{token}/pdf`. An expired link is `410`. A wrong one-time code is `422`. The signed file is a simple PDF with the drawing, not an XAdES signature.
+
+Perms: `supplier_portal.access`, `esign.manage`.
+
+## 20. Personal BI dashboards (future enhancement 12)
+
+`GET /dashboards` ensures the caller has a personal default board named «لوحتي» with three starter widgets. Boards are filtered by `tenant_id` and `owner_user_id`.
+
+- `GET /dashboards/widgets/catalog` — 20 fixed widgets. The payload contains no SQL.
+- `POST /dashboards` `{ name }`.
+- `GET /dashboards/{id}`.
+- `POST /dashboards/{id}/widgets` `{ key, config }`. Unknown keys and any config that looks like SQL are `400`.
+- `PUT /dashboards/{id}/layout` `{ widgets: [{ widgetId, positionX, positionY, width, height }] }` — saved after a drag. Overlap or an unknown widget is `400`.
+- `GET /dashboards/{id}/data` — tenant-scoped figures for every widget, with a previous-period comparison on KPI widgets that have one.
+- `GET /dashboards/{id}/pdf` — attachment. Numbers are real; the embedded font cannot draw Arabic, so titles in the file are English.
+- `POST /dashboards/{id}/default`, `DELETE /dashboards/{id}`, `DELETE /dashboards/{id}/widgets/{widgetId}`.
+
+Widget figures are cached for five minutes under `dashboard:widget:{id}:data`. If Redis is absent or unreachable the same key and TTL are kept in process memory; the board still answers.
+
+Perms: `dashboards.view`, `dashboards.manage`.
+
+## 21. Marketplace and white-label (future enhancement 13)
+
+Reviewed apps only. `POST /marketplace/apps/{code}/install` rejects a code that is not in the fixed catalog (`422`). Disabling does not delete `settings` or store rows.
+
+- `GET /marketplace/apps` — catalog plus `gatedHrefs` and `enabledHrefs`. A legacy active Salla/Zid/Shopify store counts as enabled until that app is explicitly installed and then disabled. Perm: `tenant.view`.
+- `POST /marketplace/apps/{code}/install`, `DELETE /marketplace/apps/{code}`. Perm: `tenant.apps.manage`.
+- `GET/POST /settings/white-label/domains`, `POST /settings/white-label/domains/{id}/verify`, `DELETE /settings/white-label/domains/{id}`. Adding a domain returns the TXT host `_erpcloud-verify.{domain}` and the value `erpcloud-verify={token}`. Verify reads DNS and sets `status=active`. It does not issue a certificate; `ssl_status` stays `manual`. Perm: `tenant.apps.manage`.
+- `GET /settings/white-label/branding` (`tenant.view`), `PUT /settings/white-label/branding` `{ logoFileId, primaryColor, secondaryColor }` (`tenant.apps.manage`). Colors are `#RRGGBB`. The logo must be a finalized image. The printed invoice header includes `<img alt="شعار المنشأة">` when a logo is set. A missing signing secret leaves the invoice printable without the image.
+- `GET /public/branding?host=` — public. Returns the brand of one active domain, or `data: null`.
+- `GET /platform/marketplace/apps`, `PUT /platform/marketplace/apps/{code}` `{ monthlyPrice, isActive }`. Perm: `console.marketplace.manage`. The platform cannot register a third-party module.
+
+Staff hides a gated href only after this catalog answers. `/settings/ecommerce` and `/sales/ecommerce-orders` are gated by `salla`, `zid` or `shopify`. OCR, WMS and e-sign are not gated.
+
+## 22. Sales CRM and WhatsApp (future enhancement 14)
+
+Tenant routes require a token. The webhook is public and authenticates only by its query token. Screens live under the sales module (`/crm/pipelines`, `/crm/deals/{id}`, `/crm/activities`, `/crm/forecast`). There is no new navigation module.
+
+- `GET/POST /crm/pipelines`. The first read seeds a four-stage default pipeline and a greeting template. Perm: view / manage.
+- `GET/POST /crm/deals`. Filters accept `pipeline_id` or `pipelineId`, and the same pair for `stage_id` and `owner_id`. A new deal starts on the first stage unless `stage_id` is sent. Body value is `value` or `amount`.
+- `GET /crm/deals/{id}` — deal plus its activities.
+- `PUT /crm/deals/{id}/move` `{ stage_id }`. Unknown stage or a won/lost deal is `422`.
+- `PUT /crm/deals/{id}/status` `{ status: won|lost, lost_reason }`. A loss needs a reason.
+- `POST /crm/deals/{id}/activities` `{ type, description }`. `whatsapp` is not accepted here; that type is written only by send and by the webhook.
+- `POST /crm/deals/{id}/whatsapp` `{ template_id, message, to }`. Renders `{name}` and `{deal}`, then calls the existing WhatsApp gateway with `invoiceId` null. The sent text is stored as an activity with `direction=out`. The monthly cap is the same `whatsapp_per_month` limit. A gateway that is not configured, or is switched off, is refused; simulation mode is the local path.
+- `GET /crm/activities`.
+- `GET /crm/forecast` — `{ weighted, openCount, count, deals }`. `weighted` is the sum of open deal value × probability / 100, at four decimal places. Won and lost deals are excluded.
+- `GET/POST /crm/whatsapp/templates`.
+- `GET /crm/settings` — returns the webhook path. Perm: `crm.deals.manage`.
+- `POST /crm/webhooks/whatsapp?token=` — public. `{ from, text }` or a Meta `entry.changes.value.messages` payload. A matching open deal (party phone, last 9 digits, or a previous outbound number) gets an activity with `type=whatsapp` and `direction=in`. No match returns `{ matched: false }` and stores nothing. A bad token is `401`.
+
+Perms: `crm.deals.view`, `crm.deals.manage`, `crm.activities.manage`. `tenant_admin` and `sales_manager` receive all three. `sales_user` receives view and activities only. The migration also grants view and activities to any role that already has `sales.view`, and manage to any role that has `sales.offer.manage`.
+
+## 23. Document comments and mentions (future enhancement 15)
+
+Comments sit on the document head, not on a line, and they are not a chat room. Seeing a comment also requires the document permission (`sales.view`, `purchase.view`, `parties.view`, `hrm.view`, or `projects.view`). `*` counts.
+
+- `GET /comments?entity_type=&entity_id=&open=` — threaded roots and one level of replies. `open=true` hides resolved and deleted roots. Perm: `comment.view`.
+- `POST /comments` `{ entity_type, entity_id, body, parent_id }`. A reply to a reply, a reply on a resolved thread, or a reply on a deleted comment is `422`. Perm: `comment.manage`.
+- `PUT /comments/{id}` `{ body }` — author only.
+- `PUT /comments/{id}/resolve` — root comments only. A second resolve is `422`.
+- `DELETE /comments/{id}` — author only. The row stays, the text becomes «حُذف هذا التعليق».
+- `GET /comments/suggest?q=` — colleagues whose name contains `q`. Perm: `comment.manage`.
+- `GET /comments/mentions?is_read=false` — the caller's mentions.
+- `POST /comments/mentions/{id}/read`.
+
+Saving `@[uuid]` or a unique `@name` writes `comment_mentions`, an in-app notification `comment.mention` (shown by the bell and `/notifications`), and a tenant email of the same event. Email failure does not roll back the comment. There is no email open tracking.
+
+Staff: `CommentsPanel` on the sales invoice, the purchase invoice, a chosen customer, an open employee card, and the project card. Inbox: `/comments/mentions`. No new navigation module.
+
+Perms: `comment.view`, `comment.manage`. The migration grants view to roles that already see those documents, and manage to roles that already create or edit them. The auditor receives view only.

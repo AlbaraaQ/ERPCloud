@@ -1,5 +1,7 @@
 # 13 — سوق الإضافات + White-label بدومين خاص
 
+> الحالة: منفذة. التفاصيل في `docs/STATUS.md` صف `FE-13`، و`DATABASE_DESIGN` §20، و`API_CONTRACT` §21. الترحيل `0109`. لا كود طرف ثالث، والشهادة يدوية.
+
 > الأولوية: P3 - 3 أسابيع
 > السوق: Shopify App Store / Odoo Apps — يمنع Churn ويزيد LTV
 
@@ -29,6 +31,7 @@
 ## التصميم التقني
 
 ### ترحيل 0107
+0107 مستخدم لبوابة الموردين و0108 للوحات المؤشرات، لذلك التنفيذ التالي يبدأ من `0109`.
 ```sql
 marketplace_apps (id, code unique, name_ar, name_en, description_ar, icon, version, price_monthly, is_core, config_schema jsonb)
 tenant_apps (tenant_id, app_code, is_enabled, settings jsonb, installed_at, unique(tenant_id,app_code))

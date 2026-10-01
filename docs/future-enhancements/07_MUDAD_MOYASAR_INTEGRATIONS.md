@@ -62,11 +62,21 @@ payment_provider_configs (id, tenant_id, provider, api_key_enc, is_active)
 - `payroll.wps.export` + `payments.links.manage`
 
 ## معايير القبول
-- [ ] تصدير WPS لـ 10 موظفين → ملف CSV بصيغة معتمدة
-- [ ] إنشاء رابط ميسر → دفع تجريبي → سند قبض ينشأ تلقائياً
-- [ ] انتهاء إقامة موظف خلال 30 يوم → تنبيه في لوحة HRM
-- [ ] اختبار `mudad-moyasar.spec.ts` 8 حالات mock
-- [ ] `verify-mudad-moyasar.mjs` 12 نقطة
+- [x] تصدير WPS لـ 10 موظفين → ملف CSV بصيغة معتمدة
+- [x] إنشاء رابط ميسر → دفع تجريبي → سند قبض ينشأ تلقائياً
+- [x] انتهاء إقامة موظف خلال 30 يوم → تنبيه في لوحة HRM
+- [x] اختبار `mudad-moyasar.spec.ts` 8 حالات mock
+- [x] `verify-mudad-moyasar.mjs` 12 نقطة
+
+## حالة التنفيذ
+
+- الترحيل `0103_mudad_moyasar.sql` (0101 مستخدم لحقول التقارير). الجداول: `payroll_wps_files` و`payroll_gosi_files` و`payment_links` و`payment_provider_configs` مع RLS.
+- ملف WPS هو CSV بنكي بأعمدة الهوية والآيبان والأساسي والسكن والبدلات والاستقطاع والصافي. الرفع إلى مدد يبقى يدوياً مع تتبع الحالة.
+- ملف التأمينات يحسب حصص 2026: السعودي الجديد 10.75/12.75، القديم 9.75/11.75، وغير السعودي خطر مهني 2% على صاحب العمل.
+- `GET /hrm/compliance/alerts` ينبّه قبل 30 يوماً ومن انتهت إقامته أو تأمينه.
+- `POST /payments/links` ينشئ رابط ميسر (`POST /v1/invoices` بالهللة) أو HyperPay أو Tap. الويبهوك عام ويتحقق من `secret_token` قبل إنشاء سند قبض وربطه بالفاتورة.
+- الواجهات: `/hrm/payroll/[id]/wps` و`/hrm/compliance` و`/settings/payments` وزر الرابط في الفاتورة و`/portal/invoices/[id]/pay`.
+- التحقق: `apps/api/src/modules/payments/mudad-moyasar.spec.ts` و`node scripts/verify-mudad-moyasar.mjs`.
 
 ## الجهد
 - Backend: 5 أيام (WPS + ميسر + webhooks)

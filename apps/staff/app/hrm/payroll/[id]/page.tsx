@@ -93,9 +93,14 @@ export default function PayrollRunPage() {
       subtitle={`${statusLabel(doc.status)} — إجمالي الصافي ${money(netTotal, doc.currency)}`}
       crumbs={['الموظفين والرواتب', 'العمليات']}
       actions={
-        <Link className="btn" href="/hrm/payroll">
-          كل المسيّرات
-        </Link>
+        <div className="row">
+          <Link className="btn primary" href={`/hrm/payroll/${doc.id}/wps`}>
+            تصدير حماية أجور
+          </Link>
+          <Link className="btn" href="/hrm/payroll">
+            كل المسيّرات
+          </Link>
+        </div>
       }
     >
       <div className="card">

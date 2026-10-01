@@ -77,6 +77,7 @@ export const permissionRegistry: readonly PermissionDefinition[] = [
   perm('tenant.membership.manage', 'Invite, update and remove tenant memberships.'),
   perm('tenant.role.manage', 'Create and maintain roles and their permission sets.'),
   perm('tenant.settings.manage', 'Read and write individual typed tenant settings.'),
+  perm('tenant.apps.manage', 'Install and remove marketplace apps and manage the tenant domain and brand.'),
   perm('tenant.audit.view', 'Read the tenant audit log.'),
   perm('tenant.file.upload', 'Request pre-signed uploads, attach and download files.'),
   // R7 — مدير الملفات: الإزالة فعلٌ مدمّر، فله رمزه ولا يُمنح تلقائياً لكل من يرفع.
@@ -199,7 +200,13 @@ export const permissionRegistry: readonly PermissionDefinition[] = [
     'inventory.production.complete',
     'Complete production orders: consume components and receive the finished item.',
   ),
+  perm('inventory.bins.manage', 'Create warehouse bins and move quantities between them.'),
   perm('inventory.negative.override', 'Allow negative stock movements.'),
+
+  // manufacturing (PHASE_10)
+  perm('manufacturing.view', 'Read bills of materials and manufacturing orders.'),
+  perm('manufacturing.manage', 'Create bills of materials and manufacturing orders.'),
+  perm('manufacturing.produce', 'Produce a manufacturing order: consume components and receive the finished item.'),
 
   // sales / purchases (PHASE_13)
   perm('sales.view', 'List and read sales documents.'),
@@ -212,13 +219,21 @@ export const permissionRegistry: readonly PermissionDefinition[] = [
   perm('sales.adjustment.create', 'Issue credit and debit notes against posted sales invoices.'),
   perm('sales.offer.manage', 'Maintain sales offers and promotional discount rules.'),
   perm('sales.salesman.manage', 'Maintain salesman cards.'),
+  perm('crm.deals.view', 'Read sales pipelines, deals, activities and the forecast.'),
+  perm('crm.deals.manage', 'Create pipelines and deals, and move or close a deal.'),
+  perm('crm.activities.manage', 'Log a call, a note or a WhatsApp message on a deal.'),
+  perm('comment.view', 'Read comments on a document the caller can already see.'),
+  perm('comment.manage', 'Write, edit, resolve or delete a comment, and mention a colleague.'),
   perm('purchase.view', 'List and read purchase documents.'),
   perm('purchase.invoice.create', 'Create draft purchase invoices.'),
+  perm('purchase.ocr.use', 'Upload purchase invoices and review OCR extraction results.'),
   perm('purchase.invoice.post', 'Post purchase invoices.'),
   perm('purchase.invoice.void', 'Void posted purchase invoices.'),
   perm('purchase.invoice.pay', 'Record supplier payment hooks on purchase invoices.'),
   perm('purchase.cost.manage', 'Create, update and allocate purchase landed costs.'),
   perm('purchase.adjustment.create', 'Issue credit and debit notes against posted purchase invoices.'),
+  perm('supplier_portal.access', 'Invite suppliers and read their portal submissions.'),
+  perm('esign.manage', 'Send a document for a simple drawn signature.'),
 
   // treasury (PHASE_13)
   perm('treasury.view', 'List and read vouchers and shifts.'),
@@ -230,6 +245,9 @@ export const permissionRegistry: readonly PermissionDefinition[] = [
   perm('treasury.expensetype.manage', 'Maintain treasury expense types.'),
   perm('treasury.shift.close', 'Open and close cashier shifts.'),
   perm('treasury.shift.post', 'Post the journal entry a counted shift produces.'),
+  // Future enhancement 01 — imported bank statements and reconciliation.
+  perm('treasury.bank.view', 'Read bank accounts, imported statements and reconciliation results.'),
+  perm('treasury.bank.manage', 'Create bank accounts, import statements, match lines and manage reconciliation rules.'),
 
   // e-invoicing (PHASE_13)
   perm('einvoice.view', 'Read e-invoice credentials and submissions.'),
@@ -239,8 +257,15 @@ export const permissionRegistry: readonly PermissionDefinition[] = [
 
   // reporting (PHASE_14)
   perm('reporting.view', 'Read the reporting catalogue.'),
+  perm('dashboards.view', 'Read personal dashboards and widget figures.'),
+  perm('dashboards.manage', 'Create dashboards and arrange widgets.'),
   perm('reporting.export.execute', 'Run asynchronous report exports.'),
   perm('reporting.layout.manage', 'Create and maintain saved report layouts (مصمم التقارير).'),
+  // Future enhancement 05 — tenant-defined fields and the safe report builder.
+  perm('custom_fields.view', 'Read custom field definitions and values.'),
+  perm('custom_fields.manage', 'Create, update and deactivate custom fields and their values.'),
+  perm('custom_reports.view', 'Run and read saved custom reports.'),
+  perm('custom_reports.manage', 'Create and maintain saved custom report definitions.'),
 
   // file-level operations (الإعدادات: النسخ الإحتياطي، الإستعادة، التدوير، الصيانة، إنشاء ملف)
   perm('settings.backup.manage', 'Take and download logical backups of the company file.'),
@@ -270,6 +295,13 @@ export const permissionRegistry: readonly PermissionDefinition[] = [
   perm('hrm.manage', 'Maintain departments, jobs, employees, attendance imports and payroll drafts.'),
   perm('hrm.payroll.post', 'Post, pay and reverse payroll runs.'),
   perm('hrm.adjust.approve', 'Approve salary additions and deductions.'),
+  perm('payroll.wps.export', 'Preview and export Mudad WPS and GOSI payroll files.'),
+  perm('payments.links.manage', 'Connect online payment providers and manage invoice payment links.'),
+  perm('ai.assistant.use', 'Ask the accounting assistant and read own conversations.'),
+  perm('ai.settings.manage', 'Enable the assistant and set tenant provider, model and monthly limits.'),
+  perm('employee.self.view', 'Read own attendance, requests, payslips and custodies.'),
+  perm('employee.self.manage', 'Punch attendance and submit own employee requests.'),
+  perm('employee.team.approve', 'Approve or reject team leave, permission, custody and advance requests.'),
 
   // installments and contracting/projects packs (PHASE_21)
   perm('installments.view', 'Read installment contracts, schedules, overdue aging and contract statements.'),
@@ -299,6 +331,11 @@ export const permissionRegistry: readonly PermissionDefinition[] = [
   perm('fitment.manage', 'Maintain vehicle makes, models and item fitment rows.'),
   perm('salla.integration.view', 'Read Salla synchronization status and export logs.'),
   perm('salla.integration.manage', 'Manage Salla OAuth connections, mappings, export queues and webhooks.'),
+  // Future enhancement 03 — provider-neutral Salla/Zid/Shopify orders and stock.
+  perm('ecommerce.manage', 'Connect e-commerce stores, synchronize orders and monitor stock updates.'),
+  // Future enhancement 04 — sequential approval workflows.
+  perm('approval.manage', 'Create and maintain tenant approval workflows.'),
+  perm('approval.approve', 'Review, approve and reject assigned approval requests.'),
 ] as const;
 
 /**
@@ -321,6 +358,7 @@ export const platformPermissionRegistry: readonly PermissionDefinition[] = [
     'console.settings.manage',
     'Read and write the platform settings (support contacts, service domains, default limits, maintenance switch).',
   ),
+  perm('console.marketplace.manage', 'Price and activate reviewed marketplace apps. Third-party code is not accepted.'),
   perm('console.health.view', 'Read system health and readiness.'),
   perm('console.jobs.view', 'Read background-queue and outbox health.'),
   //

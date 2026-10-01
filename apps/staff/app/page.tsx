@@ -4,6 +4,7 @@ import Link from 'next/link';
 import {
   CalendarDays,
   FilePlus2,
+  LayoutDashboard,
   PackageSearch,
   ReceiptText,
   ShoppingCart,
@@ -13,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import { UserDashboard } from '../components/dashboard/user-dashboard';
 import { AreaCardChart, DonutCardChart } from '../components/ui/chart';
 import { CountUp, Reveal } from '../components/ui/count-up';
 import { EmptyState } from '../components/ui/empty-state';
@@ -147,10 +149,21 @@ export default function DashboardPage() {
                 <TrendingUp size={16} />
                 تقارير المبيعات
               </Link>
+              {can('dashboards.view') ? (
+                <Link
+                  href="/dashboards"
+                  className="inline-flex items-center gap-2 h-10 px-4 rounded-[10px] bg-white border border-slate-300 text-slate-700 text-[13.5px] font-semibold shadow-1 hover:bg-slate-50 transition-all duration-150"
+                >
+                  <LayoutDashboard size={16} />
+                  لوحاتي
+                </Link>
+              ) : null}
             </div>
           </div>
         </section>
       </Reveal>
+
+      <UserDashboard />
 
       {/* -------------------------------------------------------- KPIs */}
       {data.status === 'loading' ? (

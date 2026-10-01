@@ -254,6 +254,53 @@ export class WhatsappService {
     return { messages: rows.map((row) => this.toMessage(row)) };
   }
 
+  /**
+   * A CRM greeting, not an invoice. Uses the same gateway and the same monthly cap.
+   * `invoiceId` stays null so the invoice log is not mixed with a deal conversation.
+   */
+  async sendPlain(tenantId: string, input: { to: string; message: string; partyId?: string | null }) {
+    await this.usage.assertWithinLimit(tenantId, 'whatsapp_per_month');
+    const row = await this.row(tenantId);
+    if (!row) throw new DomainError('WHATSAPP_NOT_CONFIGURED', 'لم تُضبط بوابة واتساب — افتح «💬 واتساب» واحفظ الإعدادات.', 404);
+    if (!row.active) throw new DomainError('WHATSAPP_DISABLED', DISABLED_MESSAGE, 409);
+    const phone = normalizePhone(input.to, row.defaultCountryCode);
+    if (!phone || phone.length < 8 || phone.length > 15) {
+      throw new DomainError('WHATSAPP_PHONE_INVALID', `رقم الجوال غير صحيح: ${input.to}`, 422);
+    }
+    const message = input.message.trim();
+    if (!message) throw new DomainError('VALIDATION_FAILED', 'نص الرسالة فارغ', 422);
+    const config = this.config(row);
+    const text = await sendText(config, phone, message);
+    const [record] = await withTenantTx(this.database.db, tenantId, (tx) =>
+      tx
+        .insert(whatsappMessages)
+        .values({
+          id: newId(),
+          tenantId,
+          invoiceId: null,
+          partyId: input.partyId ?? null,
+          phone,
+          message,
+          attachmentStatus: 'none',
+          status: text.ok ? 'sent' : 'failed',
+          providerMessageId: text.messageId,
+          error: text.error,
+          simulation: config.simulation,
+          createdBy: getRequestContext().tenant?.userId ?? null,
+        })
+        .returning(),
+    );
+    return {
+      ok: text.ok,
+      phone,
+      message,
+      providerMessageId: text.messageId,
+      error: text.error,
+      simulation: config.simulation,
+      id: record?.id ?? '',
+    };
+  }
+
   // ── internals ────────────────────────────────────────────────────────────────────
 
   /**

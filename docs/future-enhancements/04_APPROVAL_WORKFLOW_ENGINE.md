@@ -21,10 +21,13 @@
 ### لا يدخل
 - محرر مرئي معقد (BPMN) — نبدأ بقائمة خطوات مرتبة
 - موافقات متوازية — نبدأ متسلسلة
+- إرسال WhatsApp فعلي — تُنفَّذ إشعارات داخل التطبيق عبر `NotificationsService` فقط ما لم تُجهَّز قناة WhatsApp معتمدة
 
 ## التصميم التقني
 
-### ترحيل 0099
+### ترحيل 0100
+
+> 0099 محجوزٌ بالفعل لتكامل متاجر التجارة الإلكترونية؛ لذلك تُنفَّذ موافقات المرحلة الرابعة في `0100_approval_workflows.sql`.
 ```sql
 approval_workflows (id, tenant_id, entity, name, is_active, created_at)
 approval_steps (id, workflow_id, step_order, approver_role, approver_user_id, condition_json, is_required)

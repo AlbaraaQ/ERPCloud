@@ -81,8 +81,16 @@ export const jobTypes = {
   // آلاف المستلمين، وتُعيد جدولة نفسها للبقيّة. وطابور «الصيانة» لأن الإرسال المجدول
   // ليس رسالةَ عميلٍ عاجلة (تماماً كما `content.publish` و`report.weekly`).
   CAMPAIGN_SEND: 'campaign.send',
+  // Future enhancement 02 — first-page purchase-invoice OCR. It uses the existing
+  // `maintenance` queue so the frozen queue contract does not grow a sixth queue.
+  OCR_PROCESS: 'ocr.process',
   FILES_ORPHAN_GC: 'files.orphan-gc',
   IDEMPOTENCY_GC: 'idempotency.gc',
+  // Future enhancement 03 — order imports and stock pushes share the existing maintenance queue.
+  ECOMMERCE_IMPORT: 'ecommerce.import',
+  ECOMMERCE_STOCK: 'ecommerce.stock',
+  // Future enhancement 08 — daily assistant suggestions. Same frozen maintenance queue.
+  AI_SUGGEST: 'ai.suggest',
 } as const;
 
 export type JobType = (typeof jobTypes)[keyof typeof jobTypes];

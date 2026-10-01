@@ -53,7 +53,6 @@ export function Avatar({ name, src, size = 'md', status = null, children, classN
   return (
     <span className={`relative inline-flex flex-none ${s.box} ${className}`} title={name}>
       {src ? (
-        // eslint-disable-next-line @next/next/no-img-element
         <img src={src} alt={name} className={`${s.box} rounded-full object-cover`} />
       ) : (
         <span className={`grid place-items-center ${s.box} rounded-full font-bold ${s.text} ${hashPalette(name)} select-none`}>

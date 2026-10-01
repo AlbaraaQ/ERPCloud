@@ -251,7 +251,9 @@ h6 {
   padding: 8px 12px;
   font-size: 13px;
   width: 100%;
-  transition: box-shadow var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+  transition:
+    box-shadow var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
 }
 .nav-search::placeholder {
   color: var(--muted);
@@ -332,7 +334,9 @@ h6 {
   border-radius: 8px;
   color: #475569;
   font-size: 13px;
-  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
 }
 .nav-link:hover {
   background: var(--surface-2);
@@ -427,7 +431,9 @@ h6 {
   box-shadow: var(--shadow-1);
 }
 .card.lift {
-  transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
 }
 .card.lift:hover {
   transform: translateY(-4px);
@@ -499,8 +505,11 @@ h6 {
   font-weight: 600;
   cursor: pointer;
   box-shadow: var(--shadow-1);
-  transition: background var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out),
-    box-shadow var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
   white-space: nowrap;
 }
 .btn:hover {
@@ -519,7 +528,9 @@ h6 {
   background: var(--color-brand-600);
   color: #fff;
   border-color: var(--color-brand-600);
-  box-shadow: var(--shadow-2), inset 0 1px 0 rgb(255 255 255 / 0.12);
+  box-shadow:
+    var(--shadow-2),
+    inset 0 1px 0 rgb(255 255 255 / 0.12);
 }
 .btn.primary:hover {
   background: var(--color-brand-700);
@@ -568,7 +579,9 @@ textarea.input {
   min-width: 0;
   width: 100%;
   font-size: 13.5px;
-  transition: box-shadow var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+  transition:
+    box-shadow var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
 }
 .input::placeholder {
   color: #94a3b8;
@@ -861,6 +874,68 @@ th.num {
   display: grid;
   place-items: center;
 }
+.public-page {
+  min-height: 100vh;
+  background: var(--bg);
+  padding: 28px 16px 64px;
+}
+.public-wrap {
+  width: min(920px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: 16px;
+}
+.logo-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--brand);
+  color: white;
+  font-weight: 700;
+}
+.sign-pad {
+  width: 100%;
+  height: 180px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 12px;
+  background: #fff;
+  touch-action: none;
+  cursor: crosshair;
+}
+.sign-sheet {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow-3);
+  padding: 28px;
+  display: grid;
+  gap: 16px;
+}
+.sign-letterhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 2px solid var(--brand);
+  padding-bottom: 14px;
+}
+.sign-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.sign-table th,
+.sign-table td {
+  border-bottom: 1px solid var(--line);
+  padding: 8px 4px;
+  text-align: start;
+}
+.sign-table .num {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
 .boot-card {
   display: grid;
   gap: 10px;
@@ -885,7 +960,9 @@ th.num {
   background: var(--surface);
   padding: 10px;
   cursor: pointer;
-  transition: border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out),
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out),
     transform var(--dur-fast) var(--ease-out);
 }
 .pos-tile:hover {
@@ -1560,7 +1637,9 @@ tr.opening td {
   font-family: inherit;
   font-size: inherit;
   color: inherit;
-  transition: border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
 }
 .bank-tile:hover {
   border-color: var(--color-brand-400);
@@ -1581,8 +1660,71 @@ tr.opening td {
   line-height: 1.35;
 }
 
+/* ------------------------------------------------------------------ offline POS */
+.offline-scanner {
+  width: min(100%, 360px);
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  background: #0f172a;
+  margin-bottom: 10px;
+}
+.stat-card {
+  display: grid;
+  gap: 3px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+.stat-card span,
+.stat-card small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.stat-card strong {
+  font-size: 25px;
+  line-height: 1.1;
+  color: var(--text);
+}
+.subtle {
+  background: var(--surface-2);
+}
+.offline-receipt {
+  display: none;
+}
+
 /* ------------------------------------------------------------------ print */
 @media print {
+  body:has(.offline-receipt) * {
+    visibility: hidden !important;
+  }
+  body:has(.offline-receipt) .offline-receipt,
+  body:has(.offline-receipt) .offline-receipt * {
+    visibility: visible !important;
+  }
+  .offline-receipt {
+    display: block !important;
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    width: 72mm;
+    margin: 0;
+    color: #000;
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    line-height: 1.45;
+  }
+  .offline-receipt h1,
+  .offline-receipt strong {
+    font-size: 15px;
+  }
+  @page {
+    size: 80mm auto;
+    margin: 4mm;
+  }
+
   .side,
   .topbar,
   .toolbar,
@@ -1656,4 +1798,191 @@ tr.opening td {
   h1 {
     font-size: 26px;
   }
+}
+.ocr-review-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(280px, 0.9fr) minmax(420px, 1.1fr);
+}
+
+.ocr-document-preview {
+  background: #f1f5f9;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  min-height: 420px;
+  overflow: hidden;
+}
+
+.ocr-document-preview iframe,
+.ocr-document-preview img {
+  border: 0;
+  display: block;
+  height: 420px;
+  object-fit: contain;
+  width: 100%;
+}
+
+.ocr-fields {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ocr-field {
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  display: grid;
+  gap: 6px;
+  grid-template-columns: 1fr auto;
+  padding: 10px;
+}
+
+.ocr-field > span:nth-child(2),
+.ocr-field > .input {
+  grid-column: 1 / -1;
+  font-size: 16px;
+}
+
+.ocr-field > span:last-child {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+
+@media (max-width: 960px) {
+  .ocr-review-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .ocr-fields {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* PHASE_08 — accounting assistant */
+.assistant-fab {
+  position: fixed;
+  z-index: 40;
+  inset-inline-end: 20px;
+  bottom: 20px;
+  border-radius: 999px;
+  box-shadow: var(--shadow-2, 0 8px 24px rgb(15 23 42 / 18%));
+}
+.assistant-drawer {
+  position: fixed;
+  z-index: 45;
+  inset-inline-end: 20px;
+  bottom: 76px;
+  width: min(400px, calc(100vw - 32px));
+  max-height: min(680px, calc(100vh - 110px));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+}
+.assistant-panel,
+.assistant-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+.chat-log {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: auto;
+  max-height: 420px;
+  padding-inline-end: 4px;
+}
+.assistant-compact .chat-log {
+  max-height: 280px;
+}
+.chat-bubble {
+  white-space: pre-wrap;
+  border-radius: 14px;
+  padding: 10px 12px;
+  line-height: 1.6;
+}
+.chat-bubble.user {
+  align-self: flex-start;
+  background: var(--color-brand-600, #2563eb);
+  color: white;
+  max-width: 85%;
+}
+.chat-bubble.assistant {
+  align-self: stretch;
+  background: var(--surface, white);
+  border: 1px solid var(--line, #e2e8f0);
+}
+.chat-bubble a {
+  font-weight: 700;
+}
+.assistant-layout {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
+  gap: 12px;
+  min-height: 0;
+}
+.assistant-side {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 520px;
+  overflow: auto;
+}
+.assistant-side .btn {
+  justify-content: flex-start;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.assistant-suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+@media (max-width: 800px) {
+  .assistant-layout {
+    grid-template-columns: 1fr;
+  }
+  .assistant-side {
+    max-height: 140px;
+  }
+}
+
+.employee-app {
+  min-height: 100vh;
+  padding: 16px;
+  background: #f8fafc;
+}
+.employee-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.employee-bar nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.employee-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px;
+}
+.employee-actions {
+  display: grid;
+  gap: 10px;
+}
+.punch {
+  min-height: 64px;
+  font-size: 20px;
 }

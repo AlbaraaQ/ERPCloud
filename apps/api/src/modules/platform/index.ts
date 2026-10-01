@@ -16,6 +16,7 @@ export { RateLimiterService } from './rate-limit/rate-limiter.service.js';
 
 export { Public, IS_PUBLIC_KEY } from './decorators/public.decorator.js';
 export { RequiresPermission, REQUIRED_PERMISSION_KEY } from './decorators/requires-permission.decorator.js';
+export { RequiresPlatformRole, REQUIRED_PLATFORM_PERMISSION_KEY } from './decorators/requires-platform-role.decorator.js';
 export { RateLimit, RATE_LIMIT_KEY } from './decorators/rate-limit.decorator.js';
 export type { RateLimitRule } from './decorators/rate-limit.decorator.js';
 export { CurrentAuth, CurrentTenant } from './decorators/current-context.decorator.js';

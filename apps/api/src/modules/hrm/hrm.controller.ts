@@ -19,6 +19,7 @@ import {
   type RunInput,
   type SalaryPaymentInput,
 } from './hrm.service.js';
+import { PayrollComplianceService, type ComplianceSettingsInput, type WpsExportInput } from './payroll-compliance.service.js';
 
 /**
  * The desktop sends `1`, `true` and `on` for the same checkbox (and the accounting
@@ -31,7 +32,10 @@ function flag(value?: string): boolean | undefined {
 
 @Controller('hrm')
 export class HrmController {
-  constructor(private readonly hrm: HrmService) {}
+  constructor(
+    private readonly hrm: HrmService,
+    private readonly compliance: PayrollComplianceService,
+  ) {}
   @Get('departments') @RequiresPermission('hrm.view') departments() { return this.hrm.listDepartments(getTenantContext().tenantId); }
   @Post('departments') @RequiresPermission('hrm.manage') createDepartment(@Body() body: DepartmentInput) { return this.hrm.createDepartment(getTenantContext().tenantId, body); }
   @Patch('departments/:id') @RequiresPermission('hrm.manage') updateDepartment(@Param('id') id: string, @Body() body: DepartmentPatch) { return this.hrm.updateDepartment(getTenantContext().tenantId, id, body); }
@@ -140,4 +144,71 @@ export class HrmController {
   @Post('salary-payments') @RequiresPermission('hrm.payroll.post') createSalaryPayment(@Body() body: SalaryPaymentInput) { return this.hrm.createSalaryPayment(getTenantContext().tenantId, body); }
   @Delete('salary-payments/:id') @RequiresPermission('hrm.payroll.post') deleteSalaryPayment(@Param('id') id: string) { return this.hrm.deleteSalaryPayment(getTenantContext().tenantId, id); }
   @Post('payroll/runs/:id/reverse') @RequiresPermission('hrm.payroll.post') reverseRun(@Param('id') id: string, @Body() body: { reason: string }) { return this.hrm.reverseRun(getTenantContext().tenantId, id, body.reason); }
+
+  @Get('compliance/alerts')
+  @RequiresPermission('hrm.view')
+  alerts(@Query('within_days') withinDays?: string) {
+    const days = Number(withinDays ?? 30);
+    return this.compliance.alerts(getTenantContext().tenantId, Number.isFinite(days) ? days : 30);
+  }
+
+  @Get('payroll/compliance-settings')
+  @RequiresPermission('hrm.view')
+  complianceSettings() {
+    return this.compliance.settings(getTenantContext().tenantId);
+  }
+
+  @Post('payroll/compliance-settings')
+  @RequiresPermission('payroll.wps.export')
+  saveComplianceSettings(@Body() body: ComplianceSettingsInput) {
+    return this.compliance.saveSettings(getTenantContext().tenantId, body ?? {});
+  }
+
+  @Get('payroll/runs/:id/wps-preview')
+  @RequiresPermission('payroll.wps.export')
+  wpsPreview(@Param('id') id: string, @Query('bank_code') bankCode?: string, @Query('establishment_id') establishmentId?: string) {
+    return this.compliance.wpsPreview(getTenantContext().tenantId, id, { bankCode, establishmentId });
+  }
+
+  @Post('payroll/runs/:id/wps-export')
+  @RequiresPermission('payroll.wps.export')
+  wpsExport(@Param('id') id: string, @Body() body: WpsExportInput) {
+    return this.compliance.wpsExport(getTenantContext().tenantId, id, body ?? {});
+  }
+
+  @Get('payroll/runs/:id/wps')
+  @RequiresPermission('payroll.wps.export')
+  wpsFiles(@Param('id') id: string) {
+    return this.compliance.listWps(getTenantContext().tenantId, id);
+  }
+
+  @Get('payroll/wps/:fileId')
+  @RequiresPermission('payroll.wps.export')
+  wpsFile(@Param('fileId') fileId: string) {
+    return this.compliance.readWps(getTenantContext().tenantId, fileId);
+  }
+
+  @Post('payroll/wps/:fileId/status')
+  @RequiresPermission('payroll.wps.export')
+  wpsStatus(@Param('fileId') fileId: string, @Body() body: { status?: string; bankResponse?: string | null }) {
+    return this.compliance.updateWps(getTenantContext().tenantId, fileId, body ?? {});
+  }
+
+  @Get('payroll/runs/:id/gosi-preview')
+  @RequiresPermission('payroll.wps.export')
+  gosiPreview(@Param('id') id: string) {
+    return this.compliance.gosiPreview(getTenantContext().tenantId, id);
+  }
+
+  @Post('payroll/runs/:id/gosi-export')
+  @RequiresPermission('payroll.wps.export')
+  gosiExport(@Param('id') id: string) {
+    return this.compliance.gosiExport(getTenantContext().tenantId, id);
+  }
+
+  @Get('payroll/runs/:id/gosi')
+  @RequiresPermission('payroll.wps.export')
+  gosiFiles(@Param('id') id: string) {
+    return this.compliance.listGosi(getTenantContext().tenantId, id);
+  }
 }

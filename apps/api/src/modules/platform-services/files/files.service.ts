@@ -240,6 +240,20 @@ export class FilesService {
   }
 
   /**
+   * Internal provider capability: give a trusted background adapter a short-lived storage
+   * URL without making it depend on the browser-facing `/files/:id/content` redirect.
+   * The row is still resolved under tenant RLS before the capability is minted.
+   */
+  async providerDownloadUrl(tenantId: string, fileId: string): Promise<FileContentTarget> {
+    const row = await withTenantTx(this.database.db, tenantId, (tx) => this.loadOwned(tx, tenantId, fileId));
+    if (row.status !== 'ready') {
+      throw new DomainError(errorCodes.VALIDATION_FAILED, 'File upload has not been finalized yet', 422, { field: 'status' });
+    }
+    const presigned = this.storage.presignDownload(row.objectKey, row.name);
+    return { url: presigned.url, expiresAt: presigned.expiresAt, fileName: row.name, mime: row.mime };
+  }
+
+  /**
    * Verifies an app-signed URL and resolves the storage target.
    *
    * Runs unauthenticated (the signature *is* the capability), so it re-reads the row

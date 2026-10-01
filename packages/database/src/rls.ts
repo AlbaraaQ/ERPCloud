@@ -128,6 +128,10 @@ export const rlsProtectedTables = [
   'notifications',
   'outbox_jobs',
   'idempotency_keys',
+  // Future enhancement 03 — provider-neutral e-commerce connections, orders and logs.
+  'ecommerce_stores',
+  'ecommerce_orders',
+  'ecommerce_sync_logs',
   'document_sequences',
   // PHASE_05 — organization (DATABASE_DESIGN §5 + §3 currencies).
   'company_profiles',
@@ -143,6 +147,75 @@ export const rlsProtectedTables = [
   // 2026-09 architecture/RBAC reorganisation (migration 0032).
   'devices',
   'membership_role_scopes',
+  // Future enhancement 01 — bank feeds and reconciliation.
+  'bank_accounts',
+  'bank_statements',
+  'bank_statement_lines',
+  'bank_reconciliation_rules',
+  // R17 — printer/report links.
+  'printer_report_links',
+  // Future enhancement 02 — purchase-invoice OCR jobs and their extracted fields.
+  'ocr_jobs',
+  // Future enhancement 04 — approval workflow engine (migration 0100).
+  'approval_workflows',
+  'approval_steps',
+  'approval_requests',
+  'approval_decisions',
+  // Future enhancement 05 — tenant-defined fields, values and saved report definitions.
+  'custom_fields',
+  'custom_field_values',
+  'custom_reports',
+  // Future enhancement 06 — durable idempotency ledger for offline POS invoices.
+  'offline_queue',
+  // Future enhancement 07 — Mudad/GOSI files and online invoice payment links.
+  'payroll_compliance_settings',
+  'payroll_wps_files',
+  'payroll_gosi_files',
+  'payment_provider_configs',
+  'payment_links',
+  // Future enhancement 08 — assistant conversations, settings, usage and suggestions.
+  'ai_settings',
+  'ai_conversations',
+  'ai_usage_logs',
+  'ai_suggestions',
+  // Future enhancement 09 — mobile attendance, requests and push notices.
+  'employee_geofences',
+  'employee_attendance',
+  'employee_requests',
+  'employee_push_subscriptions',
+  'employee_push_outbox',
+  // Future enhancement 10 — warehouse bins and light manufacturing.
+  'warehouse_bins',
+  'bin_balances',
+  'bin_transfers',
+  'boms',
+  'bom_lines',
+  'manufacturing_orders',
+  'manufacturing_moves',
+  // Future enhancement 11 — supplier portal and a drawn signature.
+  'supplier_portal_users',
+  'supplier_portal_sessions',
+  'supplier_rfqs',
+  'supplier_invoice_uploads',
+  'esign_requests',
+  'esign_events',
+  // Future enhancement 12 — personal BI dashboards.
+  'dashboards',
+  'dashboard_widgets',
+  // Future enhancement 13 — installed apps, custom domains and branding.
+  // `marketplace_apps` is a platform catalog (no tenant_id) and is not in this list.
+  'tenant_apps',
+  'tenant_domains',
+  'tenant_branding',
+  // Future enhancement 14 — sales pipeline. `crm_settings` is tenant-scoped too.
+  'crm_pipelines',
+  'crm_deals',
+  'crm_activities',
+  'crm_whatsapp_templates',
+  'crm_settings',
+  // Future enhancement 15 — comments on a document head.
+  'comments',
+  'comment_mentions',
 ] as const;
 
 export type QueryRowsOf<T> = QueryRows<T>;

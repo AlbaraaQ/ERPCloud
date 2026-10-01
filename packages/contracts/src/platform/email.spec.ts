@@ -27,8 +27,9 @@ describe('email event registry (P-C6)', () => {
     // (رابط التأكيد المزدوج) — فاستمارةُ تواصلٍ لا تُجيب ولا نشرةٌ تُشترط بلا حدثَين.
     // والثاني والعشرون أضافه P-M7: `campaign.message` — نصُّ الحملة ظرفٌ لا محتوى
     // (المحتوى في صفّ الحملة)، وهو حدثُ منصّةٍ كسابقَيه.
-    expect(emailEvents).toHaveLength(22);
-    expect(new Set(emailEvents).size).toBe(22);
+    expect(emailEvents).toHaveLength(23);
+    expect(new Set(emailEvents).size).toBe(23);
+    expect(emailEventRegistry.find((entry) => entry.event === 'comment.mention')?.scope).toBe('tenant');
     expect(emailEvents).toContain('portal.access.grant');
     expect(emailEvents).toContain('subscription.payment_failed');
     expect(emailEvents).toContain('announcement');

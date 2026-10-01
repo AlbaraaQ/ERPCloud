@@ -69,3 +69,18 @@ export function verifyDownloadToken(input: DownloadTokenInput, signature: string
 export function isExpired(expiresAtEpochSeconds: number, now = new Date()): boolean {
   return expiresAtEpochSeconds * 1000 <= now.getTime();
 }
+
+/**
+ * Browser-facing logo URL. A relative path works in the staff iframe (the rewrite
+ * reaches the API). `API_PUBLIC_URL` makes a saved print file load the image too.
+ * Signing can throw when no secret is configured; callers must treat that as "no logo".
+ */
+export function signedContentUrl(fileId: string, tenantId: string, ttlSeconds: number): string {
+  const expiresAtEpochSeconds = Math.floor(Date.now() / 1000) + ttlSeconds;
+  const signature = signDownloadToken({ fileId, tenantId, expiresAtEpochSeconds });
+  const path =
+    `/api/v1/files/${fileId}/content?tenant=${encodeURIComponent(tenantId)}` +
+    `&expires=${expiresAtEpochSeconds}&signature=${encodeURIComponent(signature)}`;
+  const base = (process.env.API_PUBLIC_URL || '').replace(/\/+$/, '');
+  return base ? `${base}${path}` : path;
+}

@@ -23,10 +23,10 @@
 
 ## التصميم التقني
 
-### ترحيل 0098
+### ترحيل 0099
 ```sql
 ecommerce_stores (id, tenant_id, provider, store_url, access_token_enc, refresh_token_enc, status: active|error, settings: jsonb)
-ecommerce_orders (id, tenant_id, store_id, remote_id unique, remote_order_no, status: pending|imported|failed, payload, erp_invoice_id, error)
+ecommerce_orders (id, tenant_id, store_id, remote_id unique per store, remote_order_no, status: pending|imported|failed, payload, erp_invoice_id, error)
 ecommerce_sync_logs (id, store_id, direction: in|out, entity: order|stock, status, message)
 ```
 

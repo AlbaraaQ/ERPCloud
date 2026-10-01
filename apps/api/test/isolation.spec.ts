@@ -170,6 +170,10 @@ describe('tenant isolation (TESTING_STRATEGY §6)', () => {
       'notifications',
       'outbox_jobs',
       'idempotency_keys',
+      // Future enhancement 03 — e-commerce stores, orders and sync logs (migration 0099).
+      'ecommerce_stores',
+      'ecommerce_orders',
+      'ecommerce_sync_logs',
       'document_sequences',
       // PHASE_05 — organization structure.
       'company_profiles',
@@ -185,6 +189,45 @@ describe('tenant isolation (TESTING_STRATEGY §6)', () => {
       // 2026-09 architecture/RBAC reorganisation (migration 0032).
       'devices',
       'membership_role_scopes',
+      // Future enhancement 01 — bank feeds and reconciliation (migration 0096).
+      'bank_accounts',
+      'bank_statements',
+      'bank_statement_lines',
+      'bank_reconciliation_rules',
+      // R17 — printer/report links.
+      'printer_report_links',
+      // Future enhancement 02 — purchase-invoice OCR jobs (migration 0097).
+      'ocr_jobs',
+      // Future enhancement 04 — approval workflows and their parent-scoped children.
+      'approval_workflows',
+      'approval_steps',
+      'approval_requests',
+      'approval_decisions',
+      'custom_fields',
+      'custom_field_values',
+      'custom_reports',
+      'offline_queue',
+      'payroll_compliance_settings',
+      'payroll_wps_files',
+      'payroll_gosi_files',
+      'payment_provider_configs',
+      'payment_links',
+      'ai_settings',
+      'ai_conversations',
+      'ai_usage_logs',
+      'ai_suggestions',
+      'employee_geofences',
+      'employee_attendance',
+      'employee_requests',
+      'employee_push_subscriptions',
+      'employee_push_outbox',
+      'warehouse_bins',
+      'bin_balances',
+      'bin_transfers',
+      'boms',
+      'bom_lines',
+      'manufacturing_orders',
+      'manufacturing_moves',
     ]);
   });
 

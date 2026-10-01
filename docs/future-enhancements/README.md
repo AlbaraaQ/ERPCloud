@@ -20,15 +20,15 @@
 | 4 | `04_APPROVAL_WORKFLOW` | محرك موافقات مرئي | P1 | 2 أسبوع | يفتح سوق الشركات |
 | 5 | `05_REPORT_BUILDER_CUSTOM_FIELDS` | تقرير Builder + حقول مخصصة | P2 | 2.5 أسبوع | يقلل تخصيص 70% |
 | 6 | `06_OFFLINE_POS_PWA` | POS أوفلاين + مسح كاميرا | P2 | 2 أسبوع | يفتح المرسى بلا نت |
-| 7 | `07_MUDAD_MOYASAR` | مدد + ميسر + تأمينات | P2 | 2 أسبوع | ميزة HR قاتلة |
-| 8 | `08_AI_ACCOUNTING_ASSISTANT` | مساعد محاسبي AI | P2 | 2 أسبوع | تسويق قوي |
-| 9 | `09_MOBILE_EMPLOYEE_APP` | تطبيق موظف GPS + إجازات | P2 | 2 أسبوع | مطلوب لكل شركة |
-| 10 | `10_WMS_BOM` | مستودعات متقدمة + تصنيع | P3 | 3 أسابيع | للمستودعات الكبيرة |
-| 11 | `11_SUPPLIER_PORTAL_E_SIGNATURE` | بوابة موردين + توقيع | P3 | 2 أسبوع | ميزة B2B |
-| 12 | `12_BI_DASHBOARD` | لوحة BI قابلة للسحب | P2 | 2 أسبوع | كل مدير لوحته |
-| 13 | `13_MARKETPLACE_WHITE_LABEL` | سوق إضافات + دومين خاص | P3 | 3 أسابيع | يزيد MRR |
-| 14 | `14_ADVANCED_CRM` | CRM + واتساب | P3 | 2.5 أسبوع | لفريق المبيعات |
-| 15 | `15_COLLABORATION` | تعليقات ومنشن | P3 | 1.5 أسبوع | يقلل واتساب خارجي |
+| 7 | `07_MUDAD_MOYASAR` | مدد + ميسر + تأمينات (منفذة) | P2 | 2 أسبوع | ميزة HR قاتلة |
+| 8 | `08_AI_ACCOUNTING_ASSISTANT` | مساعد محاسبي AI (منفذة) | P2 | 2 أسبوع | تسويق قوي |
+| 9 | `09_MOBILE_EMPLOYEE_APP` | تطبيق موظف GPS + إجازات (منفذة) | P2 | 2 أسبوع | مطلوب لكل شركة |
+| 10 | `10_WMS_BOM` | مستودعات متقدمة + تصنيع (منفذة) | P3 | 3 أسابيع | للمستودعات الكبيرة |
+| 11 | `11_SUPPLIER_PORTAL_E_SIGNATURE` | بوابة موردين + توقيع (منفذة) | P3 | 2 أسبوع | ميزة B2B |
+| 12 | `12_BI_DASHBOARD` | لوحة BI قابلة للسحب (منفذة) | P2 | 2 أسبوع | كل مدير لوحته |
+| 13 | `13_MARKETPLACE_WHITE_LABEL` | سوق إضافات + دومين خاص (منفذة) | P3 | 3 أسابيع | يزيد MRR |
+| 14 | `14_ADVANCED_CRM_WHATSAPP` | CRM + واتساب (منفذة) | P3 | 2.5 أسبوع | لفريق المبيعات |
+| 15 | `15_COLLABORATION_COMMENTS_MENTIONS` | تعليقات ومنشن (منفذة) | P3 | 1.5 أسبوع | يقلل واتساب خارجي |
 | 16 | `16_PROJECT_KANBAN_GANTT` | مشاريع Kanban+Gantt+وقت | P3 | 2.5 أسبوع | للمقاولات |
 | 17 | `17_UI_REDESIGN_PRO_PROMPT` | إعادة تصميم staff بمستوى Stripe | P1 | 1.5 أسبوع | واجهات احترافية |
 | 18 | `18_UI_REDESIGN_ALL_APPS_PRO_PROMPT` | إعادة تصميم staff+platform+marketing | P1 | 2.5 أسبوع | 3 أسطح بمستوى عالمي |
@@ -42,7 +42,7 @@
 
 ## ملاحظات تنفيذ
 
-- كل ترحيل يبدأ من 0096 (آخر ترحيل حالي 0095)
+- الترحيل `0096` استُخدم لـ Bank Feeds و`0097` لـ OCR و`0098` لتحصين RLS؛ تكامل التجارة الإلكترونية يبدأ من `0099`. المرحلة 10 تستخدم `0106`، والمرحلة 11 `0107`، والمرحلة 12 `0108`، والمرحلة 13 `0109`، والمرحلة 14 `0110`، والمرحلة 15 `0111`. التالي الحر `0112`.
 - كل صلاحية جديدة تُضاف في `packages/contracts/src/permissions.ts` + ترحيل idempotent + اختبار `permission-codes.spec.ts`
 - كل شاشة جديدة يجب أن تكون مسار حقيقي ويقيسها `navigation.spec.ts`
 - لا `git add -A` — مسارات صريحة فقط
@@ -51,7 +51,18 @@
 
 ## الحالة الحالية (للتذكير)
 
-- 01-10 مكتملة 100% (R17 أغلق 10)
+- **01 Bank Feeds مكتملة 100%**: migration `0096_bank_feeds.sql`، API، 3 شاشات Staff، اختبار 8 حالات، وسكربت تحقق حي 15 نقطة.
+- **02 OCR قيد التحقق بمزود خارجي**: migration `0097_ocr_purchase_invoices.sql`، API/worker، شاشة مراجعة Staff، اختبار 6 حالات، و`verify-ocr.mjs`؛ يلزم ضبط endpoint حقيقي لاختبار دقة العربية.
+- **03 Ecommerce منفذة**: migration `0099_ecommerce_stores_orders.sql`، مزودو Salla/Zid/Shopify مع mock transport، عاملَا `ecommerce.import` و`ecommerce.stock` على طابور `maintenance`، 11 حالة mock + اختبار API، و`verify-ecommerce.mjs` بأكثر من 15 نقطة؛ اختبار sandbox خارجي يبقى اختيارياً.
+- **04 Approval Workflow منفذة**: migration `0100_approval_workflows.sql`، مسارات tenant-scoped وخطوات متسلسلة وinbox/history، بوابة ترحيل المبيعات والمشتريات، إشعارات داخل التطبيق، 13 حالة API و`verify-approvals.mjs` بأكثر من 20 نقطة.
+- **09 تطبيق الموظف منفذ**: migration `0105_employee_mobile.sql`، حضور GPS مع نطاق الفرع، طلبات وموافقات، و`/m` يعمل أوفلاين. `verify-employee-mobile.mjs` بـ 10 نقاط.
+- **10 مستودعات وتصنيع منفذ**: migration `0106_wms_bom.sql`، رفوف وأرصدة ونقل وجرد، قوائم مواد وأوامر تصنيع بالتكلفة المتوسطة. `verify-wms-bom.mjs`.
+- **11 بوابة الموردين والتوقيع منفذة**: migration `0107_supplier_portal_esign.sql`، دخول مورد بلا صلاحيات ERP، فواتيره ومدفوعاته وطلبات العرض فقط، وتوقيع مرسوم مع رمز لمرة واحدة (ليس XAdES). `supplier-esign.spec.ts` بـ 8 حالات. السجل في `docs/STATUS.md` صف `FE-11`، والجداول في `DATABASE_DESIGN` §18، والمسارات في `API_CONTRACT` §19.
+- **12 لوحات المؤشرات منفذة**: migration `0108_bi_dashboards.sql`، كتالوج 20 ويدجت بلا SQL من المستخدم، لوحة افتراضية لكل مستخدم، سحب يحفظ الترتيب، وتصدير PDF. `bi-dashboard.spec.ts` بـ 8 حالات. السجل في `docs/STATUS.md` صف `FE-12`، والجداول في `DATABASE_DESIGN` §19، والمسارات في `API_CONTRACT` §20.
+- **15 تعليقات ومنشن منفذة**: migration `0111_comments_mentions.sql` (لا `0109`)، تعليق على رأس المستند ورد بمستوى واحد وحل وحذف، وإشارة تُنشئ إشعاراً وبريداً. `comments.spec.ts` بـ 8 حالات. السجل في `docs/STATUS.md` صف `FE-15`، والجداول في `DATABASE_DESIGN` §22، والمسارات في `API_CONTRACT` §23.
+- **14 CRM وواتساب منفذة**: migration `0110_crm_whatsapp.sql` (لا `0108`)، مسار بأربع مراحل، صفقة تُنقل ما دامت `open`، واتساب صادر ووارد كنشاط، والتنبؤ مجموع القيمة × الاحتمال للصفقات المفتوحة. الشاشات داخل المبيعات لا كموديول جديد. `crm.spec.ts` بـ 10 حالات. السجل في `docs/STATUS.md` صف `FE-14`، والجداول في `DATABASE_DESIGN` §21، والمسارات في `API_CONTRACT` §22.
+- **13 سوق الإضافات والعلامة البيضاء منفذة**: migration `0109_marketplace_white_label.sql`، كتالوج مُراجَع بلا كود طرف ثالث، تفعيل سلة يُظهر `/settings/ecommerce` وإيقافها يُخفيها، دومين يُتحقق بـ TXT والشهادة يدوية، والشعار يظهر في الفاتورة. `marketplace.spec.ts` بـ 8 حالات. السجل في `docs/STATUS.md` صف `FE-13`، والجداول في `DATABASE_DESIGN` §20، والمسارات في `API_CONTRACT` §21.
+- **08 المساعد المحاسبي منفذ**: migration `0104_ai_assistant.sql`، دردشة `/assistant` وزر عائم، مجاميع المستأجر فقط، و`verify-ai.mjs` بـ 13 نقطة.
 - P-C1..12 مكتملة
 - P-M1..10 مكتملة
 - 232 شاشة ready + 1 planned مستبعدة
