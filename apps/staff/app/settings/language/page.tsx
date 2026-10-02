@@ -28,22 +28,22 @@ export default function LanguagePage() {
         className={`relative w-full rounded-xl border p-4 text-start transition-all duration-150 ease-out cursor-pointer ${
           active
             ? 'border-brand-600 bg-brand-50/50 shadow-3 ring-1 ring-brand-600'
-            : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-2'
+            : 'border-line bg-surface hover:border-line-strong hover:shadow-2'
         }`}
         dir={dir}
       >
         {active ? (
-          <span className="absolute top-3 end-3 grid place-items-center size-6 rounded-full bg-brand-600 text-white">
+          <span className="absolute top-3 end-3 grid place-items-center size-6 rounded-full bg-brand-600 text-on-accent">
             <Check size={14} strokeWidth={3} />
           </span>
         ) : null}
         <div className="flex items-center gap-3">
-          <span className="grid place-items-center size-11 rounded-xl bg-slate-100 text-2xl flex-none">{flag}</span>
+          <span className="grid place-items-center size-11 rounded-xl bg-surface-3 text-2xl flex-none">{flag}</span>
           <div className="min-w-0">
-            <p className="m-0 text-[15px] font-bold text-slate-900">
-              {titleAr} <span className="text-slate-400 font-semibold">· {titleEn}</span>
+            <p className="m-0 text-[15px] font-bold text-ink">
+              {titleAr} <span className="text-muted font-semibold">· {titleEn}</span>
             </p>
-            <p className="m-0 mt-1 text-[12.5px] text-slate-500 leading-snug">{detail}</p>
+            <p className="m-0 mt-1 text-[12.5px] text-muted leading-snug">{detail}</p>
           </div>
         </div>
       </motion.button>
@@ -52,12 +52,12 @@ export default function LanguagePage() {
 
   return (
     <Screen title="اللغة" subtitle="Language" crumbs={['الإعدادات', 'عامة']}>
-      <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-1">
+      <section className="rounded-xl border border-line bg-surface p-4 shadow-1">
         <div className="flex items-center gap-2 mb-3">
           <span className="grid place-items-center size-8 rounded-lg bg-brand-50 text-brand-600">
             <Languages size={16} />
           </span>
-          <h3 className="m-0 text-[15px] font-bold text-slate-900">اختر لغة الواجهة</h3>
+          <h3 className="m-0 text-[15px] font-bold text-ink">اختر لغة الواجهة</h3>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           {option('ar', 'العربية', 'Arabic', 'اتجاه الكتابة من اليمين إلى اليسار (RTL). هذا هو الوضع الافتراضي للنظام.', '🇸🇦')}
@@ -65,9 +65,9 @@ export default function LanguagePage() {
         </div>
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-1">
-        <h3 className="m-0 text-[15px] font-bold text-slate-900 mb-2">{lang === 'ar' ? 'معاينة' : 'Preview'}</h3>
-        <p className="m-0 text-[13.5px] text-slate-600">
+      <section className="rounded-xl border border-line bg-surface p-4 shadow-1">
+        <h3 className="m-0 text-[15px] font-bold text-ink mb-2">{lang === 'ar' ? 'معاينة' : 'Preview'}</h3>
+        <p className="m-0 text-[13.5px] text-ink-2">
           {lang === 'ar'
             ? 'هكذا تظهر النصوص العامة في النظام: الرئيسية، تسجيل الخروج، رسائل الدخول، وحالات الشاشات.'
             : 'This is how shared chrome text renders: Home, Sign out, login messages and screen states.'}

@@ -109,7 +109,7 @@ export function DataTable<T>({
                 </tr>
                 {expanded ? (
                   <tr>
-                    <td colSpan={columns.length} style={{ background: '#fbfbfd', padding: '8px 12px' }}>
+                    <td colSpan={columns.length} style={{ background: 'var(--surface-2)', padding: '8px 12px' }}>
                       {expanded(row)}
                     </td>
                   </tr>

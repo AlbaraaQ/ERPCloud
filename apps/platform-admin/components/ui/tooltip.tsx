@@ -53,10 +53,10 @@ export function Tooltip({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96 }}
             transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
-            className={`absolute z-[80] whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1.5 text-[11.5px] font-semibold text-white shadow-4 pointer-events-none ${POSITIONS[side]}`}
+            className={`absolute z-[80] whitespace-nowrap rounded-lg bg-inverse px-2.5 py-1.5 text-[11.5px] font-semibold text-on-accent shadow-4 pointer-events-none ${POSITIONS[side]}`}
           >
             {label}
-            <span aria-hidden className={`absolute size-2 bg-slate-900 ${ARROWS[side]}`} />
+            <span aria-hidden className={`absolute size-2 bg-inverse ${ARROWS[side]}`} />
           </motion.span>
         ) : null}
       </AnimatePresence>

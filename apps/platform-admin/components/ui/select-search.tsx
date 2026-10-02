@@ -99,11 +99,11 @@ export function SelectSearch({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 w-full h-10 ps-3 pe-2.5 rounded-[10px] border border-slate-300 bg-white text-[13.5px] text-slate-700 hover:border-slate-400 transition-colors duration-150"
+        className="flex items-center gap-2 w-full h-10 ps-3 pe-2.5 rounded-[10px] border border-line-strong bg-surface text-[13.5px] text-ink-2 hover:border-line-strong transition-colors duration-150"
         aria-expanded={open}
       >
         {selected?.avatarName ? <Avatar name={selected.avatarName} src={selected.avatarSrc} size="sm" /> : null}
-        <span className={`flex-1 text-start truncate ${selected ? 'font-semibold' : 'text-slate-400'}`}>
+        <span className={`flex-1 text-start truncate ${selected ? 'font-semibold' : 'text-muted'}`}>
           {selected ? selected.label : placeholder}
         </span>
         {clearable && selected ? (
@@ -114,19 +114,19 @@ export function SelectSearch({
               event.stopPropagation();
               onClear?.();
             }}
-            className="text-slate-300 hover:text-slate-500"
+            className="text-muted hover:text-muted"
             aria-label="مسح"
           >
             ✕
           </span>
         ) : null}
-        <ChevronDown size={15} className={`text-slate-400 transition-transform duration-150 flex-none ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown size={15} className={`text-muted transition-transform duration-150 flex-none ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open ? (
-        <div className="absolute z-40 top-full inset-x-0 mt-1.5 rounded-xl border border-slate-200 bg-white shadow-4 overflow-hidden">
-          <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-100">
-            <Search size={14} className="text-slate-400 flex-none" />
+        <div className="absolute z-40 top-full inset-x-0 mt-1.5 rounded-xl border border-line bg-surface shadow-4 overflow-hidden">
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-line">
+            <Search size={14} className="text-muted flex-none" />
             <input
               ref={inputRef}
               value={query}
@@ -136,12 +136,12 @@ export function SelectSearch({
               }}
               onKeyDown={onKey}
               placeholder="اكتب للبحث…"
-              className="w-full bg-transparent text-[13px] outline-none placeholder:text-slate-400"
+              className="w-full bg-transparent text-[13px] outline-none placeholder:text-muted"
             />
           </div>
           <ul className="max-h-64 overflow-y-auto py-1 m-0 list-none">
             {filtered.length === 0 ? (
-              <li className="px-3 py-4 text-center text-[12.5px] text-slate-400">{emptyText}</li>
+              <li className="px-3 py-4 text-center text-[12.5px] text-muted">{emptyText}</li>
             ) : (
               filtered.map((option, index) => (
                 <li key={option.value}>
@@ -150,16 +150,16 @@ export function SelectSearch({
                     onClick={() => commit(index)}
                     onMouseEnter={() => setActive(index)}
                     className={`w-full flex items-center gap-2.5 px-3 py-2 text-start transition-colors duration-100 ${
-                      index === active ? 'bg-blue-50' : ''
+                      index === active ? 'bg-info-soft' : ''
                     }`}
                   >
                     {option.avatarName ? (
                       <Avatar name={option.avatarName} src={option.avatarSrc} size="sm" />
                     ) : null}
                     <span className="flex-1 min-w-0">
-                      <span className="block text-[13px] font-semibold text-slate-800 truncate">{option.label}</span>
+                      <span className="block text-[13px] font-semibold text-ink truncate">{option.label}</span>
                       {option.sublabel ? (
-                        <span className="block text-[11px] text-slate-400 truncate">{option.sublabel}</span>
+                        <span className="block text-[11px] text-muted truncate">{option.sublabel}</span>
                       ) : null}
                     </span>
                     {option.value === value ? <Check size={15} className="text-brand-600 flex-none" /> : null}

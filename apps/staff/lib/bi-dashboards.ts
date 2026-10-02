@@ -115,7 +115,11 @@ export async function downloadDashboardPdf(id: string): Promise<void> {
 }
 
 /** يعيد رصّ الويدجتات بعد السحب حتى لا يتداخل مقاسان مختلفان. */
-export function reorderWidgets(widgets: DashboardWidget[], fromId: string, toId: string): DashboardWidget[] {
+export function reorderWidgets<T extends DashboardWidget>(
+  widgets: T[],
+  fromId: string,
+  toId: string,
+): T[] {
   const ordered = [...widgets].sort((a, b) => a.positionY - b.positionY || a.positionX - b.positionX);
   const from = ordered.findIndex((widget) => widget.id === fromId);
   const to = ordered.findIndex((widget) => widget.id === toId);

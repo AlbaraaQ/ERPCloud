@@ -6,6 +6,7 @@
  */
 
 import Link from 'next/link';
+import { ThemeToggle } from '@erp/ui/theme';
 import type { ReactNode } from 'react';
 
 import type { MenuItem, SiteShell } from '../../lib/content';
@@ -51,6 +52,10 @@ export function SiteHeader({ shell, locale }: { shell: SiteShell; locale: Locale
           {nav}
         </nav>
         <div className="header-actions">
+          {/* Design v3 §2.1 — the site follows the OS by default and offers the
+              switch here. Same component, same `erp.theme` key as the two
+              back-office surfaces. */}
+          <ThemeToggle variant="icon" lang={locale === 'en' ? 'en' : 'ar'} />
           <LocaleSwitch locale={locale} />
           <Link className="btn ghost" href="/login">
             {t(locale, 'cta.login')}

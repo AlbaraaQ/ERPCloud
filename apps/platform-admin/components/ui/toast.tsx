@@ -24,10 +24,10 @@ export function useToast(): ToastContextValue {
 }
 
 const ICONS: Record<ToastKind, ReactNode> = {
-  success: <CheckCircle2 size={19} className="text-emerald-500" />,
-  error: <XCircle size={19} className="text-red-500" />,
-  info: <Info size={19} className="text-blue-500" />,
-  warning: <TriangleAlert size={19} className="text-amber-500" />,
+  success: <CheckCircle2 size={19} className="text-ok" />,
+  error: <XCircle size={19} className="text-danger" />,
+  info: <Info size={19} className="text-info" />,
+  warning: <TriangleAlert size={19} className="text-warn" />,
 };
 
 const BORDERS: Record<ToastKind, string> = {
@@ -67,18 +67,18 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, x: 24 }}
               transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-              className={`flex items-start gap-2.5 rounded-xl border border-slate-200 border-s-4 bg-white px-3.5 py-3 shadow-4 ${BORDERS[item.kind]}`}
+              className={`flex items-start gap-2.5 rounded-xl border border-line border-s-4 bg-surface px-3.5 py-3 shadow-4 ${BORDERS[item.kind]}`}
               role="status"
             >
               <span className="mt-0.5 flex-none">{ICONS[item.kind]}</span>
               <div className="min-w-0 flex-1">
-                <p className="m-0 text-[13px] font-bold text-slate-800">{item.title}</p>
-                {item.description ? <p className="m-0 mt-0.5 text-[12px] text-slate-500">{item.description}</p> : null}
+                <p className="m-0 text-[13px] font-bold text-ink">{item.title}</p>
+                {item.description ? <p className="m-0 mt-0.5 text-[12px] text-muted">{item.description}</p> : null}
               </div>
               <button
                 type="button"
                 onClick={() => dismiss(item.id)}
-                className="grid place-items-center size-6 rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-600 flex-none"
+                className="grid place-items-center size-6 rounded-md text-muted hover:bg-surface-3 hover:text-ink-2 flex-none"
                 aria-label="إغلاق"
               >
                 <X size={14} />

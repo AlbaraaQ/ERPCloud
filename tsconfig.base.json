@@ -42,5 +42,10 @@
     "packages/**/*.mjs",
     "scripts/**/*.mjs"
   ],
-  "exclude": ["**/node_modules", "**/dist", "**/.next"]
+  "exclude": [
+    "packages/ui",
+    "**/node_modules",
+    "**/dist",
+    "**/.next"
+  ]
 }

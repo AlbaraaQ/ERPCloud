@@ -7,21 +7,21 @@ import type { ReactNode } from 'react';
 export type BadgeTone = 'neutral' | 'blue' | 'green' | 'amber' | 'red' | 'purple';
 
 const TONES: Record<BadgeTone, string> = {
-  neutral: 'bg-slate-100 text-slate-600',
-  blue: 'bg-blue-50 text-blue-700',
-  green: 'bg-emerald-50 text-emerald-700',
-  amber: 'bg-amber-50 text-amber-700',
-  red: 'bg-red-50 text-red-600',
-  purple: 'bg-violet-50 text-violet-700',
+  neutral: 'bg-surface-3 text-ink-2',
+  blue: 'bg-info-soft text-info-ink',
+  green: 'bg-ok-soft text-ok-ink',
+  amber: 'bg-warn-soft text-warn-ink',
+  red: 'bg-danger-soft text-danger',
+  purple: 'bg-brand-soft text-brand',
 };
 
 const DOT_TONES: Record<BadgeTone, string> = {
-  neutral: 'bg-slate-400',
-  blue: 'bg-blue-500',
-  green: 'bg-emerald-500',
-  amber: 'bg-amber-500',
-  red: 'bg-red-500',
-  purple: 'bg-violet-500',
+  neutral: 'bg-line-raised',
+  blue: 'bg-info',
+  green: 'bg-ok',
+  amber: 'bg-warn',
+  red: 'bg-danger',
+  purple: 'bg-brand-2',
 };
 
 /** Maps the API's English status vocabulary onto a tone. */

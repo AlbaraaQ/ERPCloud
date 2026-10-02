@@ -125,7 +125,7 @@ export default function BarcodesPage() {
                   <span className="label-name">{itemLabel(item)}</span>
                   <svg className="label-bars" viewBox={`0 0 ${width} 40`} preserveAspectRatio="none" role="img" aria-label={value}>
                     {bars.map((bar) => (
-                      <rect key={`${bar.x}`} x={bar.x} y={0} width={bar.width} height={40} fill="#111" />
+                      <rect key={`${bar.x}`} x={bar.x} y={0} width={bar.width} height={40} fill="var(--text)" />
                     ))}
                   </svg>
                   <span className="label-code" dir="ltr">

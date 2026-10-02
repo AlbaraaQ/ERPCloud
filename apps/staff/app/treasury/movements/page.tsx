@@ -289,7 +289,7 @@ export default function MovementsPage() {
                 header: '⚖️ الرصيد',
                 align: 'num',
                 cell: (row) => (
-                  <strong style={new Decimal(row.balance || '0').lt(0) ? { color: '#b3261e' } : undefined}>
+                  <strong style={new Decimal(row.balance || '0').lt(0) ? { color: 'var(--danger)' } : undefined}>
                     {money(row.balance)}
                   </strong>
                 ),

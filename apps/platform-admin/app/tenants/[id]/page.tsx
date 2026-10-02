@@ -159,13 +159,13 @@ export default function TenantCardPage() {
       {card.status === 'success' && tenant && (
         <>
           {/* identity strip */}
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-3 rounded-[10px] border border-slate-200 bg-white px-4 py-3 shadow-1">
-            <span className="grid size-11 flex-none place-items-center rounded-xl bg-slate-900 font-mono text-[14px] font-bold text-white" dir="ltr">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-3 rounded-[10px] border border-line bg-surface px-4 py-3 shadow-1">
+            <span className="grid size-11 flex-none place-items-center rounded-xl bg-inverse font-mono text-[14px] font-bold text-on-accent" dir="ltr">
               {tenant.code.slice(0, 2).toUpperCase()}
             </span>
             <span className="min-w-0">
-              <span className="block truncate text-[16px] font-extrabold text-slate-900">{tenant.name}</span>
-              <span className="block font-mono text-[11.5px] text-slate-400" dir="ltr">
+              <span className="block truncate text-[16px] font-extrabold text-ink">{tenant.name}</span>
+              <span className="block font-mono text-[11.5px] text-muted" dir="ltr">
                 {tenant.code} · {tenant.baseCurrency ?? ''} {tenant.timezone ? `· ${tenant.timezone}` : ''}
               </span>
             </span>
@@ -173,7 +173,7 @@ export default function TenantCardPage() {
               <Badge tone={tenant.status === 'active' ? 'green' : tenant.status === 'suspended' ? 'red' : 'neutral'} dot>
                 {STATUS_LABEL[tenant.status] ?? tenant.status}
               </Badge>
-              <span className="text-[12px] font-semibold text-slate-400">
+              <span className="text-[12px] font-semibold text-muted">
                 أُنشئ {when(tenant.createdAt)} · آخر نشاط {when(tenant.lastActivityAt)} · آخر دخول {when(tenant.lastLoginAt)}
               </span>
             </span>
@@ -188,7 +188,7 @@ export default function TenantCardPage() {
           {notice ? (
             <div
               className={`flex items-center gap-2 rounded-[10px] border px-4 py-2.5 text-[13px] font-semibold ${
-                notice.kind === 'ok' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-700'
+                notice.kind === 'ok' ? 'border-ok-line bg-ok-soft text-ok-ink' : 'border-danger-line bg-danger-soft text-danger-ink'
               }`}
             >
               {notice.text}

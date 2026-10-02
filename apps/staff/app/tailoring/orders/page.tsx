@@ -355,7 +355,7 @@ function TailoringOrders() {
                     <tr
                       key={row.id}
                       // ⌛ متأخّر — the desktop paints the row `#FFE4E4` with dark-red text.
-                      style={row.isDelayed ? { background: '#FFE4E4', color: '#8B0000' } : undefined}
+                      style={row.isDelayed ? { background: '#FFE4E4', color: 'var(--danger-ink)' } : undefined}
                       onDoubleClick={() => canManage && openEdit(row)}
                     >
                       <td dir="ltr">{row.number}</td>

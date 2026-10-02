@@ -92,7 +92,7 @@ export default function OfflineQueuePage() {
       actions={
         <>
           <span
-            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-bold ${online ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-bold ${online ? 'bg-ok-soft text-ok-ink' : 'bg-danger-soft text-danger-ink'}`}
           >
             {online ? '🟢 متصل' : '🔴 أوفلاين'}
           </span>
@@ -114,12 +114,12 @@ export default function OfflineQueuePage() {
         </div>
         <div className="stat-card">
           <span>تعارض</span>
-          <strong className="text-red-600">{conflicts.length}</strong>
+          <strong className="text-danger">{conflicts.length}</strong>
           <small>تحتاج حلاً قبل الترحيل</small>
         </div>
         <div className="stat-card">
           <span>مُرحّلة</span>
-          <strong className="text-emerald-600">{synced.length}</strong>
+          <strong className="text-ok">{synced.length}</strong>
           <small>تحمل رقماً حقيقياً</small>
         </div>
       </div>
@@ -182,7 +182,7 @@ export default function OfflineQueuePage() {
                     <td>
                       {row.status === 'conflict' ? (
                         <>
-                          <span className="text-red-700">
+                          <span className="text-danger-ink">
                             {row.message ?? row.errorCode ?? 'تحتاج مراجعة'}
                           </span>
                           <div className="toolbar" style={{ marginTop: 6 }}>
@@ -205,7 +205,7 @@ export default function OfflineQueuePage() {
                           </div>
                         </>
                       ) : row.status === 'synced' ? (
-                        <span className="text-emerald-700">تم الترحيل بنجاح</span>
+                        <span className="text-ok-ink">تم الترحيل بنجاح</span>
                       ) : (
                         <span className="muted">ستتم المحاولة تلقائياً</span>
                       )}

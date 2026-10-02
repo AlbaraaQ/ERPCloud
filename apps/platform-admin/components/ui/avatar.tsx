@@ -13,12 +13,12 @@ const SIZES: Record<AvatarSize, { box: string; text: string; img: number }> = {
 };
 
 const PALETTE = [
-  'bg-blue-100 text-blue-700',
-  'bg-violet-100 text-violet-700',
-  'bg-emerald-100 text-emerald-700',
-  'bg-amber-100 text-amber-700',
-  'bg-rose-100 text-rose-700',
-  'bg-cyan-100 text-cyan-700',
+  'bg-info-soft text-info-ink',
+  'bg-brand-soft text-brand',
+  'bg-ok-soft text-ok-ink',
+  'bg-warn-soft text-warn-ink',
+  'bg-danger-soft text-danger-ink',
+  'bg-info-soft text-info-ink',
 ];
 
 function hashPalette(text: string): string {
@@ -46,7 +46,7 @@ export type AvatarProps = {
   className?: string;
 };
 
-const STATUS_COLORS = { online: 'bg-emerald-500', away: 'bg-amber-500', offline: 'bg-slate-300' } as const;
+const STATUS_COLORS = { online: 'bg-ok', away: 'bg-warn', offline: 'bg-line-raised' } as const;
 
 export function Avatar({ name, src, size = 'md', status = null, children, className = '' }: AvatarProps) {
   const s = SIZES[size];
@@ -61,7 +61,7 @@ export function Avatar({ name, src, size = 'md', status = null, children, classN
       )}
       {status ? (
         <span
-          className={`absolute bottom-0 end-0 size-3 rounded-full border-2 border-white ${STATUS_COLORS[status]}`}
+          className={`absolute bottom-0 end-0 size-3 rounded-full border-2 border-on-accent ${STATUS_COLORS[status]}`}
           aria-label={status}
         />
       ) : null}

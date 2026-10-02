@@ -99,35 +99,35 @@ export default function DashboardPage() {
     <div className="grid gap-5">
       {/* ---------------------------------------------------- greeting */}
       <Reveal>
-        <section className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-1">
+        <section className="relative overflow-hidden rounded-2xl border border-line bg-surface p-5 shadow-1">
           {/* dotted grid + gradient wash */}
           <div
             aria-hidden
             className="absolute inset-0 pointer-events-none opacity-70"
             style={{
               backgroundImage:
-                'radial-gradient(110rem 34rem at 115% -20%, rgb(37 99 235 / 0.10), transparent 55%), radial-gradient(circle, #e2e8f0 1px, transparent 1px)',
+                'radial-gradient(110rem 34rem at 115% -20%, rgb(37 99 235 / 0.10), transparent 55%), radial-gradient(circle, var(--line-strong) 1px, transparent 1px)',
               backgroundSize: 'auto, 18px 18px',
             }}
           />
           <div className="relative flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h1 className="m-0 text-[26px] font-bold text-slate-900 tracking-tight">
+              <h1 className="m-0 text-[26px] font-bold text-ink tracking-tight">
                 {greetingWord}، {firstName} <span aria-hidden>👋</span>
               </h1>
-              <p className="m-0 mt-1 text-[13px] text-slate-500 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <p className="m-0 mt-1 text-[13px] text-muted flex flex-wrap items-center gap-x-3 gap-y-1">
                 <span className="inline-flex items-center gap-1.5">
                   <CalendarDays size={14} className="text-brand-600" />
                   {dates.greg}
                 </span>
-                {dates.hijri ? <span dir="rtl" className="text-slate-400">· {dates.hijri} هـ</span> : null}
+                {dates.hijri ? <span dir="rtl" className="text-muted">· {dates.hijri} هـ</span> : null}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
               {can('sales.invoice.create') ? (
                 <Link
                   href="/sales/invoices/new"
-                  className="inline-flex items-center gap-2 h-10 px-4 rounded-[10px] bg-brand-600 border border-brand-600 text-white text-[13.5px] font-semibold shadow-2 hover:bg-brand-700 transition-all duration-150"
+                  className="inline-flex items-center gap-2 h-10 px-4 rounded-[10px] bg-brand-600 border border-brand-600 text-on-accent text-[13.5px] font-semibold shadow-2 hover:bg-brand-700 transition-all duration-150"
                 >
                   <FilePlus2 size={16} />
                   فاتورة جديدة
@@ -136,7 +136,7 @@ export default function DashboardPage() {
               {can('sales.invoices.view') ? (
                 <Link
                   href="/sales/invoices"
-                  className="inline-flex items-center gap-2 h-10 px-4 rounded-[10px] bg-white border border-slate-300 text-slate-700 text-[13.5px] font-semibold shadow-1 hover:bg-slate-50 transition-all duration-150"
+                  className="inline-flex items-center gap-2 h-10 px-4 rounded-[10px] bg-surface border border-line-strong text-ink-2 text-[13.5px] font-semibold shadow-1 hover:bg-surface-2 transition-all duration-150"
                 >
                   <ReceiptText size={16} />
                   كل الفواتير
@@ -144,7 +144,7 @@ export default function DashboardPage() {
               ) : null}
               <Link
                 href="/reports/sales"
-                className="inline-flex items-center gap-2 h-10 px-4 rounded-[10px] bg-white border border-slate-300 text-slate-700 text-[13.5px] font-semibold shadow-1 hover:bg-slate-50 transition-all duration-150"
+                className="inline-flex items-center gap-2 h-10 px-4 rounded-[10px] bg-surface border border-line-strong text-ink-2 text-[13.5px] font-semibold shadow-1 hover:bg-surface-2 transition-all duration-150"
               >
                 <TrendingUp size={16} />
                 تقارير المبيعات
@@ -152,7 +152,7 @@ export default function DashboardPage() {
               {can('dashboards.view') ? (
                 <Link
                   href="/dashboards"
-                  className="inline-flex items-center gap-2 h-10 px-4 rounded-[10px] bg-white border border-slate-300 text-slate-700 text-[13.5px] font-semibold shadow-1 hover:bg-slate-50 transition-all duration-150"
+                  className="inline-flex items-center gap-2 h-10 px-4 rounded-[10px] bg-surface border border-line-strong text-ink-2 text-[13.5px] font-semibold shadow-1 hover:bg-surface-2 transition-all duration-150"
                 >
                   <LayoutDashboard size={16} />
                   لوحاتي
@@ -216,11 +216,11 @@ export default function DashboardPage() {
       {/* ------------------------------------------------------ charts */}
       <div className="grid gap-4 grid-cols-1 xl:grid-cols-5">
         <Reveal delay={0.15} className="xl:col-span-3">
-          <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-1 h-full">
+          <section className="rounded-xl border border-line bg-surface p-4 shadow-1 h-full">
             <header className="flex items-start justify-between gap-3 mb-2">
               <div>
-                <h3 className="m-0 text-[15px] font-bold text-slate-900">مبيعات آخر 7 أيام</h3>
-                <p className="m-0 mt-0.5 text-xs text-slate-500">إجمالي الفواتير المرحّلة (بالريال السعودي)</p>
+                <h3 className="m-0 text-[15px] font-bold text-ink">مبيعات آخر 7 أيام</h3>
+                <p className="m-0 mt-0.5 text-xs text-muted">إجمالي الفواتير المرحّلة (بالريال السعودي)</p>
               </div>
               <Badge tone="blue" dot>
                 {stats ? `${stats.week.reduce((sum, day) => sum + day.count, 0)} فاتورة` : '…'}
@@ -235,11 +235,11 @@ export default function DashboardPage() {
         </Reveal>
 
         <Reveal delay={0.25} className="xl:col-span-2">
-          <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-1 h-full">
+          <section className="rounded-xl border border-line bg-surface p-4 shadow-1 h-full">
             <header className="flex items-start justify-between gap-3 mb-2">
               <div>
-                <h3 className="m-0 text-[15px] font-bold text-slate-900">المبيعات حسب الفرع</h3>
-                <p className="m-0 mt-0.5 text-xs text-slate-500">توزيع الإيراد على الفروع</p>
+                <h3 className="m-0 text-[15px] font-bold text-ink">المبيعات حسب الفرع</h3>
+                <p className="m-0 mt-0.5 text-xs text-muted">توزيع الإيراد على الفروع</p>
               </div>
             </header>
             {data.status === 'loading' ? (
@@ -267,9 +267,9 @@ export default function DashboardPage() {
       {/* ------------------------------------------------ mini tables */}
       <div className="grid gap-4 grid-cols-1 xl:grid-cols-2">
         <Reveal delay={0.3}>
-          <section className="rounded-xl border border-slate-200 bg-white shadow-1">
+          <section className="rounded-xl border border-line bg-surface shadow-1">
             <header className="flex items-center justify-between gap-3 px-4 pt-4 pb-2">
-              <h3 className="m-0 text-[15px] font-bold text-slate-900">أحدث الفواتير</h3>
+              <h3 className="m-0 text-[15px] font-bold text-ink">أحدث الفواتير</h3>
               <Link href="/sales/invoices" className="text-[12.5px] font-bold text-brand-600 hover:text-brand-700">
                 عرض الكل ←
               </Link>
@@ -279,25 +279,25 @@ export default function DashboardPage() {
                 <SkeletonCard lines={4} />
               </div>
             ) : stats && stats.lastInvoices.length > 0 ? (
-              <ul className="m-0 list-none p-0 divide-y divide-slate-100">
+              <ul className="m-0 list-none p-0 divide-y divide-line">
                 {stats.lastInvoices.map((invoice) => (
                   <li key={invoice.id}>
                     <Link
                       href={`/sales/invoices/${invoice.id}`}
-                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 transition-colors duration-150"
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-2 transition-colors duration-150"
                     >
-                      <span className="grid place-items-center size-9 rounded-lg bg-blue-50 text-brand-600 flex-none">
+                      <span className="grid place-items-center size-9 rounded-lg bg-info-soft text-brand-600 flex-none">
                         <ReceiptText size={16} />
                       </span>
                       <span className="flex-1 min-w-0">
-                        <span className="block text-[13px] font-bold text-slate-800 truncate" dir="ltr">
+                        <span className="block text-[13px] font-bold text-ink truncate" dir="ltr">
                           {invoice.number ?? 'مسودة'}
                         </span>
-                        <span className="block text-[11.5px] text-slate-400 truncate">
+                        <span className="block text-[11.5px] text-muted truncate">
                           {data.data ? partyName(invoice, data.data.parties) : '—'} · {shortDate(invoice.postedAt ?? invoice.createdAt)}
                         </span>
                       </span>
-                      <span className="text-[13px] font-bold text-slate-800" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                      <span className="text-[13px] font-bold text-ink" style={{ fontVariantNumeric: 'tabular-nums' }}>
                         {money(invoice.total)}
                       </span>
                       <Badge tone={invoice.paymentStatus === 'paid' ? 'green' : 'amber'} status={invoice.paymentStatus}>
@@ -321,9 +321,9 @@ export default function DashboardPage() {
         </Reveal>
 
         <Reveal delay={0.4}>
-          <section className="rounded-xl border border-slate-200 bg-white shadow-1">
+          <section className="rounded-xl border border-line bg-surface shadow-1">
             <header className="flex items-center justify-between gap-3 px-4 pt-4 pb-2">
-              <h3 className="m-0 text-[15px] font-bold text-slate-900">أصناف تحت الحد الأدنى</h3>
+              <h3 className="m-0 text-[15px] font-bold text-ink">أصناف تحت الحد الأدنى</h3>
               <Link href="/inventory/below-minimum" className="text-[12.5px] font-bold text-brand-600 hover:text-brand-700">
                 عرض الكل ←
               </Link>
@@ -333,20 +333,20 @@ export default function DashboardPage() {
                 <SkeletonCard lines={4} />
               </div>
             ) : data.data && data.data.lowStock.length > 0 ? (
-              <ul className="m-0 list-none p-0 divide-y divide-slate-100">
+              <ul className="m-0 list-none p-0 divide-y divide-line">
                 {data.data.lowStock.slice(0, 5).map((row) => (
                   <li key={`${row.itemId}-${row.warehouseId}`} className="flex items-center gap-3 px-4 py-2.5">
-                    <span className="grid place-items-center size-9 rounded-lg bg-red-50 text-red-500 flex-none">
+                    <span className="grid place-items-center size-9 rounded-lg bg-danger-soft text-danger flex-none">
                       <PackageSearch size={16} />
                     </span>
                     <span className="flex-1 min-w-0">
-                      <span className="block text-[13px] font-bold text-slate-800 truncate">{row.nameAr}</span>
-                      <span className="block text-[11.5px] text-slate-400 truncate" dir="ltr">
+                      <span className="block text-[13px] font-bold text-ink truncate">{row.nameAr}</span>
+                      <span className="block text-[11.5px] text-muted truncate" dir="ltr">
                         {row.sku}
                       </span>
                     </span>
-                    <span className="text-[12px] text-slate-500 font-semibold">
-                      المتاح <b className="text-red-600">{row.quantity}</b> / الحد {row.minQty}
+                    <span className="text-[12px] text-muted font-semibold">
+                      المتاح <b className="text-danger">{row.quantity}</b> / الحد {row.minQty}
                     </span>
                     <Badge tone="red" dot>
                       ناقص {row.shortage}

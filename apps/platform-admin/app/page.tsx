@@ -186,14 +186,14 @@ export default function PlatformOverviewPage() {
       {/* charts */}
       <div className="grid gap-4 xl:grid-cols-2">
         <Reveal delay={0.1}>
-          <section className="rounded-[10px] border border-slate-200 bg-white p-4 shadow-1">
+          <section className="rounded-[10px] border border-line bg-surface p-4 shadow-1">
             <div className="mb-2 flex items-center justify-between">
               <div>
-                <h3 className="m-0 text-[15px] font-bold text-slate-900">منحنى MRR</h3>
-                <p className="m-0 mt-0.5 text-[12px] text-slate-400">الإيراد الشهري المتكرر — آخر {a?.mrrSeries.length ?? 6} أشهر</p>
+                <h3 className="m-0 text-[15px] font-bold text-ink">منحنى MRR</h3>
+                <p className="m-0 mt-0.5 text-[12px] text-muted">الإيراد الشهري المتكرر — آخر {a?.mrrSeries.length ?? 6} أشهر</p>
               </div>
               {a ? (
-                <span className="rounded-md bg-violet-50 px-2.5 py-1 font-mono text-[12px] font-bold text-violet-700" dir="ltr">
+                <span className="rounded-md bg-brand-soft px-2.5 py-1 font-mono text-[12px] font-bold text-brand" dir="ltr">
                   {money(Number(a.mrr) || 0, a.currency)}
                 </span>
               ) : null}
@@ -205,7 +205,7 @@ export default function PlatformOverviewPage() {
                 dataKey="mrr"
                 name="MRR"
                 height={264}
-                color="#7c3aed"
+                color="var(--color-chart-2)"
                 formatter={(v) => money(v)}
               />
             ) : (
@@ -215,11 +215,11 @@ export default function PlatformOverviewPage() {
         </Reveal>
 
         <Reveal delay={0.16}>
-          <section className="rounded-[10px] border border-slate-200 bg-white p-4 shadow-1">
+          <section className="rounded-[10px] border border-line bg-surface p-4 shadow-1">
             <div className="mb-2 flex items-center justify-between">
               <div>
-                <h3 className="m-0 text-[15px] font-bold text-slate-900">التسرّب الشهري</h3>
-                <p className="m-0 mt-0.5 text-[12px] text-slate-400">قيمة التراخيص المفقودة كل شهر (SAR)</p>
+                <h3 className="m-0 text-[15px] font-bold text-ink">التسرّب الشهري</h3>
+                <p className="m-0 mt-0.5 text-[12px] text-muted">قيمة التراخيص المفقودة كل شهر (SAR)</p>
               </div>
               {a ? (
                 <Badge tone="neutral" dot>{a.churn.windowMonths} شهراً</Badge>
@@ -232,7 +232,7 @@ export default function PlatformOverviewPage() {
                 dataKey="churned"
                 name="Churn"
                 height={264}
-                color="#f59e0b"
+                color="var(--color-chart-4)"
                 formatter={(v) => money(v)}
               />
             ) : (
@@ -245,11 +245,11 @@ export default function PlatformOverviewPage() {
       {/* customers + alerts */}
       <div className="grid gap-4 xl:grid-cols-5">
         <Reveal delay={0.2} className="xl:col-span-3">
-          <section className="rounded-[10px] border border-slate-200 bg-white shadow-1 overflow-hidden">
+          <section className="rounded-[10px] border border-line bg-surface shadow-1 overflow-hidden">
             <header className="flex items-center justify-between px-4 pt-4 pb-2">
               <div>
-                <h3 className="m-0 text-[15px] font-bold text-slate-900">أحدث العملاء</h3>
-                <p className="m-0 mt-0.5 text-[12px] text-slate-400">آخر المنضمّين إلى المنصة</p>
+                <h3 className="m-0 text-[15px] font-bold text-ink">أحدث العملاء</h3>
+                <p className="m-0 mt-0.5 text-[12px] text-muted">آخر المنضمّين إلى المنصة</p>
               </div>
               <Link href="/tenants">
                 <Button variant="ghost" size="sm" icon={<ArrowLeft size={13} />}>كل العملاء</Button>
@@ -259,7 +259,7 @@ export default function PlatformOverviewPage() {
               {tenants.status === 'loading' ? (
                 <div className="grid gap-2 p-2">
                   {[0, 1, 2].map((i) => (
-                    <div key={i} className="h-12 animate-pulse rounded-lg bg-slate-100" style={{ width: `${98 - i * 6}%` }} />
+                    <div key={i} className="h-12 animate-pulse rounded-lg bg-surface-3" style={{ width: `${98 - i * 6}%` }} />
                   ))}
                 </div>
               ) : lastCustomers.length === 0 ? (
@@ -272,14 +272,14 @@ export default function PlatformOverviewPage() {
                     <li key={t.id}>
                       <Link
                         href={`/tenants/${t.id}`}
-                        className="flex items-center gap-3 rounded-lg px-2.5 py-2.5 transition-colors duration-100 hover:bg-violet-50/50"
+                        className="flex items-center gap-3 rounded-lg px-2.5 py-2.5 transition-colors duration-100 hover:bg-brand-soft"
                       >
-                        <span className="grid size-9 flex-none place-items-center rounded-lg bg-slate-900 font-mono text-[12px] font-bold text-white" dir="ltr">
+                        <span className="grid size-9 flex-none place-items-center rounded-lg bg-inverse font-mono text-[12px] font-bold text-on-accent" dir="ltr">
                           {t.code.slice(0, 2).toUpperCase()}
                         </span>
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate text-[13.5px] font-bold text-slate-800">{t.name}</span>
-                          <span className="block font-mono text-[11px] text-slate-400" dir="ltr">
+                          <span className="block truncate text-[13.5px] font-bold text-ink">{t.name}</span>
+                          <span className="block font-mono text-[11px] text-muted" dir="ltr">
                             {t.code} · {new Date(t.createdAt).toLocaleDateString('ar-SA-u-ca-gregory', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' })}
                           </span>
                         </span>
@@ -297,23 +297,23 @@ export default function PlatformOverviewPage() {
         </Reveal>
 
         <Reveal delay={0.26} className="xl:col-span-2">
-          <section className="rounded-[10px] border border-slate-200 bg-white shadow-1 overflow-hidden h-full">
+          <section className="rounded-[10px] border border-line bg-surface shadow-1 overflow-hidden h-full">
             <header className="flex items-center justify-between px-4 pt-4 pb-2">
               <div>
-                <h3 className="m-0 text-[15px] font-bold text-slate-900">تنبيهات الصحة</h3>
-                <p className="m-0 mt-0.5 text-[12px] text-slate-400">ما يستحق النظر من النظام</p>
+                <h3 className="m-0 text-[15px] font-bold text-ink">تنبيهات الصحة</h3>
+                <p className="m-0 mt-0.5 text-[12px] text-muted">ما يستحق النظر من النظام</p>
               </div>
               {critical > 0 ? (
                 <span className="relative grid size-2.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-70" />
-                  <span className="relative inline-flex size-2.5 rounded-full bg-red-500" />
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-danger opacity-70" />
+                  <span className="relative inline-flex size-2.5 rounded-full bg-danger" />
                 </span>
               ) : null}
             </header>
             {analytics.status === 'loading' ? (
               <div className="grid gap-2 px-3 pb-3">
                 {[0, 1, 2].map((i) => (
-                  <div key={i} className="h-14 animate-pulse rounded-lg bg-slate-100" />
+                  <div key={i} className="h-14 animate-pulse rounded-lg bg-surface-3" />
                 ))}
               </div>
             ) : (a?.alerts ?? []).length === 0 ? (
@@ -326,28 +326,28 @@ export default function PlatformOverviewPage() {
                   <li key={alert.kind}>
                     <Link
                       href={alert.href}
-                      className="flex items-start gap-2.5 rounded-lg px-2.5 py-2.5 transition-colors duration-100 hover:bg-slate-50"
+                      className="flex items-start gap-2.5 rounded-lg px-2.5 py-2.5 transition-colors duration-100 hover:bg-surface-2"
                     >
                       <span
                         className={`mt-1 grid size-2.5 flex-none rounded-full ${
                           alert.severity === 'critical' || alert.severity === 'high'
-                            ? 'bg-red-500'
+                            ? 'bg-danger'
                             : alert.severity === 'medium' || alert.severity === 'warning'
-                              ? 'bg-amber-500'
-                              : 'bg-slate-400'
+                              ? 'bg-warn'
+                              : 'bg-line-raised'
                         }`}
                         style={{ boxShadow: alert.severity === 'critical' || alert.severity === 'high' ? '0 0 0 4px rgb(239 68 68 / 0.15)' : undefined }}
                       />
                       <span className="min-w-0 flex-1">
-                        <span className="block text-[13px] font-bold text-slate-800">{alert.title}</span>
+                        <span className="block text-[13px] font-bold text-ink">{alert.title}</span>
                         {alert.examples.length > 0 ? (
-                          <span className="block truncate text-[11.5px] text-slate-400">
+                          <span className="block truncate text-[11.5px] text-muted">
                             {alert.examples.slice(0, 2).map((e) => e.label).join('، ')}
                             {alert.examples.length > 2 ? ` +${alert.examples.length - 2}` : ''}
                           </span>
                         ) : null}
                       </span>
-                      <span className="flex-none rounded-md bg-slate-100 px-2 py-0.5 font-mono text-[11px] font-bold text-slate-600" dir="ltr">
+                      <span className="flex-none rounded-md bg-surface-3 px-2 py-0.5 font-mono text-[11px] font-bold text-ink-2" dir="ltr">
                         {alert.count}
                       </span>
                     </Link>
@@ -362,29 +362,29 @@ export default function PlatformOverviewPage() {
       {/* definitions */}
       {a ? (
         <Reveal delay={0.3}>
-          <details className="group rounded-[10px] border border-slate-200 bg-white shadow-1">
-            <summary className="cursor-pointer list-none px-4 py-3 text-[12.5px] font-bold text-slate-500 transition-colors duration-150 hover:text-slate-800">
+          <details className="group rounded-[10px] border border-line bg-surface shadow-1">
+            <summary className="cursor-pointer list-none px-4 py-3 text-[12.5px] font-bold text-muted transition-colors duration-150 hover:text-ink">
               <span className="inline-flex items-center gap-2">
                 <span className="transition-transform duration-200 group-open:rotate-90">›</span>
                 كيف حُسبت هذه الأرقام (التعريفات)
               </span>
             </summary>
-            <dl className="m-0 grid gap-2 border-t border-slate-100 px-4 py-3 text-[12.5px] md:grid-cols-2">
+            <dl className="m-0 grid gap-2 border-t border-line px-4 py-3 text-[12.5px] md:grid-cols-2">
               <div>
-                <dt className="font-mono font-bold text-violet-700">MRR</dt>
-                <dd className="m-0 text-slate-600">{a.definitions.mrr}</dd>
+                <dt className="font-mono font-bold text-brand">MRR</dt>
+                <dd className="m-0 text-ink-2">{a.definitions.mrr}</dd>
               </div>
               <div>
-                <dt className="font-mono font-bold text-violet-700">Churn</dt>
-                <dd className="m-0 text-slate-600">{a.definitions.churn}</dd>
+                <dt className="font-mono font-bold text-brand">Churn</dt>
+                <dd className="m-0 text-ink-2">{a.definitions.churn}</dd>
               </div>
               <div>
-                <dt className="font-mono font-bold text-violet-700">Trial</dt>
-                <dd className="m-0 text-slate-600">{a.definitions.trial}</dd>
+                <dt className="font-mono font-bold text-brand">Trial</dt>
+                <dd className="m-0 text-ink-2">{a.definitions.trial}</dd>
               </div>
               <div>
-                <dt className="font-mono font-bold text-violet-700">Activity</dt>
-                <dd className="m-0 text-slate-600">{a.definitions.activity}</dd>
+                <dt className="font-mono font-bold text-brand">Activity</dt>
+                <dd className="m-0 text-ink-2">{a.definitions.activity}</dd>
               </div>
             </dl>
           </details>

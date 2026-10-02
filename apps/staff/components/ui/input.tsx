@@ -8,16 +8,16 @@ import { useId, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttribu
  * الحقول النصية تحمل `placeholder=" "` افتراضياً.
  */
 const BASE_LABEL =
-  'pointer-events-none absolute start-3 bg-white px-1 rounded-sm transition-all duration-150 ease-out select-none';
+  'pointer-events-none absolute start-3 bg-surface px-1 rounded-sm transition-all duration-150 ease-out select-none';
 
 /** Resting (centered) → shrunk (top) on focus or when the control has content. */
 const INPUT_LABEL =
-  `${BASE_LABEL} top-1/2 -translate-y-1/2 text-[13px] text-slate-400 ` +
+  `${BASE_LABEL} top-1/2 -translate-y-1/2 text-[13px] text-muted ` +
   `group-has-[input:focus]/field:top-0 group-has-[input:focus]/field:-translate-y-1/2 group-has-[input:focus]/field:text-[11px] group-has-[input:focus]/field:font-bold group-has-[input:focus]/field:text-brand-600 ` +
   `group-has-[input:not(:placeholder-shown)]/field:top-0 group-has-[input:not(:placeholder-shown)]/field:-translate-y-1/2 group-has-[input:not(:placeholder-shown)]/field:text-[11px] group-has-[input:not(:placeholder-shown)]/field:font-bold`;
 
 const TEXTAREA_LABEL =
-  `${BASE_LABEL} top-5 text-[13px] text-slate-400 ` +
+  `${BASE_LABEL} top-5 text-[13px] text-muted ` +
   `group-has-[textarea:focus]/field:top-1.5 group-has-[textarea:focus]/field:text-[11px] group-has-[textarea:focus]/field:font-bold group-has-[textarea:focus]/field:text-brand-600 ` +
   `group-has-[textarea:not(:placeholder-shown)]/field:top-1.5 group-has-[textarea:not(:placeholder-shown)]/field:text-[11px] group-has-[textarea:not(:placeholder-shown)]/field:font-bold`;
 
@@ -27,10 +27,10 @@ const SELECT_LABEL =
   `group-has-[select:focus]/field:text-brand-600`;
 
 const FRAME = (error?: string) =>
-  `w-full h-10 ps-9 pe-3 rounded-[10px] border bg-white text-[13.5px] text-slate-900 transition-all duration-150 ease-out focus:outline-none ${
+  `w-full h-10 ps-9 pe-3 rounded-[10px] border bg-surface text-[13.5px] text-ink transition-all duration-150 ease-out focus:outline-none ${
     error
-      ? 'border-red-400 shadow-[0_0_0_3px_rgb(239_68_68/0.12)]'
-      : 'border-slate-300 focus:border-brand-600 focus:shadow-[0_0_0_3px_rgb(37_99_235/0.15)]'
+      ? 'border-danger-line shadow-[var(--ring-danger)]'
+      : 'border-line-strong focus:border-brand-600 focus:shadow-[var(--ring-brand)]'
   }`;
 
 export type InputProps = InputHTMLAttributes<HTMLInputElement> & {
@@ -105,10 +105,10 @@ export function Textarea({ label, error, hint, className = '', placeholder, ...r
         <textarea
           id={id}
           placeholder={placeholder ?? ' '}
-          className={`w-full min-h-28 ps-9 pe-3 pt-6 pb-2 rounded-[10px] border bg-white text-[13.5px] text-slate-900 transition-all duration-150 ease-out focus:outline-none ${
+          className={`w-full min-h-28 ps-9 pe-3 pt-6 pb-2 rounded-[10px] border bg-surface text-[13.5px] text-ink transition-all duration-150 ease-out focus:outline-none ${
             error
-              ? 'border-red-400 shadow-[0_0_0_3px_rgb(239_68_68/0.12)]'
-              : 'border-slate-300 focus:border-brand-600 focus:shadow-[0_0_0_3px_rgb(37_99_235/0.15)]'
+              ? 'border-danger-line shadow-[var(--ring-danger)]'
+              : 'border-line-strong focus:border-brand-600 focus:shadow-[var(--ring-brand)]'
           } ${className}`}
           aria-invalid={error ? 'true' : undefined}
           {...rest}
@@ -123,8 +123,8 @@ export function Textarea({ label, error, hint, className = '', placeholder, ...r
 }
 
 function FieldMessage({ error, hint }: { error?: string; hint?: string }) {
-  if (error) return <p className="m-0 text-xs font-semibold text-red-600">{error}</p>;
-  if (hint) return <p className="m-0 text-xs text-slate-400">{hint}</p>;
+  if (error) return <p className="m-0 text-xs font-semibold text-danger">{error}</p>;
+  if (hint) return <p className="m-0 text-xs text-muted">{hint}</p>;
   return null;
 }
 
@@ -132,9 +132,9 @@ function FieldMessage({ error, hint }: { error?: string; hint?: string }) {
 export function Labeled({ label, children, hint }: { label: string; children: ReactNode; hint?: string }) {
   return (
     <label className="grid gap-1.5 min-w-0">
-      <span className="text-xs font-bold text-slate-500">{label}</span>
+      <span className="text-xs font-bold text-muted">{label}</span>
       {children}
-      {hint ? <span className="text-[11px] text-slate-400">{hint}</span> : null}
+      {hint ? <span className="text-[11px] text-muted">{hint}</span> : null}
     </label>
   );
 }

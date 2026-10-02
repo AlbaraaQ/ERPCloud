@@ -596,7 +596,7 @@ function VouchersScreen() {
 
       {!open && <Notice notice={notice} />}
       {highlightedId && (
-        <div className="card tight" style={{ background: '#fffbe6', borderColor: '#f0d000' }}>
+        <div className="card tight" style={{ background: 'var(--warn-soft)', borderColor: 'var(--warn-line)' }}>
           <span>
             🔍 تم فتح السند <code dir="ltr">{highlightedId}</code> من تقرير آخر — الصف المميز أدناه هو المطلوب.
           </span>

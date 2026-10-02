@@ -22,8 +22,8 @@ import type { ReactNode } from 'react';
  * مغلّفات recharts الموحّدة — تدرّج لوني، tooltip أبيض أنيق، و رسم ذاتي على 800ms.
  * كل مكوّن يقبل `data` و `dataKey` و `xKey`، مع ألوان قابلة للتخصيص.
  */
-const GRID = '#eef2f7';
-const AXIS_TICK = { fill: '#94a3b8', fontSize: 11 } as const;
+const GRID = 'var(--line)';
+const AXIS_TICK = { fill: 'var(--muted)', fontSize: 11 } as const;
 const DRAW_MS = 0.8;
 
 export type Series = { color: string; name?: string };
@@ -31,14 +31,14 @@ export type Series = { color: string; name?: string };
 function WhiteTooltip({ active, payload, label, formatter }: TooltipProps) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-xl border border-slate-200 bg-white/95 backdrop-blur px-3 py-2 shadow-4 min-w-32">
+    <div className="rounded-xl border border-line bg-surface backdrop-blur px-3 py-2 shadow-4 min-w-32">
       {label !== undefined && label !== '' ? (
-        <p className="m-0 text-[11px] font-bold text-slate-500 mb-1">{label}</p>
+        <p className="m-0 text-[11px] font-bold text-muted mb-1">{label}</p>
       ) : null}
       {payload.map((entry, i) => (
-        <p key={i} className="m-0 flex items-center gap-2 text-[12.5px] font-semibold text-slate-800">
+        <p key={i} className="m-0 flex items-center gap-2 text-[12.5px] font-semibold text-ink">
           <span className="size-2.5 rounded-full" style={{ background: entry.color }} />
-          <span className="text-slate-500 font-medium">{entry.name}:</span>
+          <span className="text-muted font-medium">{entry.name}:</span>
           <span style={{ fontVariantNumeric: 'tabular-nums' }}>
             {formatter ? formatter(Number(entry.value)) : Number(entry.value).toLocaleString('en-US')}
           </span>
@@ -75,7 +75,7 @@ export function AreaCardChart({
   data,
   xKey,
   dataKey,
-  color = '#7c3aed',
+  color = 'var(--color-chart-2)',
   height = 260,
   formatter,
   name,
@@ -106,7 +106,7 @@ export function AreaCardChart({
           fill={`url(#${id})`}
           animationDuration={DRAW_MS * 1000}
           dot={false}
-          activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }}
+          activeDot={{ r: 4, strokeWidth: 2, stroke: 'var(--surface)' }}
         />
       </AreaChart>
     </ResponsiveContainer>
@@ -117,7 +117,7 @@ export function BarCardChart({
   data,
   xKey,
   dataKey,
-  color = '#7c3aed',
+  color = 'var(--color-chart-2)',
   height = 260,
   formatter,
   name,
@@ -139,7 +139,7 @@ export function LineCardChart({
   data,
   xKey,
   dataKey,
-  color = '#7c3aed',
+  color = 'var(--color-chart-2)',
   height = 260,
   formatter,
   name,
@@ -158,7 +158,7 @@ export function LineCardChart({
           stroke={color}
           strokeWidth={2.5}
           dot={{ r: 3, fill: color, strokeWidth: 0 }}
-          activeDot={{ r: 5, strokeWidth: 2, stroke: '#fff' }}
+          activeDot={{ r: 5, strokeWidth: 2, stroke: 'var(--surface)' }}
           animationDuration={DRAW_MS * 1000}
         />
       </LineChart>
@@ -168,7 +168,15 @@ export function LineCardChart({
 
 export type DonutSlice = { name: string; value: number; color?: string };
 
-const DONUT_PALETTE = ['#7c3aed', '#a78bfa', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#64748b'];
+const DONUT_PALETTE = [
+  'var(--color-chart-2)',
+  'var(--color-violet-400)',
+  'var(--color-chart-6)',
+  'var(--color-chart-3)',
+  'var(--color-chart-4)',
+  'var(--color-chart-5)',
+  'var(--muted)',
+];
 
 export function DonutCardChart({
   data,
@@ -209,17 +217,17 @@ export function DonutCardChart({
       {(centerLabel || centerValue) && (
         <div className="absolute inset-0 grid place-items-center pointer-events-none">
           <div className="text-center">
-            {centerValue ? <p className="m-0 text-[26px] font-bold text-slate-900 leading-tight" style={{ fontVariantNumeric: 'tabular-nums' }}>{centerValue}</p> : null}
-            {centerLabel ? <p className="m-0 text-[11px] font-semibold text-slate-400 mt-0.5">{centerLabel}</p> : null}
+            {centerValue ? <p className="m-0 text-[26px] font-bold text-ink leading-tight" style={{ fontVariantNumeric: 'tabular-nums' }}>{centerValue}</p> : null}
+            {centerLabel ? <p className="m-0 text-[11px] font-semibold text-muted mt-0.5">{centerLabel}</p> : null}
           </div>
         </div>
       )}
       <ul className="grid grid-cols-2 gap-x-4 gap-y-1.5 mt-2 px-2 list-none m-0">
         {slices.map((slice, i) => (
-          <li key={i} className="flex items-center gap-2 text-[12px] text-slate-600 min-w-0">
+          <li key={i} className="flex items-center gap-2 text-[12px] text-ink-2 min-w-0">
             <span className="size-2.5 rounded-full flex-none" style={{ background: slice.color }} />
             <span className="truncate">{slice.name}</span>
-            <span className="ms-auto font-semibold text-slate-800" style={{ fontVariantNumeric: 'tabular-nums' }}>
+            <span className="ms-auto font-semibold text-ink" style={{ fontVariantNumeric: 'tabular-nums' }}>
               {grandTotal > 0 ? Math.round((slice.value / grandTotal) * 100) : 0}%
             </span>
           </li>

@@ -1003,7 +1003,7 @@ export default function PosPage() {
               className="chip on"
               type="button"
               key={hold.id}
-              style={{ background: 'var(--success, #2f9e44)', color: '#fff' }}
+              style={{ background: 'var(--success, #2f9e44)', color: 'var(--on-accent)' }}
               title={`${hold.label ?? 'معلّقة'} · ${money(hold.total)} · ${hold.linesCount} صنف`}
               onClick={() => recallHold(hold)}
               onContextMenu={(event) => {

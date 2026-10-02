@@ -142,7 +142,7 @@ export default function BankReconciliationPage() {
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mt-4">
         <section className="card">
-          <div className="flex items-center justify-between gap-3 mb-3"><div><h2 className="m-0 text-[16px] font-bold">حركات كشف البنك</h2><p className="m-0 mt-1 text-[12px] text-slate-500">راجع السطر ثم طابقه أو تجاهله.</p></div><span className="status draft">{pending.length} معلّق</span></div>
+          <div className="flex items-center justify-between gap-3 mb-3"><div><h2 className="m-0 text-[16px] font-bold">حركات كشف البنك</h2><p className="m-0 mt-1 text-[12px] text-muted">راجع السطر ثم طابقه أو تجاهله.</p></div><span className="status draft">{pending.length} معلّق</span></div>
           <QueryView query={lines} empty="لا توجد حركات في هذا الكشف">
             {(rows) => <DataTable rows={rows.filter((line) => line.status !== 'matched')} rowKey={(row) => row.id} columns={[
               { key: 'date', header: 'التاريخ', cell: (row) => <span dir="ltr">{row.txnDate}</span> },
@@ -155,7 +155,7 @@ export default function BankReconciliationPage() {
         </section>
 
         <section className="card">
-          <div className="flex items-center justify-between gap-3 mb-3"><div><h2 className="m-0 text-[16px] font-bold">ما تمت مطابقته في الدفاتر</h2><p className="m-0 mt-1 text-[12px] text-slate-500">الفواتير والسندات المرتبطة بالحركات البنكية.</p></div><span className="status posted">{matched.length} مطابق</span></div>
+          <div className="flex items-center justify-between gap-3 mb-3"><div><h2 className="m-0 text-[16px] font-bold">ما تمت مطابقته في الدفاتر</h2><p className="m-0 mt-1 text-[12px] text-muted">الفواتير والسندات المرتبطة بالحركات البنكية.</p></div><span className="status posted">{matched.length} مطابق</span></div>
           <DataTable rows={matched} rowKey={(row) => row.id} columns={[
             { key: 'date', header: 'التاريخ', cell: (row) => <span dir="ltr">{row.txnDate}</span> },
             { key: 'description', header: 'البيان', cell: (row) => row.description || '—' },

@@ -58,7 +58,7 @@ export default function EsignPage() {
       context.setTransform(ratio, 0, 0, ratio, 0, 0);
       context.lineWidth = 2.2;
       context.lineCap = 'round';
-      context.strokeStyle = '#0f172a';
+      context.strokeStyle = 'var(--inverse)';
     };
     resize();
     window.addEventListener('resize', resize);

@@ -451,7 +451,7 @@ export default function DayClosePage() {
                 header: '📉 الفرق',
                 align: 'num',
                 cell: (row) => (
-                  <strong style={new Decimal(row.diff || '0').abs().gt(0) ? { color: '#b3261e' } : undefined}>
+                  <strong style={new Decimal(row.diff || '0').abs().gt(0) ? { color: 'var(--danger)' } : undefined}>
                     {money(row.diff)}
                   </strong>
                 ),

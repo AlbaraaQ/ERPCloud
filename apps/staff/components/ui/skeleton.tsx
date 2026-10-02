@@ -6,7 +6,7 @@ import type { HTMLAttributes } from 'react';
 export function Skeleton({ className = '', ...rest }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={`animate-pulse rounded-md bg-slate-200/80 ${className}`}
+      className={`animate-pulse rounded-md bg-surface-3 ${className}`}
       aria-hidden
       {...rest}
     />
@@ -25,7 +25,7 @@ export function SkeletonRows({ rows = 4, width = '100%' }: { rows?: number; widt
 
 export function SkeletonCard({ lines = 3 }: { lines?: number }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-1 grid gap-3" aria-busy="true">
+    <div className="rounded-xl border border-line bg-surface p-4 shadow-1 grid gap-3" aria-busy="true">
       <Skeleton className="h-4 w-1/3" />
       {Array.from({ length: lines }).map((_, i) => (
         <Skeleton key={i} className="h-3.5" style={{ width: `${92 - i * 12}%` }} />

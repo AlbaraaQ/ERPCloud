@@ -124,53 +124,53 @@ export default function TwoFactorPage() {
       {status.status === 'success' && (
         <>
           {/* status card */}
-          <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-1">
+          <section className="rounded-xl border border-line bg-surface p-4 shadow-1">
             <div className="flex flex-wrap items-center gap-3">
               <span
-                className={`grid place-items-center size-12 rounded-2xl ${enabled ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}
+                className={`grid place-items-center size-12 rounded-2xl ${enabled ? 'bg-ok-soft text-ok' : 'bg-surface-3 text-muted'}`}
               >
                 <ShieldCheck size={22} />
               </span>
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="m-0 text-[16px] font-bold text-slate-900">حالة الحماية</h3>
+                  <h3 className="m-0 text-[16px] font-bold text-ink">حالة الحماية</h3>
                   <Badge tone={enabled ? 'green' : 'amber'} dot>
                     {enabled ? 'مفعَّل — الدخول يتطلب رمز التطبيق' : 'غير مفعَّل'}
                   </Badge>
                 </div>
-                <p className="m-0 mt-1.5 text-[13px] text-slate-500 leading-relaxed">
+                <p className="m-0 mt-1.5 text-[13px] text-muted leading-relaxed">
                   يضيف التحقق بخطوتين طبقة حماية فوق كلمة المرور: رمز متغيَّر كل 30 ثانية من تطبيق مصادقة
                   (Google Authenticator أو Microsoft Authenticator أو غيرهما)، مع رموز استرداد تُستخدم مرة واحدة
                   إذا فقدت جهازك.
                 </p>
               </div>
               {enabled ? (
-                <div className="text-center rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5">
-                  <p className="m-0 text-[24px] font-bold text-slate-900" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                <div className="text-center rounded-xl border border-line bg-surface-2 px-4 py-2.5">
+                  <p className="m-0 text-[24px] font-bold text-ink" style={{ fontVariantNumeric: 'tabular-nums' }}>
                     {status.data?.recoveryCodesLeft ?? 0}
                   </p>
-                  <p className="m-0 text-[11.5px] font-bold text-slate-400">رموز استرداد متبقية</p>
+                  <p className="m-0 text-[11.5px] font-bold text-muted">رموز استرداد متبقية</p>
                 </div>
               ) : null}
             </div>
           </section>
 
           {error ? (
-            <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-[13px] font-semibold text-red-700">
+            <div className="flex items-center gap-2 rounded-xl border border-danger-line bg-danger-soft px-4 py-2.5 text-[13px] font-semibold text-danger-ink">
               {error}
             </div>
           ) : null}
 
           {/* Phase: not enrolled — offer to start. */}
           {!enrolled && phase === 'idle' ? (
-            <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-1 grid gap-3">
+            <section className="rounded-xl border border-line bg-surface p-4 shadow-1 grid gap-3">
               <div className="flex items-center gap-2">
                 <span className="grid place-items-center size-8 rounded-lg bg-brand-50 text-brand-600">
                   <Smartphone size={16} />
                 </span>
-                <h3 className="m-0 text-[15px] font-bold text-slate-900">ابدأ الإعداد</h3>
+                <h3 className="m-0 text-[15px] font-bold text-ink">ابدأ الإعداد</h3>
               </div>
-              <p className="m-0 text-[13px] text-slate-500">
+              <p className="m-0 text-[13px] text-muted">
                 سيُنشأ مفتاح خاص بحسابك، تضيفه إلى تطبيق المصادقة ثم تؤكد برمز حيّ لتفعيل الحماية.
               </p>
               <div>
@@ -183,46 +183,46 @@ export default function TwoFactorPage() {
 
           {/* Phase: secret issued — scan/type, then confirm with a live code. */}
           {phase === 'confirming' && enroll ? (
-            <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-1 grid gap-5">
+            <section className="rounded-xl border border-line bg-surface p-4 shadow-1 grid gap-5">
               <div>
-                <h4 className="m-0 text-[14px] font-bold text-slate-800 flex items-center gap-2">
-                  <span className="grid place-items-center size-6 rounded-full bg-brand-600 text-white text-[12px]">1</span>
+                <h4 className="m-0 text-[14px] font-bold text-ink flex items-center gap-2">
+                  <span className="grid place-items-center size-6 rounded-full bg-brand-600 text-on-accent text-[12px]">1</span>
                   أضف الحساب إلى تطبيق المصادقة
                 </h4>
-                <p className="m-0 mt-1.5 text-[12.5px] text-slate-500">
+                <p className="m-0 mt-1.5 text-[12.5px] text-muted">
                   امسح الرابط أدناه كرمز QR عبر أي مولّد رموز، أو أدخل المفتاح يدوياً في التطبيق.
                 </p>
                 <div className="mt-3 grid gap-3">
-                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                  <div className="rounded-lg border border-line bg-surface-2 p-3">
                     <div className="flex items-center justify-between gap-2 mb-1.5">
-                      <span className="text-[11.5px] font-bold text-slate-500 flex items-center gap-1.5">
+                      <span className="text-[11.5px] font-bold text-muted flex items-center gap-1.5">
                         <QrCode size={13} /> رابط التهيئة (otpauth)
                       </span>
                       <Button size="sm" variant="secondary" icon={<Copy size={13} />} onClick={() => copy(enroll.otpauthUrl, 'otpauth')}>
                         {copied === 'otpauth' ? 'تم النسخ' : 'نسخ'}
                       </Button>
                     </div>
-                    <p className="m-0 text-[12px] text-slate-600 break-all" dir="ltr">
+                    <p className="m-0 text-[12px] text-ink-2 break-all" dir="ltr">
                       {enroll.otpauthUrl}
                     </p>
                   </div>
-                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                  <div className="rounded-lg border border-line bg-surface-2 p-3">
                     <div className="flex items-center justify-between gap-2 mb-1.5">
-                      <span className="text-[11.5px] font-bold text-slate-500">المفتاح (إدخال يدوي)</span>
+                      <span className="text-[11.5px] font-bold text-muted">المفتاح (إدخال يدوي)</span>
                       <Button size="sm" variant="secondary" icon={<Copy size={13} />} onClick={() => copy(enroll.secretBase32, 'secret')}>
                         {copied === 'secret' ? 'تم النسخ' : 'نسخ'}
                       </Button>
                     </div>
-                    <p className="m-0 text-[15px] font-bold text-slate-800 tracking-[0.2em]" dir="ltr">
+                    <p className="m-0 text-[15px] font-bold text-ink tracking-[0.2em]" dir="ltr">
                       {enroll.secretBase32}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="border-t border-slate-100 pt-4">
-                <h4 className="m-0 text-[14px] font-bold text-slate-800 flex items-center gap-2">
-                  <span className="grid place-items-center size-6 rounded-full bg-brand-600 text-white text-[12px]">2</span>
+              <div className="border-t border-line pt-4">
+                <h4 className="m-0 text-[14px] font-bold text-ink flex items-center gap-2">
+                  <span className="grid place-items-center size-6 rounded-full bg-brand-600 text-on-accent text-[12px]">2</span>
                   أكِّد برمز التطبيق
                 </h4>
                 <div className="mt-3 flex flex-wrap items-end gap-3">
@@ -239,20 +239,20 @@ export default function TwoFactorPage() {
 
           {/* Phase: just enabled — recovery codes are visible exactly once. */}
           {phase === 'codes' ? (
-            <section className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 shadow-1 grid gap-4">
+            <section className="rounded-xl border border-ok-line bg-ok-soft p-4 shadow-1 grid gap-4">
               <div className="flex items-start gap-3">
-                <span className="grid place-items-center size-10 rounded-xl bg-emerald-100 text-emerald-700 flex-none">
+                <span className="grid place-items-center size-10 rounded-xl bg-ok-soft text-ok-ink flex-none">
                   <ShieldCheck size={20} />
                 </span>
                 <div>
-                  <h3 className="m-0 text-[15px] font-bold text-emerald-900">تم تفعيل التحقق بخطوتين</h3>
-                  <p className="m-0 mt-1 text-[13px] text-emerald-800">
+                  <h3 className="m-0 text-[15px] font-bold text-ok-ink">تم تفعيل التحقق بخطوتين</h3>
+                  <p className="m-0 mt-1 text-[13px] text-ok-ink">
                     هذه رموز الاسترداد — تُعرض مرة واحدة فقط ولن تظهر مجدداً. احفظها في مكان آمن؛ كل رمز يعمل مرة واحدة.
                   </p>
                 </div>
               </div>
-              <div className="rounded-lg bg-white border border-emerald-200 p-4" dir="ltr">
-                <pre className="m-0 text-[14px] font-bold text-slate-800" style={{ letterSpacing: 2, lineHeight: 2 }}>
+              <div className="rounded-lg bg-surface border border-ok-line p-4" dir="ltr">
+                <pre className="m-0 text-[14px] font-bold text-ink" style={{ letterSpacing: 2, lineHeight: 2 }}>
                   {recoveryCodes.join('\n')}
                 </pre>
               </div>
@@ -269,14 +269,14 @@ export default function TwoFactorPage() {
 
           {/* Phase: enabled — disable requires the account password. */}
           {enabled && phase !== 'codes' ? (
-            <section className="rounded-xl border border-red-200 bg-white p-4 shadow-1">
+            <section className="rounded-xl border border-danger-line bg-surface p-4 shadow-1">
               <div className="flex items-center gap-2 mb-2">
-                <span className="grid place-items-center size-8 rounded-lg bg-red-50 text-red-600">
+                <span className="grid place-items-center size-8 rounded-lg bg-danger-soft text-danger">
                   <ShieldOff size={16} />
                 </span>
-                <h3 className="m-0 text-[15px] font-bold text-slate-900">إيقاف التحقق بخطوتين</h3>
+                <h3 className="m-0 text-[15px] font-bold text-ink">إيقاف التحقق بخطوتين</h3>
               </div>
-              <p className="m-0 text-[13px] text-slate-500 mb-3">
+              <p className="m-0 text-[13px] text-muted mb-3">
                 يتطلب كلمة مرور الحساب. لا يُنصح بالإيقاف إلا عند فقدان تطبيق المصادقة.
               </p>
               <div className="flex flex-wrap items-end gap-3">
@@ -304,18 +304,18 @@ export default function TwoFactorPage() {
 
 function SkeletonCard() {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-1 grid gap-3" aria-busy="true">
-      <div className="h-4 w-1/3 rounded-md bg-slate-100 animate-pulse" />
-      <div className="h-9 rounded-md bg-slate-100 animate-pulse" style={{ width: '85%' }} />
-      <div className="h-9 rounded-md bg-slate-100 animate-pulse" style={{ width: '60%' }} />
+    <div className="rounded-xl border border-line bg-surface p-4 shadow-1 grid gap-3" aria-busy="true">
+      <div className="h-4 w-1/3 rounded-md bg-surface-3 animate-pulse" />
+      <div className="h-9 rounded-md bg-surface-3 animate-pulse" style={{ width: '85%' }} />
+      <div className="h-9 rounded-md bg-surface-3 animate-pulse" style={{ width: '60%' }} />
     </div>
   );
 }
 
 function ErrorBox({ message, onRetry }: { message?: string; onRetry?: () => void }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-1 grid gap-3">
-      <p className="m-0 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-[13px] font-semibold text-red-700">
+    <div className="rounded-xl border border-line bg-surface p-4 shadow-1 grid gap-3">
+      <p className="m-0 flex items-center gap-2 rounded-xl border border-danger-line bg-danger-soft px-4 py-2.5 text-[13px] font-semibold text-danger-ink">
         {message ?? 'خطأ غير معروف'}
       </p>
       {onRetry ? (
