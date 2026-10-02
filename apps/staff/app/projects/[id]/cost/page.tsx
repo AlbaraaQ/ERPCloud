@@ -67,8 +67,8 @@ export default function ProjectCostPage() {
                 <td>{money(line.actualValue)}</td>
                 <td>{money(line.varianceValue)}</td>
                 <td>
-                  <span style={{ display: 'inline-block', width: `${(Number(line.plannedValue) / max) * 80}px`, height: 8, background: '#94a3b8' }} />
-                  <span style={{ display: 'inline-block', width: `${(Number(line.actualValue) / max) * 80}px`, height: 8, background: '#0f766e', marginInlineStart: 4 }} />
+                  <span style={{ display: 'inline-block', width: `${(Number(line.plannedValue) / max) * 80}px`, height: 8, background: 'var(--muted)' }} />
+                  <span style={{ display: 'inline-block', width: `${(Number(line.actualValue) / max) * 80}px`, height: 8, background: 'var(--ok)', marginInlineStart: 4 }} />
                 </td>
               </tr>
             ))}

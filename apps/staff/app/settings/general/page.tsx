@@ -82,24 +82,24 @@ export default function GeneralSettingsPage() {
       {settings.status === 'forbidden' && <Forbidden />}
       {settings.status === 'error' && <ErrorBox message={settings.error} onRetry={settings.reload} />}
       {settings.status === 'success' && (
-        <section className="rounded-xl border border-slate-200 bg-white shadow-1 overflow-hidden">
+        <section className="rounded-xl border border-line bg-surface shadow-1 overflow-hidden">
           <header className="px-4 pt-4 pb-1 flex items-center justify-between gap-2">
             <div>
-              <h3 className="m-0 text-[15px] font-bold text-slate-900">⚙️ إعدادات الكاشير</h3>
-              <p className="m-0 mt-0.5 text-[12.5px] text-slate-400">تُطبَّق مباشرة على شاشة نقطة البيع.</p>
+              <h3 className="m-0 text-[15px] font-bold text-ink">⚙️ إعدادات الكاشير</h3>
+              <p className="m-0 mt-0.5 text-[12.5px] text-muted">تُطبَّق مباشرة على شاشة نقطة البيع.</p>
             </div>
           </header>
           <div className="grid gap-x-6 gap-y-4 px-4 py-4 sm:grid-cols-2 lg:grid-cols-3">
             {CASHER_FIELDS.map((field) =>
               field.kind === 'boolean' ? (
-                <div key={field.key} className="grid gap-1 rounded-lg border border-slate-100 bg-slate-50/60 p-3">
+                <div key={field.key} className="grid gap-1 rounded-lg border border-line bg-surface-2 p-3">
                   <Toggle
                     label={field.label}
                     hint={field.hint}
                     checked={draft[field.key] !== 'false'}
                     onChange={(checked) => setDraft((current) => ({ ...current, [field.key]: String(checked) }))}
                   />
-                  <span className="text-[10.5px] font-semibold text-slate-300" dir="ltr">
+                  <span className="text-[10.5px] font-semibold text-muted" dir="ltr">
                     {field.key}
                   </span>
                 </div>
@@ -111,25 +111,25 @@ export default function GeneralSettingsPage() {
                       inputMode={field.kind === 'number' ? 'decimal' : undefined}
                       value={draft[field.key] ?? ''}
                       onChange={(event) => setDraft((current) => ({ ...current, [field.key]: event.target.value }))}
-                      className="w-full h-10 px-3 rounded-[10px] border border-slate-300 bg-white text-[13.5px] text-slate-900 focus:outline-none focus:border-brand-600 focus:shadow-[0_0_0_3px_rgb(37_99_235/0.15)] transition-all duration-150"
+                      className="w-full h-10 px-3 rounded-[10px] border border-line-strong bg-surface text-[13.5px] text-ink focus:outline-none focus:border-brand-600 focus:shadow-[var(--ring-brand)] transition-all duration-150"
                     />
                   </Labeled>
-                  <span className="text-[10.5px] font-semibold text-slate-300" dir="ltr">
+                  <span className="text-[10.5px] font-semibold text-muted" dir="ltr">
                     {field.key}
                   </span>
                 </div>
               ),
             )}
           </div>
-          <footer className="px-4 py-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+          <footer className="px-4 py-3 border-t border-line flex flex-wrap items-center justify-between gap-3">
             {notice ? (
               <span
-                className={`text-[13px] font-semibold ${notice.kind === 'ok' ? 'text-emerald-700' : 'text-red-600'}`}
+                className={`text-[13px] font-semibold ${notice.kind === 'ok' ? 'text-ok-ink' : 'text-danger'}`}
               >
                 {notice.text}
               </span>
             ) : (
-              <span className="text-[12px] text-slate-400">الحفظ يحدّث كل المفاتيح أعلاه دفعة واحدة.</span>
+              <span className="text-[12px] text-muted">الحفظ يحدّث كل المفاتيح أعلاه دفعة واحدة.</span>
             )}
             <Button variant="primary" icon={<Save size={15} />} loading={busy} onClick={() => void saveCasher()}>
               حفظ
@@ -139,10 +139,10 @@ export default function GeneralSettingsPage() {
       )}
 
       {settings.status === 'success' && (
-        <section className="rounded-xl border border-slate-200 bg-white shadow-1 overflow-hidden">
+        <section className="rounded-xl border border-line bg-surface shadow-1 overflow-hidden">
           <header className="px-4 pt-4 pb-1">
-            <h3 className="m-0 text-[15px] font-bold text-slate-900">سجل المفاتيح ({entries.length})</h3>
-            <p className="m-0 mt-0.5 text-[12.5px] text-slate-400">كل مفاتيح الإعدادات المخزنة لهذه المنشأة.</p>
+            <h3 className="m-0 text-[15px] font-bold text-ink">سجل المفاتيح ({entries.length})</h3>
+            <p className="m-0 mt-0.5 text-[12.5px] text-muted">كل مفاتيح الإعدادات المخزنة لهذه المنشأة.</p>
           </header>
           <div className="px-1 pb-2">
             <Table
@@ -155,7 +155,7 @@ export default function GeneralSettingsPage() {
                   header: 'المفتاح',
                   ltr: true,
                   cell: (row) => (
-                    <span className="font-semibold text-slate-700">{row.key}</span>
+                    <span className="font-semibold text-ink-2">{row.key}</span>
                   ),
                 },
                 {
@@ -163,7 +163,7 @@ export default function GeneralSettingsPage() {
                   header: 'القيمة',
                   ltr: true,
                   cell: (row) => (
-                    <span className="text-[12.5px] text-slate-600 break-all">
+                    <span className="text-[12.5px] text-ink-2 break-all">
                       {typeof row.value === 'object' && row.value !== null ? JSON.stringify(row.value) : String(row.value)}
                     </span>
                   ),
@@ -181,10 +181,10 @@ function ScreenLoading() {
   return (
     <div className="grid gap-4">
       {[0, 1].map((i) => (
-        <div key={i} className="rounded-xl border border-slate-200 bg-white p-4 shadow-1 grid gap-3" aria-busy="true">
-          <div className="h-4 w-1/3 rounded-md bg-slate-100 animate-pulse" />
+        <div key={i} className="rounded-xl border border-line bg-surface p-4 shadow-1 grid gap-3" aria-busy="true">
+          <div className="h-4 w-1/3 rounded-md bg-surface-3 animate-pulse" />
           {Array.from({ length: 3 }).map((_, j) => (
-            <div key={j} className="h-9 rounded-md bg-slate-100 animate-pulse" style={{ width: `${95 - j * 15}%` }} />
+            <div key={j} className="h-9 rounded-md bg-surface-3 animate-pulse" style={{ width: `${95 - j * 15}%` }} />
           ))}
         </div>
       ))}
@@ -194,18 +194,18 @@ function ScreenLoading() {
 
 function Forbidden() {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-1 grid place-items-center text-center gap-2">
-      <span className="grid place-items-center size-12 rounded-2xl bg-amber-50 text-amber-600">🔒</span>
-      <p className="m-0 text-[15px] font-bold text-slate-800">لا تملك صلاحية الوصول</p>
-      <p className="m-0 text-[13px] text-slate-500 max-w-md">اطلب من مالك الحساب منحك الصلاحية المطلوبة من «صلاحيات المستخدمين».</p>
+    <div className="rounded-xl border border-line bg-surface p-8 shadow-1 grid place-items-center text-center gap-2">
+      <span className="grid place-items-center size-12 rounded-2xl bg-warn-soft text-warn">🔒</span>
+      <p className="m-0 text-[15px] font-bold text-ink">لا تملك صلاحية الوصول</p>
+      <p className="m-0 text-[13px] text-muted max-w-md">اطلب من مالك الحساب منحك الصلاحية المطلوبة من «صلاحيات المستخدمين».</p>
     </div>
   );
 }
 
 function ErrorBox({ message, onRetry }: { message?: string; onRetry?: () => void }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-1 grid gap-3">
-      <p className="m-0 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-[13px] font-semibold text-red-700">
+    <div className="rounded-xl border border-line bg-surface p-4 shadow-1 grid gap-3">
+      <p className="m-0 flex items-center gap-2 rounded-xl border border-danger-line bg-danger-soft px-4 py-2.5 text-[13px] font-semibold text-danger-ink">
         تعذر تحميل البيانات: {message ?? 'خطأ غير معروف'}
       </p>
       <Button variant="primary" onClick={onRetry}>

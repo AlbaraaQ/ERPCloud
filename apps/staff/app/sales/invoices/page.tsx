@@ -142,9 +142,9 @@ function InvoicesInner() {
       {/* ------------------------------------------------ header */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="m-0 text-[12px] font-semibold text-slate-400">المبيعات ← العمليات</p>
-          <h1 className="m-0 text-[26px] font-bold text-slate-900 tracking-tight">فواتير المبيعات</h1>
-          <p className="m-0 mt-1 text-[13px] text-slate-500">
+          <p className="m-0 text-[12px] font-semibold text-muted">المبيعات ← العمليات</p>
+          <h1 className="m-0 text-[26px] font-bold text-ink tracking-tight">فواتير المبيعات</h1>
+          <p className="m-0 mt-1 text-[13px] text-muted">
             كل الفواتير: المسودات القابلة للتعديل والمرحّلة بأرقامها الرسمية.
           </p>
         </div>
@@ -158,16 +158,16 @@ function InvoicesInner() {
       </div>
 
       {/* ------------------------------------------------ filter bar */}
-      <section className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-1 grid gap-3">
+      <section className="rounded-xl border border-line bg-surface p-3.5 shadow-1 grid gap-3">
         <div className="grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-12 items-end">
           <div className="xl:col-span-3">
             <div className="relative">
-              <Search size={15} className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search size={15} className="absolute start-3 top-1/2 -translate-y-1/2 text-muted" />
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="بحث برقم الفاتورة أو العميل…"
-                className="w-full h-10 ps-9 pe-3 rounded-[10px] border border-slate-300 bg-white text-[13.5px] focus:outline-none focus:border-brand-600 focus:shadow-[0_0_0_3px_rgb(37_99_235/0.15)] transition-all duration-150"
+                className="w-full h-10 ps-9 pe-3 rounded-[10px] border border-line-strong bg-surface text-[13.5px] focus:outline-none focus:border-brand-600 focus:shadow-[var(--ring-brand)] transition-all duration-150"
               />
             </div>
           </div>
@@ -195,7 +195,7 @@ function InvoicesInner() {
                 type="date"
                 value={from}
                 onChange={(e) => setFrom(e.target.value)}
-                className="w-full h-10 px-3 rounded-[10px] border border-slate-300 bg-white text-[13.5px] focus:outline-none focus:border-brand-600 focus:shadow-[0_0_0_3px_rgb(37_99_235/0.15)] transition-all duration-150"
+                className="w-full h-10 px-3 rounded-[10px] border border-line-strong bg-surface text-[13.5px] focus:outline-none focus:border-brand-600 focus:shadow-[var(--ring-brand)] transition-all duration-150"
               />
             </Labeled>
           </div>
@@ -205,7 +205,7 @@ function InvoicesInner() {
                 type="date"
                 value={to}
                 onChange={(e) => setTo(e.target.value)}
-                className="w-full h-10 px-3 rounded-[10px] border border-slate-300 bg-white text-[13.5px] focus:outline-none focus:border-brand-600 focus:shadow-[0_0_0_3px_rgb(37_99_235/0.15)] transition-all duration-150"
+                className="w-full h-10 px-3 rounded-[10px] border border-line-strong bg-surface text-[13.5px] focus:outline-none focus:border-brand-600 focus:shadow-[var(--ring-brand)] transition-all duration-150"
               />
             </Labeled>
           </div>
@@ -219,7 +219,7 @@ function InvoicesInner() {
         </div>
 
         {/* status chips */}
-        <div className="flex flex-wrap gap-2 items-center border-t border-slate-100 pt-3">
+        <div className="flex flex-wrap gap-2 items-center border-t border-line pt-3">
           {STATUS_CHIPS.map((c) => (
             <button
               key={c.key}
@@ -227,19 +227,19 @@ function InvoicesInner() {
               onClick={() => setChip(c.key)}
               className={`inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full text-[12.5px] font-bold border transition-all duration-150 ${
                 chip === c.key
-                  ? 'bg-brand-600 border-brand-600 text-white shadow-2'
-                  : 'bg-white border-slate-200 text-slate-600 hover:border-brand-400 hover:text-brand-700'
+                  ? 'bg-brand-600 border-brand-600 text-on-accent shadow-2'
+                  : 'bg-surface border-line text-ink-2 hover:border-brand-400 hover:text-brand-700'
               }`}
             >
               {c.label}
-              <span className={`text-[11px] font-bold ${chip === c.key ? 'text-blue-100' : 'text-slate-400'}`}>
+              <span className={`text-[11px] font-bold ${chip === c.key ? 'text-on-accent' : 'text-muted'}`}>
                 {c.key === 'all'
                   ? (invoices.data ?? []).length
                   : (invoices.data ?? []).filter(c.test).length}
               </span>
             </button>
           ))}
-          <span className="ms-auto text-[12px] text-slate-400 font-semibold">
+          <span className="ms-auto text-[12px] text-muted font-semibold">
             {filtered.length} نتيجة {invoices.data ? `من ${(invoices.data ?? []).length}` : ''}
           </span>
         </div>
@@ -247,7 +247,7 @@ function InvoicesInner() {
 
       {/* ------------------------------------------------ bulk bar */}
       {selected.size > 0 ? (
-        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-brand-200 bg-blue-50 px-4 py-2.5">
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-brand-200 bg-info-soft px-4 py-2.5">
           <span className="text-[13px] font-bold text-brand-800">تم تحديد {selected.size} فاتورة</span>
           <span className="text-[12.5px] text-brand-700">
             الإجمالي: {money(filtered.filter((r) => selected.has(r.id)).reduce((s, r) => s + Number(r.total), 0))}
@@ -266,7 +266,7 @@ function InvoicesInner() {
       ) : null}
 
       {highlightedId ? (
-        <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-[12.5px] font-semibold text-amber-800">
+        <div className="flex items-center gap-2 rounded-xl border border-warn-line bg-warn-soft px-4 py-2.5 text-[12.5px] font-semibold text-warn-ink">
           <Search size={14} />
           تم فتح الفاتورة <code dir="ltr">{highlightedId}</code> من تقرير آخر — الصف المميز أدناه هو المطلوب.
         </div>
@@ -340,8 +340,8 @@ function InvoicesInner() {
               sortable: true,
               cell: (row) => (
                 <span title={shortDate(row.postedAt ?? row.createdAt)}>
-                  <span className="font-semibold text-slate-700">{relativeTime(row.postedAt ?? row.createdAt)}</span>
-                  <span className="block text-[11px] text-slate-400">{shortDate(row.postedAt ?? row.createdAt)}</span>
+                  <span className="font-semibold text-ink-2">{relativeTime(row.postedAt ?? row.createdAt)}</span>
+                  <span className="block text-[11px] text-muted">{shortDate(row.postedAt ?? row.createdAt)}</span>
                 </span>
               ),
             },
@@ -351,7 +351,7 @@ function InvoicesInner() {
               header: 'المدفوع',
               numeric: true,
               cell: (row) => (
-                <span className={Number(row.paidTotal) >= Number(row.total) ? 'text-emerald-600' : 'text-amber-600'}>
+                <span className={Number(row.paidTotal) >= Number(row.total) ? 'text-ok' : 'text-warn'}>
                   {money(row.paidTotal)}
                 </span>
               ),

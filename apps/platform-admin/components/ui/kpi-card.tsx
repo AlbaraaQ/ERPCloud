@@ -11,21 +11,21 @@ import type { ReactNode } from 'react';
 export type KpiTone = 'blue' | 'green' | 'amber' | 'red' | 'purple' | 'slate';
 
 const TONE_BOX: Record<KpiTone, string> = {
-  blue: 'bg-blue-50 text-blue-600',
-  green: 'bg-emerald-50 text-emerald-600',
-  amber: 'bg-amber-50 text-amber-600',
-  red: 'bg-red-50 text-red-500',
-  purple: 'bg-violet-50 text-violet-600',
-  slate: 'bg-slate-100 text-slate-500',
+  blue: 'bg-info-soft text-info',
+  green: 'bg-ok-soft text-ok',
+  amber: 'bg-warn-soft text-warn',
+  red: 'bg-danger-soft text-danger',
+  purple: 'bg-brand-soft text-brand',
+  slate: 'bg-surface-3 text-muted',
 };
 
 const TONE_SPARK: Record<KpiTone, string> = {
-  blue: '#7c3aed',
-  green: '#10b981',
-  amber: '#f59e0b',
-  red: '#ef4444',
-  purple: '#7c3aed',
-  slate: '#94a3b8',
+  blue: 'var(--color-chart-2)',
+  green: 'var(--color-chart-3)',
+  amber: 'var(--color-chart-4)',
+  red: 'var(--color-chart-5)',
+  purple: 'var(--color-chart-2)',
+  slate: 'var(--muted)',
 };
 
 /** Tiny inline sparkline — an SVG path over normalized points. */
@@ -78,12 +78,12 @@ export function KpiCard({ title, value, icon, tone = 'blue', delta, deltaLabel, 
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-40px' }}
       transition={{ duration: 0.4, delay, ease: [0.16, 1, 0.3, 1] }}
-      className="relative overflow-hidden rounded-xl border border-slate-200 bg-white p-4 shadow-1 transition-all duration-150 ease-out hover:-translate-y-1 hover:shadow-4"
+      className="relative overflow-hidden rounded-xl border border-line bg-surface p-4 shadow-1 transition-all duration-150 ease-out hover:-translate-y-1 hover:shadow-4"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="m-0 text-[12.5px] font-bold text-slate-500 flex items-center gap-1.5">{title}</p>
-          <p className="m-0 mt-1.5 text-[32px] font-bold text-slate-900 leading-none tracking-tight" style={{ fontVariantNumeric: 'tabular-nums' }}>
+          <p className="m-0 text-[12.5px] font-bold text-muted flex items-center gap-1.5">{title}</p>
+          <p className="m-0 mt-1.5 text-[32px] font-bold text-ink leading-none tracking-tight" style={{ fontVariantNumeric: 'tabular-nums' }}>
             {value}
           </p>
         </div>
@@ -93,13 +93,13 @@ export function KpiCard({ title, value, icon, tone = 'blue', delta, deltaLabel, 
       <div className="mt-3 flex items-end justify-between gap-2">
         <div className="min-w-0">
           {delta !== null && delta !== undefined ? (
-            <p className="m-0 text-[12px] font-bold flex items-center gap-1" style={{ color: positive ? '#059669' : '#dc2626' }}>
+            <p className="m-0 text-[12px] font-bold flex items-center gap-1" style={{ color: positive ? 'var(--ok)' : 'var(--danger)' }}>
               {positive ? <ArrowUpRight size={14} /> : delta < 0 ? <ArrowDownRight size={14} /> : <Minus size={14} />}
               <span dir="ltr">{Math.abs(delta).toFixed(1)}%</span>
-              {deltaLabel ? <span className="text-slate-400 font-medium">{deltaLabel}</span> : null}
+              {deltaLabel ? <span className="text-muted font-medium">{deltaLabel}</span> : null}
             </p>
           ) : hint ? (
-            <p className="m-0 text-[12px] text-slate-400 font-medium truncate">{hint}</p>
+            <p className="m-0 text-[12px] text-muted font-medium truncate">{hint}</p>
           ) : null}
         </div>
         {spark && spark.length > 1 ? (

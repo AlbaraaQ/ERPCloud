@@ -112,7 +112,7 @@ export default function TenantsPage() {
       }
     >
       {/* filter bar */}
-      <div className="rounded-[10px] border border-slate-200 bg-white p-3 shadow-1 no-print">
+      <div className="rounded-[10px] border border-line bg-surface p-3 shadow-1 no-print">
         <div className="flex flex-wrap items-end gap-3">
           <div style={{ minWidth: 240 }}>
             <Input
@@ -156,7 +156,7 @@ export default function TenantsPage() {
       {message ? (
         <div
           className={`flex items-center gap-2 rounded-[10px] border px-4 py-2.5 text-[13px] font-semibold ${
-            message.kind === 'ok' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-700'
+            message.kind === 'ok' ? 'border-ok-line bg-ok-soft text-ok-ink' : 'border-danger-line bg-danger-soft text-danger-ink'
           }`}
         >
           {message.text}
@@ -165,7 +165,7 @@ export default function TenantsPage() {
 
       {/* table */}
       {tenants.status === 'loading' ? (
-        <div className="rounded-[10px] border border-slate-200 bg-white p-4 shadow-1">
+        <div className="rounded-[10px] border border-line bg-surface p-4 shadow-1">
           <SkeletonRows rows={8} />
         </div>
       ) : tenants.status === 'error' ? (
@@ -183,7 +183,7 @@ export default function TenantsPage() {
           description="أنشئ أول عميل من زر «عميل جديد»."
         />
       ) : (
-        <div className="rounded-[10px] border border-slate-200 bg-white shadow-1 overflow-hidden">
+        <div className="rounded-[10px] border border-line bg-surface shadow-1 overflow-hidden">
           <Table
             rows={tenants.data ?? []}
             rowKey={(row) => row.id}
@@ -195,12 +195,12 @@ export default function TenantsPage() {
                 cell: (tenant) => (
                   <Link href={`/tenants/${tenant.id}`} className="group grid gap-0.5">
                     <span className="flex items-center gap-2">
-                      <span className="grid size-7 flex-none place-items-center rounded-md bg-slate-900 font-mono text-[10px] font-bold text-white" dir="ltr">
+                      <span className="grid size-7 flex-none place-items-center rounded-md bg-inverse font-mono text-[10px] font-bold text-on-accent" dir="ltr">
                         {tenant.code.slice(0, 2).toUpperCase()}
                       </span>
-                      <span className="truncate font-bold text-slate-800 group-hover:text-violet-700 transition-colors duration-150">{tenant.name}</span>
+                      <span className="truncate font-bold text-ink group-hover:text-brand transition-colors duration-150">{tenant.name}</span>
                     </span>
-                    <span className="font-mono text-[10.5px] text-slate-400" dir="ltr">
+                    <span className="font-mono text-[10.5px] text-muted" dir="ltr">
                       {gregDate(tenant.createdAt)}
                     </span>
                   </Link>
@@ -210,7 +210,7 @@ export default function TenantsPage() {
                 key: 'code',
                 header: 'الرمز',
                 ltr: true,
-                cell: (row) => <span className="font-mono text-[12px] text-slate-600">{row.code}</span>,
+                cell: (row) => <span className="font-mono text-[12px] text-ink-2">{row.code}</span>,
               },
               {
                 key: 'status',
@@ -230,7 +230,7 @@ export default function TenantsPage() {
                       <Badge tone={SUB_TONE[row.subscriptionStatus] ?? 'neutral'} dot>
                         {SUB_LABEL[row.subscriptionStatus] ?? row.subscriptionStatus}
                       </Badge>
-                      <span className="text-[11px] text-slate-400 font-semibold">{row.planName}</span>
+                      <span className="text-[11px] text-muted font-semibold">{row.planName}</span>
                     </span>
                   ) : (
                     <Badge tone="neutral">بدون ترخيص</Badge>
@@ -243,11 +243,11 @@ export default function TenantsPage() {
                 ltr: true,
                 cell: (row) =>
                   row.planAmount ? (
-                    <span className="font-mono text-[12px] font-bold text-slate-800">
+                    <span className="font-mono text-[12px] font-bold text-ink">
                       {Number(row.planAmount).toLocaleString('en-US')} {row.baseCurrency}
                     </span>
                   ) : (
-                    <span className="text-slate-300">—</span>
+                    <span className="text-muted">—</span>
                   ),
               },
               {
@@ -255,7 +255,7 @@ export default function TenantsPage() {
                 header: 'ينتهي في',
                 ltr: true,
                 cell: (row) => (
-                  <span className="font-mono text-[12px] text-slate-500">{row.currentPeriodEnd ? gregDate(row.currentPeriodEnd) : '—'}</span>
+                  <span className="font-mono text-[12px] text-muted">{row.currentPeriodEnd ? gregDate(row.currentPeriodEnd) : '—'}</span>
                 ),
               },
               {
@@ -424,7 +424,7 @@ function GrantLicenceForm({
       }
     >
       {plans.length === 0 ? (
-        <p className="m-0 rounded-[10px] border border-amber-200 bg-amber-50 px-4 py-2.5 text-[13px] font-semibold text-amber-800">
+        <p className="m-0 rounded-[10px] border border-warn-line bg-warn-soft px-4 py-2.5 text-[13px] font-semibold text-warn-ink">
           لا توجد باقات نشطة. أنشئ باقة أولاً من صفحة <Link href="/plans" className="underline">الباقات</Link>.
         </p>
       ) : (
@@ -434,7 +434,7 @@ function GrantLicenceForm({
               value={planId}
               onChange={(e) => setPlanId(e.target.value)}
               required
-              className="w-full h-10 px-3 rounded-[8px] border border-slate-300 bg-white text-[13.5px] text-slate-900 focus:outline-none focus:border-brand-600 focus:shadow-[0_0_0_3px_rgb(124_58_237/0.15)] transition-all duration-150"
+              className="w-full h-10 px-3 rounded-[8px] border border-line-strong bg-surface text-[13.5px] text-ink focus:outline-none focus:border-brand-600 focus:shadow-[var(--ring-brand)] transition-all duration-150"
             >
               {plans.map((plan) => (
                 <option key={plan.id} value={plan.id}>
@@ -451,13 +451,13 @@ function GrantLicenceForm({
               dir="ltr"
               value={months}
               onChange={(e) => setMonths(Number(e.target.value))}
-              className="w-full h-10 px-3 rounded-[8px] border border-slate-300 bg-white text-[13.5px] font-mono text-slate-900 focus:outline-none focus:border-brand-600 focus:shadow-[0_0_0_3px_rgb(124_58_237/0.15)] transition-all duration-150"
+              className="w-full h-10 px-3 rounded-[8px] border border-line-strong bg-surface text-[13.5px] font-mono text-ink focus:outline-none focus:border-brand-600 focus:shadow-[var(--ring-brand)] transition-all duration-150"
             />
           </Labeled>
         </div>
       )}
       {error ? (
-        <p className="m-0 mt-3 rounded-[10px] border border-red-200 bg-red-50 px-4 py-2.5 text-[13px] font-semibold text-red-700">{error}</p>
+        <p className="m-0 mt-3 rounded-[10px] border border-danger-line bg-danger-soft px-4 py-2.5 text-[13px] font-semibold text-danger-ink">{error}</p>
       ) : null}
     </Modal>
   );

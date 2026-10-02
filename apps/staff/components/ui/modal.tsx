@@ -28,7 +28,7 @@ export function Modal({ open, onClose, title, description, children, footer, siz
     <AnimatePresence>
       {open ? (
         <motion.div
-          className="fixed inset-0 z-[70] grid place-items-center p-4 bg-slate-900/45 backdrop-blur-sm"
+          className="fixed inset-0 z-[70] grid place-items-center p-4 bg-inverse backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -38,7 +38,7 @@ export function Modal({ open, onClose, title, description, children, footer, siz
           }}
         >
           <motion.div
-            className={`w-full ${WIDTHS[size]} bg-white rounded-2xl shadow-5 overflow-hidden border border-slate-200`}
+            className={`w-full ${WIDTHS[size]} bg-surface rounded-2xl shadow-5 overflow-hidden border border-line`}
             initial={{ opacity: 0, scale: 0.95, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.97, y: 4 }}
@@ -46,15 +46,15 @@ export function Modal({ open, onClose, title, description, children, footer, siz
             role="dialog"
             aria-modal="true"
           >
-            <header className="flex items-start justify-between gap-3 px-5 pt-4 pb-3 border-b border-slate-100">
+            <header className="flex items-start justify-between gap-3 px-5 pt-4 pb-3 border-b border-line">
               <div className="min-w-0">
-                <h3 className="m-0 text-[15px] font-bold text-slate-900">{title}</h3>
-                {description ? <p className="m-0 mt-0.5 text-xs text-slate-500">{description}</p> : null}
+                <h3 className="m-0 text-[15px] font-bold text-ink">{title}</h3>
+                {description ? <p className="m-0 mt-0.5 text-xs text-muted">{description}</p> : null}
               </div>
               <button
                 type="button"
                 onClick={onClose}
-                className="grid place-items-center size-8 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors duration-150 flex-none"
+                className="grid place-items-center size-8 rounded-lg text-muted hover:bg-surface-3 hover:text-ink-2 transition-colors duration-150 flex-none"
                 aria-label="إغلاق"
               >
                 <X size={17} />
@@ -62,7 +62,7 @@ export function Modal({ open, onClose, title, description, children, footer, siz
             </header>
             <div className="px-5 py-4 max-h-[70vh] overflow-y-auto">{children}</div>
             {footer ? (
-              <footer className="px-5 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-start gap-2">
+              <footer className="px-5 py-3 bg-surface-2 border-t border-line flex items-center justify-start gap-2">
                 {footer}
               </footer>
             ) : null}
@@ -85,7 +85,7 @@ export function Drawer({ open, onClose, title, description, children, footer, si
     <AnimatePresence>
       {open ? (
         <motion.div
-          className="fixed inset-0 z-[70] bg-slate-900/45 backdrop-blur-sm"
+          className="fixed inset-0 z-[70] bg-inverse backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -97,7 +97,7 @@ export function Drawer({ open, onClose, title, description, children, footer, si
           <motion.aside
             className={`absolute inset-y-0 ${side === 'end' ? 'end-0' : 'start-0'} w-full ${
               size === 'sm' ? 'max-w-sm' : size === 'lg' ? 'max-w-2xl' : 'max-w-md'
-            } bg-white shadow-5 border-s border-slate-200 flex flex-col`}
+            } bg-surface shadow-5 border-s border-line flex flex-col`}
             initial={{ opacity: 0.4, x: fromX }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0.4, x: fromX }}
@@ -105,15 +105,15 @@ export function Drawer({ open, onClose, title, description, children, footer, si
             role="dialog"
             aria-modal="true"
           >
-            <header className="flex items-start justify-between gap-3 px-5 py-4 border-b border-slate-100">
+            <header className="flex items-start justify-between gap-3 px-5 py-4 border-b border-line">
               <div className="min-w-0">
-                <h3 className="m-0 text-[15px] font-bold text-slate-900">{title}</h3>
-                {description ? <p className="m-0 mt-0.5 text-xs text-slate-500">{description}</p> : null}
+                <h3 className="m-0 text-[15px] font-bold text-ink">{title}</h3>
+                {description ? <p className="m-0 mt-0.5 text-xs text-muted">{description}</p> : null}
               </div>
               <button
                 type="button"
                 onClick={onClose}
-                className="grid place-items-center size-8 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors duration-150 flex-none"
+                className="grid place-items-center size-8 rounded-lg text-muted hover:bg-surface-3 hover:text-ink-2 transition-colors duration-150 flex-none"
                 aria-label="إغلاق"
               >
                 <X size={17} />
@@ -121,7 +121,7 @@ export function Drawer({ open, onClose, title, description, children, footer, si
             </header>
             <div className="px-5 py-4 flex-1 overflow-y-auto">{children}</div>
             {footer ? (
-              <footer className="px-5 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-start gap-2">
+              <footer className="px-5 py-3 bg-surface-2 border-t border-line flex items-center justify-start gap-2">
                 {footer}
               </footer>
             ) : null}

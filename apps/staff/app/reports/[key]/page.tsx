@@ -166,17 +166,17 @@ export default function ReportRunnerPage({ params }: { params: Promise<{ key: st
       <Reveal>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <Link href="/reports" className="grid place-items-center size-9 rounded-xl bg-white border border-slate-200 shadow-1 text-slate-400 hover:text-brand-600 hover:border-brand-200 transition-colors">
+            <Link href="/reports" className="grid place-items-center size-9 rounded-xl bg-surface border border-line shadow-1 text-muted hover:text-brand-600 hover:border-brand-200 transition-colors">
               <ArrowRight size={17} />
             </Link>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h1 className="m-0 text-[22px] font-bold text-slate-900 tracking-tight leading-tight truncate">{entry?.titleAr ?? 'تقرير'}</h1>
+                <h1 className="m-0 text-[22px] font-bold text-ink tracking-tight leading-tight truncate">{entry?.titleAr ?? 'تقرير'}</h1>
                 <Badge tone="blue" dot>
                   {REPORT_GROUP_LABELS[entry?.group ?? ''] ?? 'تقارير'}
                 </Badge>
               </div>
-              {entry?.hintAr ? <p className="m-0 text-[12.5px] text-slate-500 truncate">{entry.hintAr}</p> : null}
+              {entry?.hintAr ? <p className="m-0 text-[12.5px] text-muted truncate">{entry.hintAr}</p> : null}
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -202,7 +202,7 @@ export default function ReportRunnerPage({ params }: { params: Promise<{ key: st
       {entry ? (
         <Reveal delay={0.05}>
           <form
-            className="rounded-xl border border-slate-200 bg-white p-4 shadow-1"
+            className="rounded-xl border border-line bg-surface p-4 shadow-1"
             onSubmit={(event) => {
               event.preventDefault();
               setNotice(null);
@@ -215,7 +215,7 @@ export default function ReportRunnerPage({ params }: { params: Promise<{ key: st
                   <select
                     value={filters.layout ?? ''}
                     onChange={(event) => setFilters((current) => ({ ...current, layout: event.target.value }))}
-                    className="w-full h-10 px-3 rounded-[10px] border border-slate-300 bg-white text-[13.5px] text-slate-900 focus:outline-none focus:border-brand-600 focus:shadow-[0_0_0_3px_rgb(37_99_235/0.15)] transition-all duration-150"
+                    className="w-full h-10 px-3 rounded-[10px] border border-line-strong bg-surface text-[13.5px] text-ink focus:outline-none focus:border-brand-600 focus:shadow-[var(--ring-brand)] transition-all duration-150"
                   >
                     <option value="">الافتراضي</option>
                     {(layouts.data ?? []).map((layout) => (
@@ -254,10 +254,10 @@ export default function ReportRunnerPage({ params }: { params: Promise<{ key: st
         <div
           className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-[13px] font-semibold ${
             notice.kind === 'ok'
-              ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+              ? 'border-ok-line bg-ok-soft text-ok-ink'
               : notice.kind === 'danger'
-                ? 'border-red-200 bg-red-50 text-red-700'
-                : 'border-amber-200 bg-amber-50 text-amber-800'
+                ? 'border-danger-line bg-danger-soft text-danger-ink'
+                : 'border-warn-line bg-warn-soft text-warn-ink'
           }`}
         >
           {notice.text}
@@ -333,9 +333,9 @@ export default function ReportRunnerPage({ params }: { params: Promise<{ key: st
 
           {/* table */}
           <Reveal delay={0.15}>
-            <div className="rounded-xl border border-slate-200 bg-white shadow-1 overflow-hidden">
+            <div className="rounded-xl border border-line bg-surface shadow-1 overflow-hidden">
               <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-4 pb-1">
-                <h3 className="m-0 text-[15px] font-bold text-slate-900">نتائج التقرير</h3>
+                <h3 className="m-0 text-[15px] font-bold text-ink">نتائج التقرير</h3>
                 <div className="flex flex-wrap gap-1.5">
                   {Object.entries(result.totals).map(([key, value]) => {
                     const column = result.columns.find((col) => col.key === key);
@@ -376,9 +376,9 @@ function ReportChart({ entry, result }: { entry: ReportEntry; result: ReportResu
   );
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-1">
+    <div className="rounded-xl border border-line bg-surface p-4 shadow-1">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="m-0 text-[15px] font-bold text-slate-900">
+        <h3 className="m-0 text-[15px] font-bold text-ink">
           📈 {valueCol} — {entry.titleAr}
         </h3>
         <Badge tone="blue" dot>
@@ -420,9 +420,9 @@ function SortableReportTable({ result }: { result: ReportResult }) {
       result.columns.map((column) => {
         const value = result.totals[column.key];
         return value !== undefined ? (
-          <span className="font-bold text-slate-900">{formatCell(value, column.type)}</span>
+          <span className="font-bold text-ink">{formatCell(value, column.type)}</span>
         ) : (
-          <span className="text-slate-300">·</span>
+          <span className="text-muted">·</span>
         );
       }),
     [result],
@@ -459,7 +459,7 @@ function FilterField({ param, value, options, onChange }: { param: ReportParam; 
           dir="ltr"
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          className="w-full h-10 px-3 rounded-[10px] border border-slate-300 bg-white text-[13.5px] text-slate-900 focus:outline-none focus:border-brand-600 focus:shadow-[0_0_0_3px_rgb(37_99_235/0.15)] transition-all duration-150"
+          className="w-full h-10 px-3 rounded-[10px] border border-line-strong bg-surface text-[13.5px] text-ink focus:outline-none focus:border-brand-600 focus:shadow-[var(--ring-brand)] transition-all duration-150"
         />
       </Labeled>
     );
@@ -473,7 +473,7 @@ function FilterField({ param, value, options, onChange }: { param: ReportParam; 
           value={value}
           placeholder={param.kind === 'serial' ? 'SN-0001' : param.kind === 'year' ? '2026' : 'JE-000001'}
           onChange={(event) => onChange(event.target.value)}
-          className="w-full h-10 px-3 rounded-[10px] border border-slate-300 bg-white text-[13.5px] text-slate-900 focus:outline-none focus:border-brand-600 focus:shadow-[0_0_0_3px_rgb(37_99_235/0.15)] transition-all duration-150"
+          className="w-full h-10 px-3 rounded-[10px] border border-line-strong bg-surface text-[13.5px] text-ink focus:outline-none focus:border-brand-600 focus:shadow-[var(--ring-brand)] transition-all duration-150"
         />
       </Labeled>
     );
@@ -487,7 +487,7 @@ function FilterField({ param, value, options, onChange }: { param: ReportParam; 
           dir="ltr"
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          className="w-full h-10 px-3 rounded-[10px] border border-slate-300 bg-white text-[13.5px] text-slate-900 focus:outline-none focus:border-brand-600 focus:shadow-[0_0_0_3px_rgb(37_99_235/0.15)] transition-all duration-150"
+          className="w-full h-10 px-3 rounded-[10px] border border-line-strong bg-surface text-[13.5px] text-ink focus:outline-none focus:border-brand-600 focus:shadow-[var(--ring-brand)] transition-all duration-150"
         />
       </Labeled>
     );
@@ -497,7 +497,7 @@ function FilterField({ param, value, options, onChange }: { param: ReportParam; 
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full h-10 px-3 rounded-[10px] border border-slate-300 bg-white text-[13.5px] text-slate-900 focus:outline-none focus:border-brand-600 focus:shadow-[0_0_0_3px_rgb(37_99_235/0.15)] transition-all duration-150"
+        className="w-full h-10 px-3 rounded-[10px] border border-line-strong bg-surface text-[13.5px] text-ink focus:outline-none focus:border-brand-600 focus:shadow-[var(--ring-brand)] transition-all duration-150"
       >
         <option value="">الكل</option>
         {options.map((option) => (

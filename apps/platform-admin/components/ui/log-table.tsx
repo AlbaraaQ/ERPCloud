@@ -7,11 +7,11 @@ import { type Column } from './table';
 export type LogLevel = 'info' | 'warn' | 'error' | 'debug' | 'ok';
 
 const LEVEL_CLS: Record<LogLevel, string> = {
-  info: 'text-sky-700 bg-sky-50',
-  warn: 'text-amber-700 bg-amber-50',
-  error: 'text-red-700 bg-red-50',
-  debug: 'text-slate-500 bg-slate-100',
-  ok: 'text-emerald-700 bg-emerald-50',
+  info: 'text-info-ink bg-info-soft',
+  warn: 'text-warn-ink bg-warn-soft',
+  error: 'text-danger-ink bg-danger-soft',
+  debug: 'text-muted bg-surface-3',
+  ok: 'text-ok-ink bg-ok-soft',
 };
 
 /**
@@ -35,14 +35,14 @@ export function LogTable<T>({
   empty?: ReactNode;
 }) {
   return (
-    <div className="overflow-auto rounded-[10px] border border-slate-800 bg-slate-950 shadow-2" style={{ maxHeight: maxH }}>
+    <div className="overflow-auto rounded-[10px] border border-inverse-line bg-inverse shadow-2" style={{ maxHeight: maxH }}>
       <table className="w-full border-collapse text-[12.5px]" style={{ fontFamily: 'var(--font-mono)' }}>
         <thead>
           <tr>
             {columns.map((col) => (
               <th
                 key={col.key}
-                className={`sticky top-0 z-10 whitespace-nowrap border-b border-slate-800 bg-slate-900 px-3 py-2 text-[10.5px] font-bold uppercase tracking-wider text-slate-400 ${
+                className={`sticky top-0 z-10 whitespace-nowrap border-b border-inverse-line bg-inverse px-3 py-2 text-[10.5px] font-bold uppercase tracking-wider text-muted ${
                   col.numeric ? 'text-end' : 'text-start'
                 }`}
               >
@@ -54,7 +54,7 @@ export function LogTable<T>({
         <tbody>
           {rows.length === 0 ? (
             <tr>
-              <td colSpan={columns.length} className="px-4 py-10 text-center text-[13px] text-slate-500" style={{ fontFamily: 'var(--font-sans)' }}>
+              <td colSpan={columns.length} className="px-4 py-10 text-center text-[13px] text-muted" style={{ fontFamily: 'var(--font-sans)' }}>
                 {empty ?? 'لا توجد سجلات.'}
               </td>
             </tr>
@@ -63,13 +63,13 @@ export function LogTable<T>({
             const key = rowKey(row, index);
             const level = levelOf?.(row);
             return (
-              <tr key={key} className="border-b border-slate-800/60 transition-colors duration-100 hover:bg-slate-900/60">
+              <tr key={key} className="border-b border-inverse-line transition-colors duration-100 hover:bg-inverse">
                 {columns.map((col, ci) => (
                   <td
                     key={col.key}
                     className={`px-3 py-2 align-top ${col.numeric ? 'text-end' : 'text-start'}`}
                     dir={col.ltr ? 'ltr' : undefined}
-                    style={{ color: ci === 0 && level ? undefined : '#cbd5e1' }}
+                    style={{ color: ci === 0 && level ? undefined : 'var(--muted-2)' }}
                   >
                     {ci === 0 && level ? (
                       <span className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider ${LEVEL_CLS[level]}`}>

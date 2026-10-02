@@ -5,6 +5,7 @@
   "type": "module",
   "dependencies": {
     "@erp/contracts": "workspace:*",
+    "@erp/ui": "workspace:*",
     "@fontsource-variable/inter": "^5",
     "@fontsource/tajawal": "^5",
     "@tanstack/react-query": "^5.90.2",

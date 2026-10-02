@@ -12,12 +12,12 @@ export type ButtonSize = 'sm' | 'md' | 'lg';
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary:
-    'bg-brand-600 text-white border-brand-600 shadow-2 hover:bg-brand-700 hover:border-brand-700',
+    'bg-brand-600 text-on-accent border-brand-600 shadow-2 hover:bg-brand-700 hover:border-brand-700',
   secondary:
-    'bg-white text-slate-700 border-slate-300 shadow-1 hover:bg-slate-50 hover:border-slate-400',
-  ghost: 'bg-transparent text-slate-600 border-transparent hover:bg-slate-100 hover:text-slate-900',
-  danger: 'bg-white text-red-600 border-red-200 hover:bg-red-50 hover:border-red-400',
-  success: 'bg-emerald-600 text-white border-emerald-600 shadow-2 hover:bg-emerald-700',
+    'bg-surface text-ink-2 border-line-strong shadow-1 hover:bg-surface-2 hover:border-line-strong',
+  ghost: 'bg-transparent text-ink-2 border-transparent hover:bg-surface-3 hover:text-ink',
+  danger: 'bg-surface text-danger border-danger-line hover:bg-danger-soft hover:border-danger-line',
+  success: 'bg-ok text-on-accent border-ok shadow-2 hover:brightness-110',
 };
 
 const SIZES: Record<ButtonSize, string> = {

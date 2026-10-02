@@ -104,12 +104,12 @@ export function Table<T>({
   const cellPad = dense ? 'px-2.5 py-1.5' : 'px-3 py-2.5';
 
   return (
-    <div className="w-full overflow-auto max-h-[70vh] rounded-xl border border-slate-200 bg-white shadow-1">
+    <div className="w-full overflow-auto max-h-[70vh] rounded-xl border border-line bg-surface shadow-1">
       <table className="w-full border-collapse text-[13px]">
         <thead>
           <tr>
             {selectable ? (
-              <th className={`sticky top-0 z-10 bg-slate-50 w-10 ${cellPad}`}>
+              <th className={`sticky top-0 z-10 bg-surface-2 w-10 ${cellPad}`}>
                 <input
                   type="checkbox"
                   className="size-4 accent-brand-600 cursor-pointer"
@@ -126,7 +126,7 @@ export function Table<T>({
               <th
                 key={col.key}
                 style={col.width ? { width: col.width } : undefined}
-                className={`sticky top-0 z-10 bg-slate-50 font-bold text-[11px] tracking-wide text-slate-500 whitespace-nowrap ${cellPad} ${
+                className={`sticky top-0 z-10 bg-surface-2 font-bold text-[11px] tracking-wide text-muted whitespace-nowrap ${cellPad} ${
                   col.numeric ? 'text-end' : 'text-start'
                 } ${col.grow ? 'w-full' : ''}`}
               >
@@ -134,7 +134,7 @@ export function Table<T>({
                   <button
                     type="button"
                     onClick={() => toggleSort(col.key)}
-                    className={`inline-flex items-center gap-1 hover:text-slate-800 transition-colors duration-150 ${
+                    className={`inline-flex items-center gap-1 hover:text-ink transition-colors duration-150 ${
                       sort?.key === col.key ? 'text-brand-700' : ''
                     }`}
                   >
@@ -154,13 +154,13 @@ export function Table<T>({
                 )}
               </th>
             ))}
-            {actions ? <th className={`sticky top-0 z-10 bg-slate-50 w-10 ${cellPad}`} /> : null}
+            {actions ? <th className={`sticky top-0 z-10 bg-surface-2 w-10 ${cellPad}`} /> : null}
           </tr>
         </thead>
         <tbody>
           {loading
             ? Array.from({ length: skeletonRows }).map((_, i) => (
-                <tr key={i} className={zebra && i % 2 === 1 ? 'bg-slate-50/60' : ''}>
+                <tr key={i} className={zebra && i % 2 === 1 ? 'bg-surface-2' : ''}>
                   {selectable ? (
                     <td className={cellPad}>
                       <Skeleton className="size-4" />
@@ -182,11 +182,11 @@ export function Table<T>({
               ? [
                   <tr key="empty">
                     <td colSpan={colSpan}>
-                      <div className="grid place-items-center gap-2 py-14 text-slate-400">
-                        <span className="grid place-items-center size-16 rounded-2xl bg-slate-100 text-slate-300">
+                      <div className="grid place-items-center gap-2 py-14 text-muted">
+                        <span className="grid place-items-center size-16 rounded-2xl bg-surface-3 text-muted">
                           <Inbox size={30} strokeWidth={1.5} />
                         </span>
-                        <p className="m-0 text-sm font-semibold text-slate-500">
+                        <p className="m-0 text-sm font-semibold text-muted">
                           {empty ?? 'لا توجد سجلات لعرضها'}
                         </p>
                       </div>
@@ -203,10 +203,10 @@ export function Table<T>({
                       onClick={onRowClick ? () => onRowClick(row) : undefined}
                       className={[
                         'transition-colors duration-150',
-                        zebra && index % 2 === 1 ? 'bg-slate-50/60' : '',
+                        zebra && index % 2 === 1 ? 'bg-surface-2' : '',
                         onRowClick ? 'cursor-pointer' : '',
-                        active ? '!bg-blue-50 shadow-[inset_0_0_0_1.5px_#93c5fd]' : '',
-                        selected ? '!bg-blue-50/70' : '',
+                        active ? '!bg-info-soft shadow-[inset_0_0_0_1.5px_var(--brand-line)]' : '',
+                        selected ? '!bg-info-soft' : '',
                       ]
                         .filter(Boolean)
                         .join(' ')}
@@ -260,11 +260,11 @@ export function Table<T>({
         {footer && !loading && rows.length > 0 ? (
           <tfoot>
             <tr>
-              {selectable ? <td className={`${cellPad} bg-slate-50 border-t-2 border-slate-200`} /> : null}
+              {selectable ? <td className={`${cellPad} bg-surface-2 border-t-2 border-line`} /> : null}
               {footer.map((cell, i) => (
                 <td
                   key={i}
-                  className={`${cellPad} bg-slate-50 border-t-2 border-slate-200 font-bold ${
+                  className={`${cellPad} bg-surface-2 border-t-2 border-line font-bold ${
                     columns[i]?.numeric ? 'text-end' : 'text-start'
                   }`}
                 >
@@ -311,7 +311,7 @@ function RowActions({
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="grid place-items-center size-7 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors duration-150"
+        className="grid place-items-center size-7 rounded-lg text-muted hover:bg-surface-3 hover:text-ink-2 transition-colors duration-150"
         aria-label={open ? labels.close : labels.open}
         aria-expanded={open}
       >
@@ -323,7 +323,7 @@ function RowActions({
       </button>
       {open ? (
         <div
-          className="absolute z-20 top-full end-0 mt-1 min-w-36 rounded-xl border border-slate-200 bg-white shadow-4 overflow-hidden py-1"
+          className="absolute z-20 top-full end-0 mt-1 min-w-36 rounded-xl border border-line bg-surface shadow-4 overflow-hidden py-1"
           dir="rtl"
         >
           {items.map((item) => (
@@ -335,7 +335,7 @@ function RowActions({
                 item.onClick();
               }}
               className={`w-full flex items-center gap-2 px-3 py-2 text-[12.5px] font-semibold text-start transition-colors duration-150 ${
-                item.danger ? 'text-red-600 hover:bg-red-50' : 'text-slate-700 hover:bg-slate-50'
+                item.danger ? 'text-danger hover:bg-danger-soft' : 'text-ink-2 hover:bg-surface-2'
               }`}
             >
               {item.icon}

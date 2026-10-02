@@ -22,7 +22,7 @@ export function Tabs({
   const base = useId();
 
   return (
-    <div className={`relative border-b border-slate-200 flex gap-1 overflow-x-auto ${className}`} role="tablist">
+    <div className={`relative border-b border-line flex gap-1 overflow-x-auto ${className}`} role="tablist">
       {items.map((item) => {
         const active = item.key === value;
         return (
@@ -34,14 +34,14 @@ export function Tabs({
             aria-selected={active}
             onClick={() => onChange(item.key)}
             className={`relative px-3.5 py-2.5 text-[13.5px] font-semibold whitespace-nowrap transition-colors duration-150 flex items-center gap-1.5 ${
-              active ? 'text-brand-700' : 'text-slate-500 hover:text-slate-800'
+              active ? 'text-brand-700' : 'text-muted hover:text-ink'
             }`}
           >
             {item.label}
             {item.badge !== undefined ? (
               <span
                 className={`min-w-5 h-5 px-1.5 grid place-items-center rounded-full text-[10.5px] font-bold ${
-                  active ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-500'
+                  active ? 'bg-brand-600 text-on-accent' : 'bg-surface-3 text-muted'
                 }`}
               >
                 {item.badge}

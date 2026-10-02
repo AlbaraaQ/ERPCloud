@@ -60,7 +60,7 @@ export default function ApprovalInboxPage() {
                 </div>
                 <span className="chip">{request.currentStep?.approverRole ?? request.currentStep?.approverUserId ?? 'مستخدم محدد'}</span>
               </div>
-              <div className="rounded-lg bg-slate-50 p-3 text-[13px]">
+              <div className="rounded-lg bg-surface-2 p-3 text-[13px]">
                 <strong>أنشأه:</strong> {request.createdBy ?? 'النظام'} · <strong>التاريخ:</strong> {new Date(request.createdAt).toLocaleString('ar')}
               </div>
               <label className="field"><span>تعليق القرار (اختياري)</span><textarea value={comments[request.id] ?? ''} onChange={(event) => setComments((current) => ({ ...current, [request.id]: event.target.value }))} rows={2} placeholder="اكتب ملاحظة للمُنشئ أو للمراجع التالي" /></label>

@@ -151,7 +151,7 @@ export default function FilesPage() {
       }
     >
       {/* filter bar */}
-      <div className="rounded-[10px] border border-slate-200 bg-white p-3 shadow-1 no-print">
+      <div className="rounded-[10px] border border-line bg-surface p-3 shadow-1 no-print">
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <Input label="بحث في الاسم" placeholder="كشف" value={term} onChange={(e) => setTerm(e.target.value)} />
           <Select label="حالة الملف" value={status} onChange={(e) => setStatus(e.target.value)}>
@@ -175,7 +175,7 @@ export default function FilesPage() {
             error={canManage && reason.length > 0 && !reasonReady ? '5 محارف على الأقل' : undefined}
           />
         </div>
-        <p className="m-0 mt-2 text-[11.5px] text-slate-400">
+        <p className="m-0 mt-2 text-[11.5px] text-muted">
           «لم يُفحص» و«لم يُفحص فعلياً» مختلفان: الأول ملفٌّ لم يمرّ على الماسح أصلاً (لا سطر تدقيق)، والثاني
           مرّ عليه فقال الماسح إنه لا يفحص (الماسح المُهيّأ هنا لا يفعل).
         </p>
@@ -184,7 +184,7 @@ export default function FilesPage() {
       {notice ? (
         <div
           className={`mt-3 flex items-center gap-2 rounded-[10px] border px-4 py-2.5 text-[13px] font-semibold ${
-            notice.kind === 'ok' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-700'
+            notice.kind === 'ok' ? 'border-ok-line bg-ok-soft text-ok-ink' : 'border-danger-line bg-danger-soft text-danger-ink'
           }`}
         >
           {notice.text}
@@ -192,7 +192,7 @@ export default function FilesPage() {
       ) : null}
 
       {files.status === 'loading' ? (
-        <div className="mt-3 rounded-[10px] border border-slate-200 bg-white p-4 shadow-1">
+        <div className="mt-3 rounded-[10px] border border-line bg-surface p-4 shadow-1">
           <SkeletonRows rows={6} />
         </div>
       ) : files.status === 'forbidden' ? (
@@ -200,15 +200,15 @@ export default function FilesPage() {
       ) : files.status === 'error' ? (
         <ErrorBox message={files.error} onRetry={files.reload} />
       ) : rows.length === 0 ? (
-        <div className="mt-3 rounded-[10px] border border-slate-200 bg-white p-8 shadow-1">
+        <div className="mt-3 rounded-[10px] border border-line bg-surface p-8 shadow-1">
           <Empty title="لا ملفات بهذا المرشّح" detail="جرّب مرشّح «لم يُفحص بعد» — هو سؤال هذه الشاشة." />
         </div>
       ) : (
         <>
-          <p className="mt-3 mb-2 text-[12px] font-semibold text-slate-400">
+          <p className="mt-3 mb-2 text-[12px] font-semibold text-muted">
             {rows.length} من {files.data?.meta.total ?? rows.length} ملفاً
           </p>
-          <div className="overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-1">
+          <div className="overflow-hidden rounded-[10px] border border-line bg-surface shadow-1">
             <Table
               rows={rows}
               rowKey={(row) => row.id}
@@ -220,12 +220,12 @@ export default function FilesPage() {
                   grow: true,
                   cell: (row) => (
                     <span className="flex items-center gap-2 min-w-0">
-                      <span className="grid size-8 flex-none place-items-center rounded-lg bg-slate-100 text-slate-400">
+                      <span className="grid size-8 flex-none place-items-center rounded-lg bg-surface-3 text-muted">
                         <FileSearch size={14} />
                       </span>
                       <span className="block min-w-0">
-                        <span className="block truncate font-mono text-[12px] font-semibold text-slate-800" dir="ltr">{row.name}</span>
-                        <span className="block truncate font-mono text-[10.5px] text-slate-400" dir="ltr">
+                        <span className="block truncate font-mono text-[12px] font-semibold text-ink" dir="ltr">{row.name}</span>
+                        <span className="block truncate font-mono text-[10.5px] text-muted" dir="ltr">
                           {row.mime} · {row.uploadedByLabel ?? 'بلا رافع'}
                         </span>
                       </span>
@@ -235,14 +235,14 @@ export default function FilesPage() {
                 {
                   key: 'tenant',
                   header: 'العميل',
-                  cell: (row) => <span className="font-mono text-[12px] text-slate-600" dir="ltr">{row.tenantCode ?? row.tenantId.slice(0, 8)}</span>,
+                  cell: (row) => <span className="font-mono text-[12px] text-ink-2" dir="ltr">{row.tenantCode ?? row.tenantId.slice(0, 8)}</span>,
                 },
                 {
                   key: 'size',
                   header: 'الحجم',
                   numeric: true,
                   ltr: true,
-                  cell: (row) => <span className="font-mono text-[12px] text-slate-600">{formatBytes(row.sizeBytes)}</span>,
+                  cell: (row) => <span className="font-mono text-[12px] text-ink-2">{formatBytes(row.sizeBytes)}</span>,
                 },
                 {
                   key: 'status',
@@ -254,11 +254,11 @@ export default function FilesPage() {
                   header: 'مربوط بـ',
                   cell: (row) =>
                     row.entity ? (
-                      <span className="font-mono text-[11.5px] text-slate-500" dir="ltr">
+                      <span className="font-mono text-[11.5px] text-muted" dir="ltr">
                         {row.entity}/{row.entityId?.slice(0, 8) ?? ''}
                       </span>
                     ) : (
-                      <span className="text-slate-300">—</span>
+                      <span className="text-muted">—</span>
                     ),
                 },
                 {
@@ -270,7 +270,7 @@ export default function FilesPage() {
                         <Badge tone={SCAN_TONE[row.scan.verdict] ?? 'neutral'} dot>
                           <ScanLine size={11} /> {SCAN_LABEL[row.scan.verdict] ?? row.scan.verdict}
                         </Badge>
-                        <span className="mt-0.5 block font-mono text-[10.5px] text-slate-400" dir="ltr">
+                        <span className="mt-0.5 block font-mono text-[10.5px] text-muted" dir="ltr">
                           {row.scan.scanner} · {new Date(row.scan.recordedAt).toLocaleString('en-GB', { timeZone: 'UTC' })}
                         </span>
                       </span>
@@ -282,7 +282,7 @@ export default function FilesPage() {
                   key: 'created',
                   header: 'رُفع في',
                   ltr: true,
-                  cell: (row) => <span className="font-mono text-[11.5px] text-slate-500">{new Date(row.createdAt).toLocaleString('en-GB', { timeZone: 'UTC' })} UTC</span>,
+                  cell: (row) => <span className="font-mono text-[11.5px] text-muted">{new Date(row.createdAt).toLocaleString('en-GB', { timeZone: 'UTC' })} UTC</span>,
                 },
                 ...(canManage
                   ? [

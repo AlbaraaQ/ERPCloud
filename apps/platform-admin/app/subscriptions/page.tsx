@@ -192,7 +192,7 @@ export default function SubscriptionsPage() {
       {message && (
         <div
           className={`mb-4 flex items-center gap-2 rounded-[10px] border px-4 py-2.5 text-[13px] font-semibold ${
-            message.kind === 'ok' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-700'
+            message.kind === 'ok' ? 'border-ok-line bg-ok-soft text-ok-ink' : 'border-danger-line bg-danger-soft text-danger-ink'
           }`}
         >
           {message.text}
@@ -205,7 +205,7 @@ export default function SubscriptionsPage() {
         (rows.length === 0 ? (
           <Empty title="لا توجد تراخيص" detail="أصدر ترخيصاً من هنا أو من صفحة العملاء." />
         ) : (
-          <div className="overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-1">
+          <div className="overflow-hidden rounded-[10px] border border-line bg-surface shadow-1">
             <Table
               rows={rows}
               rowKey={(row) => row.id}
@@ -217,8 +217,8 @@ export default function SubscriptionsPage() {
                   grow: true,
                   cell: (row) => (
                     <span className="block">
-                      <span className="block text-[13px] font-bold text-slate-800">{row.tenantName}</span>
-                      <span className="block font-mono text-[11px] text-slate-400" dir="ltr">{row.tenantCode}</span>
+                      <span className="block text-[13px] font-bold text-ink">{row.tenantName}</span>
+                      <span className="block font-mono text-[11px] text-muted" dir="ltr">{row.tenantCode}</span>
                     </span>
                   ),
                 },
@@ -227,8 +227,8 @@ export default function SubscriptionsPage() {
                   header: 'الباقة',
                   cell: (row) => (
                     <span className="block">
-                      <span className="block text-[12.5px] font-semibold text-slate-700">{row.planName}</span>
-                      <span className="block font-mono text-[11px] text-slate-400" dir="ltr">{row.planCode}</span>
+                      <span className="block text-[12.5px] font-semibold text-ink-2">{row.planName}</span>
+                      <span className="block font-mono text-[11px] text-muted" dir="ltr">{row.planCode}</span>
                     </span>
                   ),
                 },
@@ -242,7 +242,7 @@ export default function SubscriptionsPage() {
                       <span className="block font-mono text-[12px] font-bold">
                         {Number(row.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })} {row.currency}
                       </span>
-                      <span className="block text-[11px] text-slate-400">
+                      <span className="block text-[11px] text-muted">
                         {row.interval === 'year' ? 'سنوي' : 'شهري'} · {row.monthlyAmount} شهرياً
                       </span>
                     </span>
@@ -264,19 +264,19 @@ export default function SubscriptionsPage() {
                   cell: (row) => (
                     <span className="block">
                       <Badge tone={SUB_STATUS_TONE[row.status]} dot>{STATUS_LABEL[row.status]}</Badge>
-                      {row.cancelAtPeriodEnd && <span className="mt-0.5 block text-[11px] font-semibold text-amber-600">يُنتهي بانتهاء المدة</span>}
+                      {row.cancelAtPeriodEnd && <span className="mt-0.5 block text-[11px] font-semibold text-warn">يُنتهي بانتهاء المدة</span>}
                       {row.status === 'trialing' && row.trialEndsAt && (
-                        <span className="mt-0.5 block text-[11px] text-slate-400">تنتهي التجربة {dateText(row.trialEndsAt)}</span>
+                        <span className="mt-0.5 block text-[11px] text-muted">تنتهي التجربة {dateText(row.trialEndsAt)}</span>
                       )}
                       {row.status === 'paused' && row.pausedAt && (
-                        <span className="mt-0.5 block text-[11px] text-slate-400">موقوف منذ {dateText(row.pausedAt)}</span>
+                        <span className="mt-0.5 block text-[11px] text-muted">موقوف منذ {dateText(row.pausedAt)}</span>
                       )}
                     </span>
                   ),
                 },
-                { key: 'start', header: 'يبدأ', ltr: true, cell: (row) => <span className="font-mono text-[11.5px] text-slate-500">{dateText(row.currentPeriodStart)}</span> },
-                { key: 'end', header: 'ينتهي', ltr: true, cell: (row) => <span className="font-mono text-[11.5px] text-slate-500">{dateText(row.currentPeriodEnd)}</span> },
-                { key: 'due', header: 'فواتير', numeric: true, ltr: true, cell: (row) => <span className={`font-mono text-[12px] font-bold ${row.dueInvoiceCount > 0 ? 'text-red-600' : 'text-slate-400'}`}>{row.dueInvoiceCount}</span> },
+                { key: 'start', header: 'يبدأ', ltr: true, cell: (row) => <span className="font-mono text-[11.5px] text-muted">{dateText(row.currentPeriodStart)}</span> },
+                { key: 'end', header: 'ينتهي', ltr: true, cell: (row) => <span className="font-mono text-[11.5px] text-muted">{dateText(row.currentPeriodEnd)}</span> },
+                { key: 'due', header: 'فواتير', numeric: true, ltr: true, cell: (row) => <span className={`font-mono text-[12px] font-bold ${row.dueInvoiceCount > 0 ? 'text-danger' : 'text-muted'}`}>{row.dueInvoiceCount}</span> },
                 {
                   key: 'actions',
                   header: '',
@@ -293,7 +293,7 @@ export default function SubscriptionsPage() {
                         <Button variant="danger" size="sm" onClick={() => setActionTarget({ subscription: row, kind: 'cancel' })}>إلغاء</Button>
                       </span>
                     ) : row.status === 'canceled' && row.canceledReason ? (
-                      <span className="block max-w-[220px] truncate text-left text-[11px] text-slate-400" title={row.canceledReason}>{row.canceledReason}</span>
+                      <span className="block max-w-[220px] truncate text-left text-[11px] text-muted" title={row.canceledReason}>{row.canceledReason}</span>
                     ) : null,
                 },
               ]}

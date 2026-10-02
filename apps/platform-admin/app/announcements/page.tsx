@@ -586,7 +586,7 @@ function ComposeTab({ editing, onSaved }: { editing: Announcement | null; onSave
         />
       </div>
 
-      <article className="card" style={{ background: '#fff' }}>
+      <article className="card" style={{ background: 'var(--surface)' }}>
         <strong>{preview === 'ar' ? titleAr || '—' : titleEn || '—'}</strong>
         <p dir={preview === 'ar' ? 'rtl' : 'ltr'} style={{ whiteSpace: 'pre-wrap', margin: '8px 0 0' }}>
           {preview === 'ar' ? bodyAr || '—' : bodyEn || '—'}

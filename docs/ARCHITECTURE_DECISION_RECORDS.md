@@ -101,3 +101,54 @@ C: The September 2026 advisory feed reports high/critical findings in `vitest`, 
 Alt: Block release until all upstream toolchain packages publish fixed compatible versions, or force major test/build tool upgrades that break the current TS/Vitest config.
 Why: The production runtime exposure is zero under the release runbook; the risk is managed by CI-only execution, no public dev servers, source maps disabled for public builds unless explicitly approved, and recurring dependency-audit review before each release.
 Cons: Security owners must revisit this waiver before v1.0.1 and remove it once compatible patched build tooling is available.
+
+## ADR-030 Design System v3 lives in `packages/ui`; one token set, one theme mechanism
+D: All three front-end surfaces (`apps/staff`, `apps/platform-admin`, `apps/marketing`)
+share one package — `@erp/ui` — that owns (a) the CSS token set (`@erp/ui/tokens.css`,
+imported by each app's `globals.css`) and (b) the React component kit. Dark mode is one
+mechanism: a single `localStorage` key `erp.theme` (`light|dark|system`), one blocking
+micro-script in `<head>` that toggles `html.dark` before hydration, and one semantic
+variable contract (`--bg --surface --surface-2 --text --muted --line --line-strong
+--brand --brand-soft`, plus `--ok/--warn/--danger/--info` and the `--inverse` plate)
+that every utility resolves through.
+C: v2 already had a token contract per app, but it was *copied* into three
+`globals.css` files, its dark mode was partial (staff only, no switch, no FOUC guard),
+and the React kits in `apps/staff/components/ui` and
+`apps/platform-admin/components/ui` were two near-identical forks that carried raw
+Tailwind palette classes (`bg-white`, `text-slate-900`, …) which cannot flip.
+Alt: (a) per-app design systems — rejected: three forks is how a product looks like
+three products; (b) remap Tailwind's `slate-*` scale to variables so existing JSX keeps
+working — rejected: it leaves ~800 raw palette classes in the source and hides the
+contract instead of naming it; (c) ship the kit as a compiled `dist/` — rejected: it adds
+a build-order dependency between three apps and one package for no gain, since the apps
+already compile TypeScript from workspace sources.
+Why: a reviewer can now answer "is this colour a token?" with a `grep`; a visitor gets
+one theme answer across all three surfaces; and a component fixed once is fixed in all
+three. The build-order risk of (c) is removed by `transpilePackages: ['@erp/ui']`.
+Cons: `packages/ui` must not import from `apps/*` (enforced by the repo's
+`boundaries/element-types` rule); its JS is marked `sideEffects: ['*.css']` so a barrel
+import cannot drag `recharts` into a surface that only wanted the toggle; and the root
+`eslint.config.mjs` gained two globs (`packages/ui/**`, `src/**`) plus a
+`boundaries/elements` entry for `packages/ui/**/*.tsx` — additive only, no existing rule
+changed.
+
+## ADR-031 The shared kit is consumed as TypeScript source (`transpilePackages`)
+D: `@erp/ui` is published to the workspace with `exports: { ".": "./src/index.ts", … }`
+and each app lists it in `transpilePackages`. No `dist/`, no build step, no lockfile
+coupling between the kit and its three consumers.
+C: ADR-030 chose one kit for three apps. The repo's existing convention
+(`docs/change-log/CHANGE-REQUESTS.md` → "Decisions recorded without a change request")
+is that workspace packages emit `dist/` and are consumed compiled — because NestJS needs
+`design:paramtypes`. The three Next.js apps have no such constraint.
+Alt: compiled `dist/` (would make `pnpm --filter @erp/staff build` depend on
+`packages/ui` having been built first — a silent order requirement); a git submodule or
+copy-paste (rejected: forks again).
+Why: `next build` and `next dev` both compile the package with the app's own
+toolchain, so a change in the kit is visible immediately and no artifact can go stale.
+Cons: the kit's TypeScript must satisfy every app's `tsc`; it is therefore type-checked
+in CI through the three app builds plus `@erp/ui`'s own `typecheck` script. Because it
+is a browser-only package (DOM lib, JSX, bundler resolution) it is **excluded** from
+the root `tsconfig.base.json` NodeNext server sweep, exactly as the apps' `.tsx` code
+already is — the sweep would otherwise report `window`/`document` as unknown and demand
+`.js` extensions a bundler must not carry. The exclusion is recorded as CR-007 and
+verified: the sweep's error count returns to its base-commit value.

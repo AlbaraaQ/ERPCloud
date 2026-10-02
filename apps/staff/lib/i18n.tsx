@@ -34,6 +34,18 @@ export const STRINGS: Record<string, DictEntry> = {
   'nav.status.ready': { ar: 'جاهز', en: 'Ready' },
   'nav.status.api': { ar: 'الواجهة البرمجية جاهزة', en: 'API ready' },
   'nav.status.planned': { ar: 'قيد التطوير', en: 'Planned' },
+  'nav.coverage': { ar: 'تغطية الشاشات', en: 'Screen coverage' },
+  'nav.coverage.hint': {
+    ar: 'شاشة تدّعي أنها تعمل فقط عندما تكون جاهزة.',
+    en: 'A screen claims to work only when it is ready.',
+  },
+  'nav.coverage.ready': { ar: 'جاهزة', en: 'ready' },
+  'nav.coverage.api': { ar: 'واجهة برمجية جاهزة', en: 'API ready' },
+  'nav.coverage.planned': { ar: 'مخطَّطة', en: 'planned' },
+  'nav.lang': { ar: 'اللغة', en: 'Language' },
+  'nav.lang.ar': { ar: 'العربية', en: 'Arabic' },
+  'nav.lang.en': { ar: 'الإنجليزية', en: 'English' },
+  'theme.label': { ar: 'مظهر الواجهة', en: 'Appearance' },
 
   'login.title': { ar: 'تسجيل الدخول', en: 'Sign in' },
   'login.subtitle': { ar: 'لوحة تحكم المنشأة وموظفيها.', en: 'Tenant back office for staff.' },

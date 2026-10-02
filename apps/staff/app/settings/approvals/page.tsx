@@ -191,7 +191,7 @@ export default function ApprovalSettingsPage() {
         <div className="grid gap-3">
           <h3 className="m-0">الخطوات</h3>
           {steps.map((step, index) => (
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 grid gap-3" key={index}>
+            <div className="rounded-xl border border-line bg-surface-2 p-3 grid gap-3" key={index}>
               <div className="flex items-center justify-between gap-2">
                 <strong>الخطوة {index + 1}</strong>
                 {steps.length > 1 ? <button className="btn" type="button" onClick={() => setSteps((current) => current.filter((_, i) => i !== index))}>حذف</button> : null}
@@ -217,7 +217,7 @@ export default function ApprovalSettingsPage() {
       <section className="card grid gap-3">
         <h2 className="m-0">المسارات الحالية</h2>
         {workflows.length === 0 ? <p className="muted m-0">لا توجد مسارات بعد.</p> : workflows.map((workflow) => (
-          <article className="rounded-xl border border-slate-200 p-4 grid gap-2" key={workflow.id}>
+          <article className="rounded-xl border border-line p-4 grid gap-2" key={workflow.id}>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div><strong>{workflow.name}</strong><span className="muted"> · {entityLabels[workflow.entity]}</span></div>
               <span className={`chip ${workflow.isActive ? 'success' : ''}`}>{workflow.isActive ? 'نشط' : 'متوقف'}</span>

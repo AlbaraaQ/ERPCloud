@@ -285,7 +285,7 @@ export default function ZatcaSyncStatusPage() {
                 key: 'sync_status',
                 header: 'حالة المزامنة',
                 cell: (row) => (
-                  <span className="chip" style={(row.sync_status ?? '').startsWith('✅') ? { background: '#1B8E4A', color: '#fff' } : { background: '#B92F2F', color: '#fff' }}>
+                  <span className="chip" style={(row.sync_status ?? '').startsWith('✅') ? { background: 'var(--ok)', color: 'var(--on-accent)' } : { background: 'var(--danger)', color: 'var(--on-accent)' }}>
                     {row.sync_status}
                   </span>
                 ),

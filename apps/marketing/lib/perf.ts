@@ -27,6 +27,18 @@ export type BudgetReport = {
 /** كيلوبايت = ١٠٢٤ بايت — والوحدات تُعرض كيلوبايت لأن الأرقام الخام تُقرأ بلا معنى. */
 export const KIB = 1024;
 
+/**
+ * مساراتٌ **لا يراها الزائر** فلا تُقاس بميزانيته.
+ *
+ * `/design` هي صفحة مراجعة نظام التصميم (Design v3 §2.3): تعرض كل مكوّن مرة
+ * واحدة — recharts وframer-motion وكل مغلّف — لأن غرضها هو المراجعة البصرية في
+ * الوضعين. وهي `notFound()` في البناء الإنتاجي، فحجمها لا يصل إلى زائر أبدًا.
+ * قياسها بسقف ٦٨٠ ك.ب كان سيُسقط البناء لأن الصفحة تحمل المكتبات كلها عن قصد.
+ *
+ * وهذا **ليس** رفع سقف: السقف كما هو، والقائمة هنا تقول بأيّ مسارٍ لا ينطبق.
+ */
+export const UNMEASURED_ROUTES: readonly string[] = ['/design'];
+
 export function formatKib(bytes: number): string {
   return `${(bytes / KIB).toFixed(1)} kB`;
 }
@@ -59,6 +71,7 @@ export function evaluateBudget(input: {
 }): BudgetReport {
   const lines: BudgetLine[] = [];
   for (const [route, files] of Object.entries(input.routeFiles)) {
+    if (UNMEASURED_ROUTES.includes(route)) continue;
     const budget =
       input.routeBudgets[route] ?? (input.defaultBudgetBytes === undefined ? null : input.defaultBudgetBytes);
     if (budget === null || budget === undefined) continue;
