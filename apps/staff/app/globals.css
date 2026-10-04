@@ -204,55 +204,63 @@
   padding: 9px 10px;
 }
 
-.dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--line-strong);
-  flex: none;
-}
-.dot.ready {
-  background: var(--color-success);
-}
-.dot.api {
-  background: var(--color-warning);
-}
-.dot.planned {
-  background: var(--muted);
-}
-
+/* The status markers the sidebar draws are v3 components now — `StatusDot` and
+ * `Badge` from `@erp/ui` — so this stylesheet no longer owns a colour for
+ * them. The legend is layout only: the chips carry their own tone. */
 .nav-legend {
   display: flex;
-  gap: 10px;
+  gap: 6px;
   flex-wrap: wrap;
-  font-size: 10.5px;
-  color: var(--muted);
+  align-items: center;
   padding: 10px 6px 0;
   border-top: 1px solid var(--line);
-}
-.nav-legend span {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
 }
 
 .main {
   padding: 20px 24px 40px;
   min-width: 0;
+  /* Design v3 §6.1 — the 1400px content scale. A screen that needs the full
+     viewport opts out explicitly (`.main-wide`), rather than every screen
+     quietly growing past the rail. */
+  max-width: 1400px;
+  margin-inline: auto;
+}
+.main-wide {
+  max-width: none;
 }
 
 .topbar {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-xl);
-  padding: 12px 16px;
+  /* Design v3 §6.1 — 56px, pinned. The bar used to be content-height and
+     `flex-wrap`, so it jumped to two rows the moment a tenant name or a
+     notification count grew. Fixed height plus truncation instead: the bar
+     is chrome, it must not reflow the screen under it. */
+  height: 56px;
+  min-height: 56px;
+  padding: 0 16px;
   display: flex;
   justify-content: space-between;
   gap: 12px;
   align-items: center;
   margin-bottom: 18px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   box-shadow: var(--shadow-1);
+}
+/* The two halves of the bar shrink rather than wrap, and the tenant line
+ * truncates rather than pushing the controls off-screen. */
+.topbar > * {
+  min-width: 0;
+}
+.topbar .row {
+  flex-wrap: nowrap;
+}
+.topbar strong,
+.topbar .muted {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .only-mobile {
   display: none;
@@ -375,9 +383,7 @@
   background: var(--color-brand-600);
   color: var(--brand-ink);
   border-color: var(--color-brand-600);
-  box-shadow:
-    var(--shadow-2),
-    inset 0 1px 0 rgb(255 255 255 / 0.12);
+  box-shadow: var(--shadow-2);
 }
 .btn.primary:hover {
   background: var(--color-brand-700);
@@ -440,7 +446,7 @@ textarea.input {
 }
 .input[aria-invalid='true'] {
   border-color: var(--color-danger);
-  box-shadow: 0 0 0 3px rgb(239 68 68 / 0.15);
+  box-shadow: var(--ring-danger);
 }
 
 .field {
@@ -519,13 +525,8 @@ th.num {
   font-size: 11.5px;
   font-weight: 700;
   background: var(--line-strong);
-  color: var(--ink-2, var(--muted-2));
+  color: var(--muted-2);
   white-space: nowrap;
-}
-.badge .dot {
-  width: 6px;
-  height: 6px;
-  background: currentColor;
 }
 .badge.posted,
 .badge.succeeded,
@@ -533,7 +534,7 @@ th.num {
 .badge.pass,
 .badge.approved,
 .badge.ready {
-  background: var(--color-success-soft);
+  background: var(--ok-soft);
   color: var(--ok);
 }
 .badge.draft,
@@ -542,7 +543,7 @@ th.num {
 .badge.incomplete,
 .badge.api,
 .badge.partial {
-  background: var(--color-warning-soft);
+  background: var(--warn-soft);
   color: var(--warn);
 }
 .badge.failed,
@@ -570,11 +571,11 @@ th.num {
 
 /* P-C5 usage meters — same three states on both surfaces. */
 .badge.ok {
-  background: var(--color-success-soft);
+  background: var(--ok-soft);
   color: var(--ok);
 }
 .badge.soft {
-  background: var(--color-warning-soft);
+  background: var(--warn-soft);
   color: var(--warn);
 }
 .badge.hard {
@@ -635,7 +636,7 @@ th.num {
   border: 1px solid var(--danger-line);
 }
 .alert.ok {
-  background: var(--color-success-soft);
+  background: var(--ok-soft);
   color: var(--ok-ink);
   border: 1px solid var(--ok-line);
 }
@@ -645,7 +646,7 @@ th.num {
   border: 1px solid var(--info-line);
 }
 .alert.warn {
-  background: var(--color-warning-soft);
+  background: var(--warn-soft);
   color: var(--warn-ink);
   border: 1px solid var(--warn-line);
 }
@@ -682,8 +683,8 @@ th.num {
 }
 .auth-brand {
   background:
-    radial-gradient(60rem 30rem at 110% -10%, rgb(59 130 246 / 0.25), transparent 60%),
-    radial-gradient(40rem 24rem at -20% 110%, rgb(124 58 237 / 0.2), transparent 60%),
+    radial-gradient(60rem 30rem at 110% -10%, color-mix(in srgb, var(--color-brand-500) 25%, transparent), transparent 60%),
+    radial-gradient(40rem 24rem at -20% 110%, color-mix(in srgb, var(--color-violet-600) 20%, transparent), transparent 60%),
     linear-gradient(150deg, var(--bg), var(--brand-soft));
   color: var(--text);
   padding: 48px;
@@ -739,7 +740,7 @@ th.num {
   height: 44px;
   border-radius: 12px;
   background: var(--brand);
-  color: white;
+  color: var(--on-accent);
   font-weight: 700;
 }
 .sign-pad {
@@ -967,14 +968,14 @@ button.chip:hover {
   color: var(--muted);
 }
 .tile.ok {
-  background: var(--color-success-soft);
+  background: var(--ok-soft);
   border-color: var(--ok-line);
 }
 .tile.ok .tile-value {
   color: var(--ok);
 }
 .tile.warn {
-  background: var(--color-warning-soft);
+  background: var(--warn-soft);
   border-color: var(--warn-line);
 }
 .tile.warn .tile-value {
@@ -1010,10 +1011,10 @@ button.chip:hover {
   transition: width var(--dur-slow) var(--ease-out);
 }
 .bar.ok > span {
-  background: var(--color-success);
+  background: var(--ok);
 }
 .bar.warn > span {
-  background: var(--color-warning);
+  background: var(--warn);
 }
 .bar.danger > span {
   background: var(--color-danger);
@@ -1046,7 +1047,7 @@ button.chip:hover {
   color: var(--ok);
 }
 .step.done .step-bullet {
-  background: var(--color-success);
+  background: var(--ok);
   color: var(--brand-ink);
 }
 .step.current {
@@ -1289,7 +1290,7 @@ tr.row-active {
 }
 .tree-label {
   flex: 1;
-  text-align: right;
+  text-align: start;
   background: none;
   border: 0;
   font: inherit;
@@ -1303,7 +1304,7 @@ tr.row-active {
 }
 .tree-balance {
   min-width: 120px;
-  text-align: left;
+  text-align: end;
   font-variant-numeric: tabular-nums;
   font-family: 'Inter Variable', var(--font-sans);
   color: var(--ok);
@@ -1325,7 +1326,7 @@ tr.row-active {
   gap: 6px;
   align-self: center;
   font-size: 13px;
-  color: var(--ink-2, var(--muted-2));
+  color: var(--muted-2);
   cursor: pointer;
 }
 .check input {
@@ -1409,7 +1410,7 @@ tr.opening td {
   display: grid;
   place-items: center;
   padding: 16px;
-  background: rgb(15 23 42 / 0.45);
+  background: color-mix(in srgb, var(--inverse) 45%, transparent);
   backdrop-filter: blur(4px);
   animation: fade-in 150ms var(--ease-out);
 }
@@ -1558,7 +1559,7 @@ tr.opening td {
     inset-inline-start: 0;
     width: 72mm;
     margin: 0;
-    color: #000;
+    color: var(--text);
     font-family: Arial, sans-serif;
     font-size: 11px;
     line-height: 1.45;
@@ -1715,7 +1716,7 @@ tr.opening td {
   inset-inline-end: 20px;
   bottom: 20px;
   border-radius: 999px;
-  box-shadow: var(--shadow-2, 0 8px 24px rgb(15 23 42 / 18%));
+  box-shadow: var(--shadow-2);
 }
 .assistant-drawer {
   position: fixed;
@@ -1820,7 +1821,7 @@ tr.opening td {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background: white;
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 16px;
   padding: 16px;
@@ -1853,7 +1854,7 @@ tr.opening td {
   gap: 8px;
   font-size: 12px;
   font-weight: 700;
-  color: var(--ink-2, var(--muted-2));
+  color: var(--muted-2);
 }
 .coverage-bar {
   height: 6px;

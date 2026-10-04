@@ -147,3 +147,35 @@ export function CellBadge({
     </Badge>
   );
 }
+
+/**
+ * StatusDot — the same tone map, without the sticker.
+ *
+ * `Badge` is the *labelled* status: chrome plus a word. A navigation row, a
+ * dense table cell or a legend strip needs the colour and nothing else, and
+ * the absence of a bare dot here is why `apps/staff` grew a private one:
+ * `.dot.ready` / `.dot.api` / `.dot.planned` in its stylesheet, answered by
+ * hand-written CSS that `statusTone()` could not resolve. That fork is the
+ * defect, not the preference — a status that is green on one surface must not
+ * be a different green on the next (ADR-030).
+ *
+ * `aria-hidden` on purpose: a dot beside a label repeats what the label
+ * already says to a screen reader. Pass `title` when a sighted reader needs
+ * the tooltip, which is the only thing the old class ever carried.
+ */
+export function StatusDot({
+  tone,
+  status,
+  className = '',
+  title,
+}: {
+  tone?: StatusTone;
+  status?: string | null;
+  className?: string;
+  title?: string;
+}) {
+  const resolved = tone ?? statusTone(status);
+  return (
+    <span title={title} aria-hidden className={cn('size-1.5 shrink-0 rounded-full', DOT_CLASS[resolved], className)} />
+  );
+}

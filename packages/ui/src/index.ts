@@ -62,6 +62,7 @@ export {
   Badge,
   CellBadge,
   STATUS_TONES,
+  StatusDot,
   statusTone,
   type BadgeProps,
   type StatusTone,
