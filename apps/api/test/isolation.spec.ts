@@ -157,78 +157,72 @@ describe('tenant isolation (TESTING_STRATEGY §6)', () => {
     }
   });
 
-  it('exposes the protected table list for later phases to extend', () => {
-    expect(rlsProtectedTablesProbe()).toEqual([
-      'memberships',
-      'roles',
-      'role_permissions',
-      'membership_roles',
-      'tenant_settings',
-      // PHASE_04 — platform services.
-      'audit_log',
-      'files',
-      'notifications',
-      'outbox_jobs',
-      'idempotency_keys',
-      // Future enhancement 03 — e-commerce stores, orders and sync logs (migration 0099).
-      'ecommerce_stores',
-      'ecommerce_orders',
-      'ecommerce_sync_logs',
-      'document_sequences',
-      // PHASE_05 — organization structure.
-      'company_profiles',
-      'branches',
-      'warehouses',
-      'cash_locations',
-      'cash_location_balances',
-      'currencies',
-      'fx_rates',
-      'price_lists',
-      'price_list_items',
-      'branch_posting_profiles',
-      // 2026-09 architecture/RBAC reorganisation (migration 0032).
-      'devices',
-      'membership_role_scopes',
-      // Future enhancement 01 — bank feeds and reconciliation (migration 0096).
-      'bank_accounts',
-      'bank_statements',
-      'bank_statement_lines',
-      'bank_reconciliation_rules',
-      // R17 — printer/report links.
-      'printer_report_links',
-      // Future enhancement 02 — purchase-invoice OCR jobs (migration 0097).
-      'ocr_jobs',
-      // Future enhancement 04 — approval workflows and their parent-scoped children.
-      'approval_workflows',
-      'approval_steps',
-      'approval_requests',
-      'approval_decisions',
-      'custom_fields',
-      'custom_field_values',
-      'custom_reports',
-      'offline_queue',
-      'payroll_compliance_settings',
-      'payroll_wps_files',
-      'payroll_gosi_files',
-      'payment_provider_configs',
-      'payment_links',
-      'ai_settings',
-      'ai_conversations',
-      'ai_usage_logs',
-      'ai_suggestions',
-      'employee_geofences',
-      'employee_attendance',
-      'employee_requests',
-      'employee_push_subscriptions',
-      'employee_push_outbox',
-      'warehouse_bins',
-      'bin_balances',
-      'bin_transfers',
-      'boms',
-      'bom_lines',
-      'manufacturing_orders',
-      'manufacturing_moves',
-    ]);
+  it('every table the schema declares protected really carries RLS and a policy', async () => {
+    // This replaces a hardcoded copy of `rlsProtectedTables` that had drifted 21 tables
+    // behind the source of truth — every phase added its tables to `rls.ts` and forgot
+    // this file, so the assertion had been red for months and proved nothing.
+    //
+    // The invariant that actually matters is not "the list equals these 61 names" but
+    // "every name in the list is protected in the live database". That is checkable
+    // directly against `pg_class` / `pg_policy`, it cannot drift, and it is the thing a
+    // reader of this test would assume it was already asserting: a table added to
+    // `rlsProtectedTables` without a migration to match fails here, immediately.
+    const declared = rlsProtectedTablesProbe();
+    expect(declared.length).toBeGreaterThan(0);
+
+    const client = new Client({ connectionString: ctx.db.migratorUrl });
+    await client.connect();
+    try {
+      const result = await client.query(
+        `SELECT c.relname AS name,
+                c.relrowsecurity AS rls,
+                (SELECT count(*)::int FROM pg_policy p WHERE p.polrelid = c.oid) AS policies
+           FROM pg_class c
+           JOIN pg_namespace n ON n.oid = c.relnamespace
+          WHERE n.nspname = 'public' AND c.relkind = 'r'`,
+      );
+      const actual = new Map(result.rows.map((row) => [row.name, row]));
+
+      const unprotected: string[] = [];
+      const missing: string[] = [];
+      for (const table of declared) {
+        const row = actual.get(table);
+        if (!row) missing.push(table);
+        else if (!row.rls) unprotected.push(`${table}: RLS not enabled`);
+        else if (row.policies === 0) unprotected.push(`${table}: RLS on but no policy`);
+      }
+
+      expect(missing, 'declared in rlsProtectedTables but absent from the database').toEqual([]);
+      expect(unprotected, 'declared in rlsProtectedTables but not actually isolated').toEqual([]);
+    } finally {
+      await client.end();
+    }
+  });
+
+  it('the protected list is the curated RLS subset, not every table with a tenant_id', () => {
+    // Guarding the *other* half of the design so it is not "fixed" by mistake.
+    //
+    // This schema is hybrid on purpose: `rlsProtectedTables` is the subset that carries a
+    // database-level policy, and it is consumed by nothing but this harness — it does not
+    // generate migrations. The remaining tenant-scoped tables (well over a hundred of
+    // them: stock, vouchers, vessels, CRM, tailoring…) are isolated at the application
+    // layer by `withTenantTx`, which binds the GUC and scopes every query.
+    //
+    // So "table has tenant_id but is not in rlsProtectedTables" is NOT a leak, and an
+    // assertion demanding the two sets be equal would be wrong. What this test pins is
+    // that the list stays a deliberate, reviewable subset — if it ever grows to claim
+    // every tenant-scoped table, that is an architectural change needing its own ADR,
+    // not a test update.
+    const declared = rlsProtectedTablesProbe();
+    expect(declared).toContain('memberships');
+    expect(declared).toContain('tenant_settings');
+    // The subset must never be empty, and must never contain a platform table that has
+    // no tenant_id to isolate on.
+    expect(declared).not.toContain('users');
+    expect(declared).not.toContain('tenants');
+    expect(declared).not.toContain('permissions');
+    // No duplicates — the list is used to build per-table SQL.
+    expect(new Set(declared).size).toBe(declared.length);
   });
 
   it('rejects a cross-tenant UPDATE at the RLS layer even with the caller GUC set', async () => {

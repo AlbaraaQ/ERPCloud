@@ -177,3 +177,30 @@ Cons: an incorrect-token lookup costs a hash computation, and the reset e-mail c
 only be delivered to an address already on file — there is deliberately no
 "which tenants do I belong to" disclosure on this route, so a user with several
 memberships must remember the e-mail they registered.
+
+## ADR-033 `rlsProtectedTables` is a curated RLS subset; the rest of the schema is isolated by `withTenantTx`
+D: `rlsProtectedTables` in `packages/database/src/rls.ts` names the tables that
+carry a database-level tenant policy. It is consumed by the isolation test
+harness only — it does not generate migrations and nothing enforces it at
+runtime. Tables not in the list are isolated at the application layer by
+`withTenantTx`, which binds the transaction-local GUC and scopes every query.
+C: The schema is deliberately hybrid. Roughly 82 tables carry RLS; over 170
+others have a `tenant_id` column and rely on app-layer scoping. Making the two
+sets equal would mean writing and maintaining policies for 170 more tables, each
+of which would then need its own migration, its own grant, and its own rollback
+path — for protection the application already provides.
+Alt: (a) generate the RLS migrations from the list — rejected, it would silently
+promote the list from documentation to infrastructure and every addition would
+become a migration-coupled change; (b) assert in tests that every table with a
+`tenant_id` is in the list — rejected, it would demand the 170-table expansion
+above and read as a security finding when it is a design choice.
+Why: The hybrid split is already load-bearing and reviewed; what was missing was
+a test that states it. CR-015 replaces a stale hardcoded copy of the list in
+`apps/api/test/isolation.spec.ts` with a live-database invariant (every declared
+table exists, has RLS enabled, and has a policy) plus a test that pins the
+subset's intent — it must never claim `users`/`tenants`/`permissions`, and it
+holds no duplicates. An audit at the time confirmed all 82 declared tables are
+genuinely protected.
+Cons: a future reader must not "fix" the 170 by adding RLS to them; that is an
+architectural change requiring its own ADR, and the second test's comment says so
+where they will be looking.

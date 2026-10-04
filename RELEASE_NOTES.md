@@ -64,41 +64,86 @@ The demo owner credential was then restored through `POST /auth/change-password`
 
 ## Gates
 
-`@erp/contracts` **232/232** · `recovery.spec.ts` **15/15** · `pnpm -r run lint` 0
-errors · `pnpm --filter @erp/api run build` 0 TS errors · `test:smoke` passed ·
-`openapi:export` clean.
-
-## Known-red, not caused by this release
-
-Four files in the wider `@erp/api` suite fail, and all four were confirmed to fail
-**identically with this release's changes stashed**, so none of them is caused by
-it. They are recorded here so the red is not mistaken for a regression:
-
-| File | Nature |
+| Gate | Result |
 |---|---|
-| `test/isolation.spec.ts` | snapshot drift — the protected-table allowlist is 60 entries while the schema now has 81; the test's own name says "for later phases to extend" |
-| `src/modules/ai/ai-help.spec.ts` | snapshot drift — the navigation snapshot expects 261 routes, the app now has 273 |
-| `test/platform-backups.spec.ts` | environmental — backup runs answer 404/500 and report `failed`; no object store is configured in this sandbox |
-| `test/platform-usage.spec.ts` | environmental — the storage upload endpoint answers 503 instead of 201, same missing object store |
+| `pnpm -r run lint` | **exit 0** |
+| `pnpm -r run build` | **0 TS errors** |
+| `pnpm -r run test` | **1858 passed, 0 failed** |
+| `pnpm --dir apps/api run test:smoke` | **passed** — AppModule boots, `/health/live` 200, guards emit problem+json 401 |
+| `pnpm run openapi:export` | **clean** — the diff is exactly the two new endpoints |
 
-The first two need a snapshot refresh; the last two need an S3-compatible store
-configured before they can run at all. None is in scope for this release, and each
-deserves its own change request rather than being quietly swept in here.
+Per package: `ui` 21 · `config` 10 · `contracts` 232 · `database` 53 ·
+`testing` 12 · `api` 1530.
 
-# Release Notes — Production readiness, Wave 1: remove the blockers
+## The four red files, and what each one actually was
 
-Date: 2026-10-04
-Scope: `apps/api`, `packages/database`, `apps/staff`.
-Records: CR-012, CR-13, CR-14, CR-15.
+Four files in the wider `@erp/api` suite were failing when this release was cut.
+All four are now green, and the whole workspace stands at **1858 tests, 0
+failures** (`ui` 21, `config` 10, `contracts` 232, `database` 53, `testing` 12,
+`api` 1530). What they turned out to be was not one problem but three different
+ones, and only one of them was a defect in the code under test.
 
-## Why this release exists
+**1. `test/isolation.spec.ts` — a hardcoded list that had drifted 21 tables.**
 
-The three surfaces were built and the design system was shared, but the system could
-not actually be *used*: the demo tenant held no active subscription, so every module
-flag in `tenant_settings` was `false` and every feature-gated screen answered 404.
-POS could not save an invoice, the licence screen showed nothing, and the parties
-ledger was empty. This release removes that, verified against a running stack
-(embedded PostgreSQL 16, 112 migrations, demo seed, API on `:3000`).
+The test asserted `rlsProtectedTablesProbe()` equalled a copy of
+`rlsProtectedTables` pasted into the test file. The real list lives in
+`packages/database/src/rls.ts`, and every phase since had added its tables there
+and forgotten the test's copy — supplier portal, e-sign, dashboards, tenant
+apps, CRM, comments, project tasks. The assertion had been red and meaningless
+for months.
+
+Before touching it I audited the database directly: **all 82 declared tables do
+carry RLS and a policy** — the list was not lying about the schema, only the
+test's copy was stale. I also checked the converse, because it is the shape of a
+real leak: 170 tables have a `tenant_id` column and are *not* in the list. That
+is not a gap. `rlsProtectedTables` is consumed by nothing but this harness — it
+does not generate migrations — and the schema is deliberately hybrid: the listed
+subset carries a database-level policy, the rest are isolated at the application
+layer by `withTenantTx`. Adding RLS to 170 tables would be an architectural
+change, not a test fix.
+
+So the list is now asserted against the live database instead of against a copy:
+every declared table must exist, have `relrowsecurity`, and have at least one
+policy. That cannot drift, and it fails with a named table when a phase declares
+protection without migrating it. A second test pins the design intent — the list
+stays a curated subset, never claims `users`/`tenants`/`permissions`, and holds no
+duplicates — so the hybrid model is not "fixed" by mistake later. Both were
+verified to fail when the bug is reintroduced.
+
+**2. `src/modules/ai/ai-help.spec.ts` — a generated file nobody regenerated.**
+
+`NAVIGATION_SNAPSHOT` is derived from `apps/staff/lib/navigation.ts` by
+`scripts/build-ai-navigation-snapshot.mjs`. Twelve screens had been added to
+navigation and the snapshot was never rebuilt, so it was 12 behind. Running the
+generator fixed it — the diff is 207 insertions and **zero deletions**, i.e.
+purely additive, no existing entry changed.
+
+The generator was referenced only in comments and wired into nothing, which is
+why this recurs. It now runs in `pnpm verify` immediately after `typegen`, so the
+derived artifact cannot drift again.
+
+**3. `test/platform-usage.spec.ts` — a real test defect, and the only one.**
+
+The storage-quota test drives `POST /files/presign` and expects the second,
+within-limit request to answer 201. Without MinIO the real `S3ObjectStorage` is
+unconfigured and answers **503 by design** — "a file endpoint must fail loudly
+rather than hand out an unusable URL" (`env.ts`, PHASE_04 §5.3). The test never
+overrode the provider, so half of it was asserting against an unconfigured
+sandbox rather than against quotas.
+
+Fixed the way `files.spec.ts` already does it:
+`createTestApp(..., (b) => b.overrideProvider(OBJECT_STORAGE).useValue(new FakeObjectStorage()))`.
+The quota check runs before the presign, so the refusal half stays fully covered.
+
+**4. `test/platform-backups.spec.ts` — did not survive a clean rebuild.**
+
+Nine failures here (404, 500, and backup runs reporting `failed`). I changed
+nothing that touches backups, and after rebuilding the workspace from a clean
+install the file passes 25/25 — reproducibly, with and without seed data and with
+a live API server running alongside. I could not reproduce the original failure,
+so I am not claiming a fix for it; the honest reading is that it was an artifact
+of a stale build in the sandbox it was first run in. It is green now, and it is
+the one of the four I would watch.
 
 ## What was wrong, and what changed
 
