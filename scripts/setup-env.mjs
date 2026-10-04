@@ -84,15 +84,32 @@ const replacements = {
   ...seedPasswords,
 };
 
-for (const [key, value] of Object.entries(replacements)) {
-  const pattern = new RegExp(`^${key}=.*$`, 'm');
-  // A replacer FUNCTION, not a string: generated secrets legitimately contain `$`
-  // (`!@#$%^&*?-_+=` includes it), and `String.replace` would expand `$&`, `$'`,
-  // `` $` `` and `$$` into parts of the matched text — silently corrupting the
-  // written value (e.g. a `$&` password used to splice `KEY=` into its own line).
-  const write = () => `${key}=${value}`;
-  content = pattern.test(content) ? content.replace(pattern, write) : `${content}\n${key}=${value}\n`;
+/**
+ * Writes each `KEY=value` pair into the template, replacing the placeholder line
+ * when one exists and appending when it does not.
+ *
+ * The replacer is a **function**, never a string: generated secrets legitimately
+ * contain `$` (the symbol alphabet `!@#$%^&*?-_+=` includes it), and
+ * `String.prototype.replace` expands `$&`, `$'`, `` $` `` and `$$` in a string
+ * replacement into parts of the matched text. That once silently turned a
+ * password such as `KwK$&WGXvFyN#w=ZwH6*` into the line
+ * `DEMO_CASHIER_PASSWORD=KwKDEMO_CASHIER_PASSWORD=WGXvFyN#w=ZwH6*`, which the
+ * tenant password policy then rejects for containing "password". A function
+ * replacer disables every `$` pattern.
+ *
+ * Exported so the invariant is unit-tested rather than trusted.
+ */
+export function writeEnvLines(template, pairs) {
+  let out = template;
+  for (const [key, value] of Object.entries(pairs)) {
+    const line = `${key}=${value}`;
+    const pattern = new RegExp(`^${key}=.*$`, 'm');
+    out = pattern.test(out) ? out.replace(pattern, () => line) : `${out}\n${line}\n`;
+  }
+  return out;
 }
+
+content = writeEnvLines(content, replacements);
 
 writeFileSync(target, content, { mode: 0o600 });
 
