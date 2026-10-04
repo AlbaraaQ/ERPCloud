@@ -19,15 +19,15 @@ import {
   type WeeklyReportPreview,
   type WeeklyReportRunResult,
 } from '@erp/contracts';
+import { Button } from '@erp/ui';
+import { SkeletonRows } from '@erp/ui';
+import { DataTable } from '@erp/ui';
 
 import { Empty, ErrorBox, Loading, Screen } from '../../components/screen';
-import { Button } from '../../components/ui/button';
 import { AreaCardChart } from '../../components/ui/chart';
 import { Reveal } from '../../components/ui/count-up';
 import { Select } from '../../components/ui/input';
 import { MetricCard } from '../../components/ui/metric-card';
-import { SkeletonRows } from '../../components/ui/skeleton';
-import { Table } from '../../components/ui/table';
 import { ApiError, apiData, apiPost, downloadFile } from '../../lib/api';
 import { useSession } from '../../lib/session';
 import { useQuery } from '../../lib/use-query';
@@ -323,7 +323,7 @@ export default function AnalyticsPage() {
                 <p className="m-0 mt-0.5 mb-2 text-[11.5px] text-muted">{data.definitions.churn}</p>
               </header>
               <div className="px-1 pb-2">
-                <Table
+                <DataTable
                   rows={data.churn.points}
                   rowKey={(point) => point.month}
                   dense
@@ -349,7 +349,7 @@ export default function AnalyticsPage() {
                 <div className="px-4 pb-4"><Empty title="لا باقات بعد" detail="لا ترخيص حَيّ يشير إلى باقة." /></div>
               ) : (
                 <div className="px-1 pb-2">
-                  <Table
+                  <DataTable
                     rows={data.usageByPlan}
                     rowKey={(group) => group.planCode}
                     dense

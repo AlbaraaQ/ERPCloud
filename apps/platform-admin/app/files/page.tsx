@@ -2,13 +2,13 @@
 
 import { FileSearch, RefreshCw, ScanLine, ShieldAlert } from 'lucide-react';
 import { useState } from 'react';
+import { Badge } from '@erp/ui';
+import { Button } from '@erp/ui';
+import { SkeletonRows } from '@erp/ui';
+import { DataTable } from '@erp/ui';
 
-import { Empty, ErrorBox, Forbidden, Screen } from '../../components/screen';
-import { Badge } from '../../components/ui/badge';
-import { Button } from '../../components/ui/button';
 import { Input, Select } from '../../components/ui/input';
-import { SkeletonRows } from '../../components/ui/skeleton';
-import { Table } from '../../components/ui/table';
+import { Empty, ErrorBox, Forbidden, Screen } from '../../components/screen';
 import { apiData } from '../../lib/api';
 import { useSession } from '../../lib/session';
 import { useQuery } from '../../lib/use-query';
@@ -62,10 +62,10 @@ const STATUS_LABEL: Record<string, string> = {
   deleted: 'محجور',
 };
 
-const STATUS_TONE: Record<string, 'amber' | 'green' | 'red' | 'neutral'> = {
-  pending: 'amber',
-  ready: 'green',
-  deleted: 'red',
+const STATUS_TONE: Record<string, 'warn' | 'ok' | 'danger' | 'neutral'> = {
+  pending: 'warn',
+  ready: 'ok',
+  deleted: 'danger',
 };
 
 const SCAN_LABEL: Record<string, string> = {
@@ -74,10 +74,10 @@ const SCAN_LABEL: Record<string, string> = {
   skipped: 'لم يُفحص فعلياً',
 };
 
-const SCAN_TONE: Record<string, 'green' | 'red' | 'amber' | 'neutral'> = {
-  clean: 'green',
-  infected: 'red',
-  skipped: 'amber',
+const SCAN_TONE: Record<string, 'ok' | 'danger' | 'warn' | 'neutral'> = {
+  clean: 'ok',
+  infected: 'danger',
+  skipped: 'warn',
 };
 
 export default function FilesPage() {
@@ -209,7 +209,7 @@ export default function FilesPage() {
             {rows.length} من {files.data?.meta.total ?? rows.length} ملفاً
           </p>
           <div className="overflow-hidden rounded-[10px] border border-line bg-surface shadow-1">
-            <Table
+            <DataTable
               rows={rows}
               rowKey={(row) => row.id}
               dense

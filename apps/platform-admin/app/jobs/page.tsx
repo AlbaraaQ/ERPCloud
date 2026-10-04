@@ -9,13 +9,13 @@ import {
   Server,
   Wifi,
 } from 'lucide-react';
+import { Badge } from '@erp/ui';
+import { Button } from '@erp/ui';
+import { SkeletonRows } from '@erp/ui';
+import { DataTable } from '@erp/ui';
 
-import { Empty, ErrorBox, Forbidden, Screen } from '../../components/screen';
-import { Badge } from '../../components/ui/badge';
-import { Button } from '../../components/ui/button';
 import { Input, Select } from '../../components/ui/input';
-import { SkeletonRows } from '../../components/ui/skeleton';
-import { Table } from '../../components/ui/table';
+import { Empty, ErrorBox, Forbidden, Screen } from '../../components/screen';
 import { apiData } from '../../lib/api';
 import { useSession } from '../../lib/session';
 import { useQuery } from '../../lib/use-query';
@@ -138,7 +138,7 @@ export default function JobsPage() {
               {running ? 'عاملٌ يعمل' : 'لا عامل يعمل (WORKER=0)'}
             </span>
           </span>
-          <Badge tone={enabled ? 'green' : 'amber'} dot>
+          <Badge tone={enabled ? 'ok' : 'warn'} dot>
             <Wifi size={11} /> {enabled ? 'الطابور موصول (Redis)' : 'الطابور في القاعدة فقط'}
           </Badge>
           <span className="font-mono text-[12px] text-muted" dir="ltr">
@@ -206,7 +206,7 @@ export default function JobsPage() {
             {rows.length} من {jobs.data?.meta.total ?? rows.length} مهمّة
           </p>
           <div className="overflow-hidden rounded-[10px] border border-line bg-surface shadow-1">
-            <Table
+            <DataTable
               rows={rows}
               rowKey={(row) => row.id}
               dense
@@ -237,9 +237,9 @@ export default function JobsPage() {
                         <Server size={11} /> {STATUS_LABEL[row.status]}
                       </span>
                     ) : row.status === 'dead' ? (
-                      <Badge tone="red" dot>{STATUS_LABEL[row.status]}</Badge>
+                      <Badge tone="danger" dot>{STATUS_LABEL[row.status]}</Badge>
                     ) : (
-                      <Badge tone="green" dot>{STATUS_LABEL[row.status]}</Badge>
+                      <Badge tone="ok" dot>{STATUS_LABEL[row.status]}</Badge>
                     ),
                 },
                 {

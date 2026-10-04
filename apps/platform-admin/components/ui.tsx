@@ -1,40 +1,14 @@
 'use client';
 
 /**
- * Shared console widgets.
+ * Shared console widgets — the pieces only this console has.
  *
- * `Tabs` is carried over **verbatim** from the staff surface
- * (`apps/staff/components/ui.tsx` L97–119, styling at `apps/staff/app/globals.css` L820–841):
- * the two products are one design language and one RTL layout, so a second implementation
- * would only be a second set of differences. The console had no tabbed screen before P-C2;
- * the customer card is the first, and it needs exactly this control.
+ * `Tabs` used to live here as a verbatim copy of the staff surface. That was
+ * meant to prevent divergence, but it produced exactly the divergence ADR-030
+ * forbids: a second implementation of a control `@erp/ui` already owns. It now
+ * comes from the package, and what remains are the widgets with no
+ * design-system counterpart.
  */
-
-export function Tabs<T extends string>({
-  items,
-  value,
-  onChange,
-}: {
-  items: Array<{ id: T; label: string }>;
-  value: T;
-  onChange: (next: T) => void;
-}) {
-  return (
-    <div className="tabs">
-      {items.map((item) => (
-        <button
-          key={item.id}
-          type="button"
-          className={`tab${item.id === value ? ' active' : ''}`}
-          onClick={() => onChange(item.id)}
-          aria-current={item.id === value}
-        >
-          {item.label}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 /**
  * A metered value as a bar. `ratio` is capped at 1 for the drawing and rounded for the

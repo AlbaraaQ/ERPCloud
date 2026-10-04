@@ -21,9 +21,9 @@ import {
   type ContentVersion,
   type ListEnvelope,
 } from '@erp/contracts';
+import { Tabs } from '@erp/ui';
 
 import { Empty, ErrorBox, Forbidden, Loading, Screen } from '../../components/screen';
-import { Tabs } from '../../components/ui';
 import { ApiError, apiData, apiFetch } from '../../lib/api';
 import { useSession } from '../../lib/session';
 import { useQuery } from '../../lib/use-query';
@@ -185,10 +185,10 @@ export default function ContentPageScreen() {
         value={tab}
         onChange={setTab}
         items={[
-          { id: 'pages', label: 'الصفحات' },
-          { id: 'blocks', label: 'الكتل' },
-          { id: 'menus', label: 'القوائم' },
-          { id: 'banners', label: 'اللافتات' },
+          { key: 'pages', label: 'الصفحات' },
+          { key: 'blocks', label: 'الكتل' },
+          { key: 'menus', label: 'القوائم' },
+          { key: 'banners', label: 'اللافتات' },
         ]}
       />
       {tab === 'pages' && <PagesTab />}

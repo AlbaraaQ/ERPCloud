@@ -13,15 +13,15 @@ import {
   Zap,
 } from 'lucide-react';
 import { useState } from 'react';
+import { Badge } from '@erp/ui';
+import { Button } from '@erp/ui';
+import { EmptyState } from '@erp/ui';
+import { SkeletonCard } from '@erp/ui';
 
 import { Screen } from '../components/screen';
-import { Badge } from '../components/ui/badge';
-import { Button } from '../components/ui/button';
 import { AreaCardChart, BarCardChart } from '../components/ui/chart';
 import { Reveal } from '../components/ui/count-up';
-import { EmptyState } from '../components/ui/empty-state';
 import { MetricCard } from '../components/ui/metric-card';
-import { SkeletonCard } from '../components/ui/skeleton';
 import { apiData } from '../lib/api';
 import { useQuery } from '../lib/use-query';
 
@@ -283,8 +283,8 @@ export default function PlatformOverviewPage() {
                             {t.code} · {new Date(t.createdAt).toLocaleDateString('ar-SA-u-ca-gregory', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' })}
                           </span>
                         </span>
-                        <Badge tone={t.planName ? 'purple' : 'neutral'} dot>{t.planName ?? 'بلا باقة'}</Badge>
-                        <Badge tone={t.status === 'active' ? 'green' : t.status === 'suspended' ? 'red' : 'neutral'}>
+                        <Badge tone={t.planName ? 'brand' : 'neutral'} dot>{t.planName ?? 'بلا باقة'}</Badge>
+                        <Badge tone={t.status === 'active' ? 'ok' : t.status === 'suspended' ? 'danger' : 'neutral'}>
                           {t.status === 'active' ? 'نشط' : t.status === 'suspended' ? 'موقوف' : t.status}
                         </Badge>
                       </Link>
@@ -318,7 +318,7 @@ export default function PlatformOverviewPage() {
               </div>
             ) : (a?.alerts ?? []).length === 0 ? (
               <div className="px-4 pb-5">
-                <EmptyState tone="green" icon={<Bell size={22} strokeWidth={1.5} />} title="كل المؤشرات خضراء" description="لا تنبيهات تستدعي إجراءً حالياً." />
+                <EmptyState tone="ok" icon={<Bell size={22} strokeWidth={1.5} />} title="كل المؤشرات خضراء" description="لا تنبيهات تستدعي إجراءً حالياً." />
               </div>
             ) : (
               <ul className="m-0 list-none p-0 grid gap-1 px-2 pb-2">

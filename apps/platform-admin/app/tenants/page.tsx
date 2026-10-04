@@ -11,16 +11,16 @@ import {
   Search,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { Badge } from '@erp/ui';
+import { Button } from '@erp/ui';
+import { EmptyState } from '@erp/ui';
+import { Modal } from '@erp/ui';
+import { SkeletonRows } from '@erp/ui';
+import { DataTable } from '@erp/ui';
 
-import { Screen } from '../../components/screen';
-import { Badge } from '../../components/ui/badge';
-import { Button } from '../../components/ui/button';
-import { CountUp } from '../../components/ui/count-up';
-import { EmptyState } from '../../components/ui/empty-state';
 import { Input, Labeled, Select } from '../../components/ui/input';
-import { Modal } from '../../components/ui/modal';
-import { SkeletonRows } from '../../components/ui/skeleton';
-import { Table } from '../../components/ui/table';
+import { CountUp } from '../../components/ui/count-up';
+import { Screen } from '../../components/screen';
 import { ApiError, apiData, apiPost } from '../../lib/api';
 import { useQuery } from '../../lib/use-query';
 
@@ -50,11 +50,11 @@ const SUB_LABEL: Record<string, string> = {
   paused: 'موقوف مؤقتاً',
   canceled: 'ملغى',
 };
-const SUB_TONE: Record<string, 'green' | 'blue' | 'amber' | 'red' | 'purple' | 'neutral'> = {
-  active: 'green',
-  trialing: 'blue',
-  past_due: 'red',
-  paused: 'purple',
+const SUB_TONE: Record<string, 'ok' | 'info' | 'warn' | 'danger' | 'brand' | 'neutral'> = {
+  active: 'ok',
+  trialing: 'info',
+  past_due: 'danger',
+  paused: 'brand',
   canceled: 'neutral',
 };
 
@@ -140,13 +140,13 @@ export default function TenantsPage() {
             <Badge tone="neutral" dot>
               <CountUp value={counts.total} /> إجمالي
             </Badge>
-            <Badge tone="green" dot>
+            <Badge tone="ok" dot>
               <CountUp value={counts.active} /> نشط
             </Badge>
-            <Badge tone="amber" dot>
+            <Badge tone="warn" dot>
               <CountUp value={counts.suspended} /> موقوف
             </Badge>
-            <Badge tone="blue" dot>
+            <Badge tone="info" dot>
               <CountUp value={counts.licensed} /> مرخّص
             </Badge>
           </div>
@@ -170,7 +170,7 @@ export default function TenantsPage() {
         </div>
       ) : tenants.status === 'error' ? (
         <EmptyState
-          tone="red"
+          tone="danger"
           icon={<Building2 size={26} strokeWidth={1.5} />}
           title="تعذر تحميل العملاء"
           description={tenants.error}
@@ -184,7 +184,7 @@ export default function TenantsPage() {
         />
       ) : (
         <div className="rounded-[10px] border border-line bg-surface shadow-1 overflow-hidden">
-          <Table
+          <DataTable
             rows={tenants.data ?? []}
             rowKey={(row) => row.id}
             dense
@@ -216,7 +216,7 @@ export default function TenantsPage() {
                 key: 'status',
                 header: 'الحالة',
                 cell: (row) => (
-                  <Badge tone={row.status === 'active' ? 'green' : row.status === 'suspended' ? 'red' : 'neutral'} dot>
+                  <Badge tone={row.status === 'active' ? 'ok' : row.status === 'suspended' ? 'danger' : 'neutral'} dot>
                     {STATUS_LABEL[row.status] ?? row.status}
                   </Badge>
                 ),

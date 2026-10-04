@@ -10,16 +10,16 @@ import {
   TrendingUp,
   Wallet,
 } from 'lucide-react';
+import { Badge } from '@erp/ui';
+import { Button } from '@erp/ui';
+import { EmptyState } from '@erp/ui';
+import { SkeletonRows } from '@erp/ui';
+import { DataTable } from '@erp/ui';
 
-import { Screen } from '../../components/screen';
-import { Badge } from '../../components/ui/badge';
-import { Button } from '../../components/ui/button';
 import { AreaCardChart } from '../../components/ui/chart';
 import { Reveal } from '../../components/ui/count-up';
-import { EmptyState } from '../../components/ui/empty-state';
 import { MetricCard } from '../../components/ui/metric-card';
-import { SkeletonRows } from '../../components/ui/skeleton';
-import { Table } from '../../components/ui/table';
+import { Screen } from '../../components/screen';
 import { apiData } from '../../lib/api';
 import { useQuery } from '../../lib/use-query';
 
@@ -99,7 +99,7 @@ export default function RevenuePage() {
           <SkeletonRows rows={6} />
         </div>
       ) : revenue.status === 'error' ? (
-        <EmptyState tone="red" icon={<Wallet size={26} strokeWidth={1.5} />} title="تعذر تحميل الإيراد" description={revenue.error} />
+        <EmptyState tone="danger" icon={<Wallet size={26} strokeWidth={1.5} />} title="تعذر تحميل الإيراد" description={revenue.error} />
       ) : data ? (
         <>
           {/* top metrics */}
@@ -150,7 +150,7 @@ export default function RevenuePage() {
                   <p className="m-0 mt-0.5 text-[12px] text-muted">الإيراد الشهري المتكرر كما حُسب في العقود (بلا رسومٍ بلا معنى).</p>
                 </div>
                 {data.mixedCurrency ? (
-                  <Badge tone="amber" dot>
+                  <Badge tone="warn" dot>
                     <AlertTriangle size={12} /> عملات مختلطة — الأرقام بعملة العرض وحدها
                   </Badge>
                 ) : null}
@@ -209,7 +209,7 @@ export default function RevenuePage() {
                   </div>
                 ) : (
                   <div className="px-1 pb-1">
-                    <Table
+                    <DataTable
                       rows={upcomingRows}
                       rowKey={(row) => row.invoiceId}
                       dense
@@ -224,9 +224,9 @@ export default function RevenuePage() {
                           header: 'الحالة',
                           cell: (row) =>
                             row.daysOverdue > 0 ? (
-                              <Badge tone="red" dot>متأخّرة {row.daysOverdue} يوماً</Badge>
+                              <Badge tone="danger" dot>متأخّرة {row.daysOverdue} يوماً</Badge>
                             ) : (
-                              <Badge tone="amber" dot>تنتظر السداد</Badge>
+                              <Badge tone="warn" dot>تنتظر السداد</Badge>
                             ),
                         },
                       ]}

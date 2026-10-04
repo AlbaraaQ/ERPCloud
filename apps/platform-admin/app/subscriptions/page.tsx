@@ -2,23 +2,23 @@
 
 import { KeyRound } from 'lucide-react';
 import { useState } from 'react';
+import { Badge } from '@erp/ui';
+import { Button } from '@erp/ui';
+import { DataTable } from '@erp/ui';
 
-import { Empty, ErrorBox, Loading, Screen } from '../../components/screen';
-import { Badge } from '../../components/ui/badge';
-import { Button } from '../../components/ui/button';
 import { Select } from '../../components/ui/input';
-import { Table } from '../../components/ui/table';
+import { Empty, ErrorBox, Loading, Screen } from '../../components/screen';
 import { ApiError, apiData, apiPost } from '../../lib/api';
 import { useQuery } from '../../lib/use-query';
 
-const SUB_STATUS_TONE: Record<Status, 'blue' | 'purple' | 'green' | 'amber' | 'red' | 'neutral'> = {
-  pending: 'amber',
-  trialing: 'blue',
-  active: 'green',
-  past_due: 'amber',
-  paused: 'amber',
+const SUB_STATUS_TONE: Record<Status, 'info' | 'brand' | 'ok' | 'warn' | 'danger' | 'neutral'> = {
+  pending: 'warn',
+  trialing: 'info',
+  active: 'ok',
+  past_due: 'warn',
+  paused: 'warn',
   canceled: 'neutral',
-  expired: 'red',
+  expired: 'danger',
   incomplete: 'neutral',
 };
 
@@ -206,7 +206,7 @@ export default function SubscriptionsPage() {
           <Empty title="لا توجد تراخيص" detail="أصدر ترخيصاً من هنا أو من صفحة العملاء." />
         ) : (
           <div className="overflow-hidden rounded-[10px] border border-line bg-surface shadow-1">
-            <Table
+            <DataTable
               rows={rows}
               rowKey={(row) => row.id}
               dense
@@ -253,7 +253,7 @@ export default function SubscriptionsPage() {
                   header: 'المصدر',
                   cell: (row) =>
                     row.provider === 'stripe' ? (
-                      <Badge tone="purple" dot>Stripe</Badge>
+                      <Badge tone="brand" dot>Stripe</Badge>
                     ) : (
                       <Badge tone="neutral" dot>يدوي</Badge>
                     ),

@@ -1,13 +1,13 @@
 'use client';
 
 import { AlertTriangle, Database, Gauge, HardDrive, Mail, RefreshCw, Server, Timer } from 'lucide-react';
+import { Badge } from '@erp/ui';
+import { Button } from '@erp/ui';
+import { EmptyState } from '@erp/ui';
+import { SkeletonRows } from '@erp/ui';
 
-import { Screen } from '../../components/screen';
-import { Badge } from '../../components/ui/badge';
-import { Button } from '../../components/ui/button';
-import { EmptyState } from '../../components/ui/empty-state';
 import { MetricCard } from '../../components/ui/metric-card';
-import { SkeletonRows } from '../../components/ui/skeleton';
+import { Screen } from '../../components/screen';
 import { apiBaseUrl, apiData } from '../../lib/api';
 import { useQuery } from '../../lib/use-query';
 
@@ -92,7 +92,7 @@ export default function HealthPage() {
       ) : health.status === 'forbidden' ? (
         <div className="rounded-[10px] border border-line bg-surface p-4 shadow-1">لا تملك console.health.view.</div>
       ) : health.status === 'error' ? (
-        <EmptyState tone="red" icon={<AlertTriangle size={26} strokeWidth={1.5} />} title="تعذّر الفحص" description={health.error} />
+        <EmptyState tone="danger" icon={<AlertTriangle size={26} strokeWidth={1.5} />} title="تعذّر الفحص" description={health.error} />
       ) : null}
 
       {health.status === 'success' && data && (
@@ -132,8 +132,8 @@ export default function HealthPage() {
             </span>
             <span className="text-[12px] text-muted">آخر فحص {new Date(data.checkedAt).toLocaleTimeString('ar-SA')}</span>
             <span className="ms-auto flex flex-wrap gap-2">
-              <Badge tone={data.backlog.dead > 0 ? 'red' : 'neutral'} dot>ميتة: {data.backlog.dead}</Badge>
-              <Badge tone={data.requests.errorRate > 0.01 ? 'amber' : 'green'} dot>
+              <Badge tone={data.backlog.dead > 0 ? 'danger' : 'neutral'} dot>ميتة: {data.backlog.dead}</Badge>
+              <Badge tone={data.requests.errorRate > 0.01 ? 'warn' : 'ok'} dot>
                 أخطاء {(data.requests.errorRate * 100).toFixed(2)}٪
               </Badge>
             </span>

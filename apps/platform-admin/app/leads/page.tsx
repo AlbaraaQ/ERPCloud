@@ -44,9 +44,9 @@ import {
   type SubscriberStatus,
   type SubscriberView,
 } from '@erp/contracts';
+import { Tabs } from '@erp/ui';
 
 import { Empty, ErrorBox, Forbidden, Loading, Screen } from '../../components/screen';
-import { Tabs } from '../../components/ui';
 import { ApiError, apiData, apiFetch, apiPatch, apiPost } from '../../lib/api';
 import { useSession } from '../../lib/session';
 import { useQuery } from '../../lib/use-query';
@@ -76,8 +76,8 @@ export default function LeadsPage() {
     >
       <Tabs
         items={[
-          { id: 'queue', label: 'الطابور' },
-          { id: 'subscribers', label: 'النشرة البريدية' },
+          { key: 'queue', label: 'الطابور' },
+          { key: 'subscribers', label: 'النشرة البريدية' },
         ]}
         value={tab}
         onChange={setTab}

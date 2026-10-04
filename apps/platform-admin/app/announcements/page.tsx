@@ -12,9 +12,9 @@ import {
   type AnnouncementStatus,
   type AnnouncementTargetStatus,
 } from '@erp/contracts';
+import { Tabs } from '@erp/ui';
 
 import { Empty, ErrorBox, Forbidden, Loading, Screen } from '../../components/screen';
-import { Tabs } from '../../components/ui';
 import { ApiError, apiData } from '../../lib/api';
 import { useQuery } from '../../lib/use-query';
 
@@ -102,8 +102,8 @@ export default function AnnouncementsPage() {
         value={tab}
         onChange={setTab}
         items={[
-          { id: 'list', label: 'الإعلانات' },
-          { id: 'compose', label: editing ? 'تعديل إعلان' : 'كتابة إعلان' },
+          { key: 'list', label: 'الإعلانات' },
+          { key: 'compose', label: editing ? 'تعديل إعلان' : 'كتابة إعلان' },
         ]}
       />
       {tab === 'list' && (
@@ -580,8 +580,8 @@ function ComposeTab({ editing, onSaved }: { editing: Announcement | null; onSave
           value={preview}
           onChange={setPreview}
           items={[
-            { id: 'ar', label: 'معاينة عربية' },
-            { id: 'en', label: 'Preview English' },
+            { key: 'ar', label: 'معاينة عربية' },
+            { key: 'en', label: 'Preview English' },
           ]}
         />
       </div>

@@ -3,19 +3,19 @@
 import Link from 'next/link';
 import { FilePlus2 } from 'lucide-react';
 import { useState } from 'react';
+import { Badge } from '@erp/ui';
+import { Button } from '@erp/ui';
+import { DataTable } from '@erp/ui';
 
-import { Empty, ErrorBox, Loading, Screen } from '../../components/screen';
-import { Badge } from '../../components/ui/badge';
-import { Button } from '../../components/ui/button';
 import { Select } from '../../components/ui/input';
-import { Table } from '../../components/ui/table';
+import { Empty, ErrorBox, Loading, Screen } from '../../components/screen';
 import { ApiError, apiData, apiPost } from '../../lib/api';
 import { useQuery } from '../../lib/use-query';
 
-const INVOICE_STATUS_TONE: Record<InvoiceStatus, 'blue' | 'purple' | 'green' | 'neutral'> = {
-  draft: 'blue',
-  issued: 'purple',
-  paid: 'green',
+const INVOICE_STATUS_TONE: Record<InvoiceStatus, 'info' | 'brand' | 'ok' | 'neutral'> = {
+  draft: 'info',
+  issued: 'brand',
+  paid: 'ok',
   void: 'neutral',
 };
 
@@ -273,7 +273,7 @@ export default function InvoicesPage() {
               ))}
             </div>
             <div className="overflow-hidden rounded-[10px] border border-line bg-surface shadow-1">
-              <Table
+              <DataTable
                 rows={rows}
                 rowKey={(row) => row.id}
                 dense

@@ -28,11 +28,11 @@ import {
   type TenantNotesResponse,
   type TenantSettingsResponse,
 } from '@erp/contracts';
+import { Badge } from '@erp/ui';
+import { Button } from '@erp/ui';
+import { Tabs as TabsBar } from '@erp/ui';
 
 import { Empty, ErrorBox, Loading, Screen } from '../../../components/screen';
-import { Badge } from '../../../components/ui/badge';
-import { Button } from '../../../components/ui/button';
-import { Tabs as TabsBar } from '../../../components/ui/tabs';
 import { MeterBar, SourceTag } from '../../../components/ui';
 import { ApiError, apiData, apiDelete, apiPatch, apiPost, apiPut } from '../../../lib/api';
 import { useSession } from '../../../lib/session';
@@ -61,17 +61,17 @@ import { useQuery } from '../../../lib/use-query';
 
 /** The eight tabs, verbatim from the plan (`PLATFORM_CONSOLE_PLAN.md` §4/‏P-C2) — now with icons. */
 const TABS = [
-  { id: 'overview', label: 'نظرة عامة', icon: <Building2 size={15} /> },
-  { id: 'subscription', label: 'الاشتراك', icon: <CreditCard size={15} /> },
-  { id: 'users', label: 'المستخدمون', icon: <UserRound size={15} /> },
-  { id: 'usage', label: 'الاستخدام', icon: <Gauge size={15} /> },
-  { id: 'flags', label: 'الرايات', icon: <ListChecks size={15} /> },
-  { id: 'health', label: 'الصحة', icon: <ShieldCheck size={15} /> },
-  { id: 'audit', label: 'التدقيق', icon: <History size={15} /> },
-  { id: 'notes', label: 'الملاحظات', icon: <ScrollText size={15} /> },
+  { key: 'overview', label: 'نظرة عامة', icon: <Building2 size={15} /> },
+  { key: 'subscription', label: 'الاشتراك', icon: <CreditCard size={15} /> },
+  { key: 'users', label: 'المستخدمون', icon: <UserRound size={15} /> },
+  { key: 'usage', label: 'الاستخدام', icon: <Gauge size={15} /> },
+  { key: 'flags', label: 'الرايات', icon: <ListChecks size={15} /> },
+  { key: 'health', label: 'الصحة', icon: <ShieldCheck size={15} /> },
+  { key: 'audit', label: 'التدقيق', icon: <History size={15} /> },
+  { key: 'notes', label: 'الملاحظات', icon: <ScrollText size={15} /> },
 ] as const;
 
-type TabId = (typeof TABS)[number]['id'];
+type TabId = (typeof TABS)[number]['key'];
 
 /** The status words the customers list already uses (`app/tenants/page.tsx`), verbatim. */
 const STATUS_LABEL: Record<string, string> = { active: 'نشط', suspended: 'موقوف', archived: 'مؤرشف' };
@@ -170,7 +170,7 @@ export default function TenantCardPage() {
               </span>
             </span>
             <span className="ms-auto flex flex-wrap items-center gap-2">
-              <Badge tone={tenant.status === 'active' ? 'green' : tenant.status === 'suspended' ? 'red' : 'neutral'} dot>
+              <Badge tone={tenant.status === 'active' ? 'ok' : tenant.status === 'suspended' ? 'danger' : 'neutral'} dot>
                 {STATUS_LABEL[tenant.status] ?? tenant.status}
               </Badge>
               <span className="text-[12px] font-semibold text-muted">
@@ -180,7 +180,7 @@ export default function TenantCardPage() {
           </div>
 
           <TabsBar
-            items={TABS.map((entry) => ({ key: entry.id, label: <span className="inline-flex items-center gap-1.5">{entry.icon}{entry.label}</span> }))}
+            items={TABS.map((entry) => ({ key: entry.key, label: <span className="inline-flex items-center gap-1.5">{entry.icon}{entry.label}</span> }))}
             value={tab}
             onChange={(key) => setTab(key as TabId)}
           />
