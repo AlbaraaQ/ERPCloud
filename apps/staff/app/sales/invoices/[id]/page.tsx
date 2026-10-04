@@ -25,7 +25,6 @@ import { Input, Labeled } from '@erp/ui';
 
 import { CommentsPanel } from '../../../../components/comments-panel';
 import { DonutCardChart } from '../../../../components/ui/chart';
-import { Reveal } from '../../../../components/ui/count-up';
 import { ApiError, apiData, apiList, apiPatch, apiPost } from '../../../../lib/api';
 import {
   arabicName,
@@ -295,66 +294,64 @@ export default function SalesInvoiceDetailPage() {
   return (
     <div className="grid gap-4">
       {/* ------------------------------------------------ header card */}
-      <Reveal>
-        <section className="relative overflow-hidden rounded-2xl border border-line bg-surface p-5 shadow-1">
-          <div
-            aria-hidden
-            className="absolute inset-0 pointer-events-none opacity-60"
-            style={{
-              backgroundImage:
-                'radial-gradient(90rem 26rem at 110% -30%, rgb(37 99 235 / 0.08), transparent 55%), radial-gradient(circle, var(--line-strong) 1px, transparent 1px)',
-              backgroundSize: 'auto, 16px 16px',
-            }}
-          />
-          <div className="relative">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div className="min-w-0">
-                <Link href="/sales/invoices" className="inline-flex items-center gap-1 text-[12.5px] font-bold text-muted hover:text-brand-600 transition-colors">
-                  <ArrowRight size={13} /> كل الفواتير
-                </Link>
-                <div className="flex flex-wrap items-center gap-3 mt-1.5">
-                  <h1 className="m-0 text-[30px] font-bold text-ink tracking-tight leading-none" dir="ltr">
-                    {doc.number ?? 'مسودة'}
-                  </h1>
-                  <Badge tone={doc.kind === 'quotation' ? 'brand' : 'info'} dot>
-                    {doc.kind === 'quotation' ? 'عرض أسعار' : 'فاتورة مبيعات'}
+      <section className="relative overflow-hidden rounded-2xl border border-line bg-surface p-5 shadow-1">
+        <div
+          aria-hidden
+          className="absolute inset-0 pointer-events-none opacity-60"
+          style={{
+            backgroundImage:
+              'radial-gradient(90rem 26rem at 110% -30%, rgb(37 99 235 / 0.08), transparent 55%), radial-gradient(circle, var(--line-strong) 1px, transparent 1px)',
+            backgroundSize: 'auto, 16px 16px',
+          }}
+        />
+        <div className="relative">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="min-w-0">
+              <Link href="/sales/invoices" className="inline-flex items-center gap-1 text-[12.5px] font-bold text-muted hover:text-brand-600 transition-colors">
+                <ArrowRight size={13} /> كل الفواتير
+              </Link>
+              <div className="flex flex-wrap items-center gap-3 mt-1.5">
+                <h1 className="m-0 text-[30px] font-bold text-ink tracking-tight leading-none" dir="ltr">
+                  {doc.number ?? 'مسودة'}
+                </h1>
+                <Badge tone={doc.kind === 'quotation' ? 'brand' : 'info'} dot>
+                  {doc.kind === 'quotation' ? 'عرض أسعار' : 'فاتورة مبيعات'}
+                </Badge>
+                <Badge tone={doc.status === 'posted' ? 'ok' : doc.status === 'voided' ? 'danger' : 'warn'} dot>
+                  {doc.status === 'posted' ? 'مرحّلة' : doc.status === 'voided' ? 'ملغاة' : 'مسودة'}
+                </Badge>
+                {doc.status === 'posted' ? (
+                  <Badge tone={doc.paymentStatus === 'paid' ? 'info' : 'warn'}>
+                    {doc.paymentStatus === 'paid' ? 'مسدّدة' : 'غير مسدّدة'}
                   </Badge>
-                  <Badge tone={doc.status === 'posted' ? 'ok' : doc.status === 'voided' ? 'danger' : 'warn'} dot>
-                    {doc.status === 'posted' ? 'مرحّلة' : doc.status === 'voided' ? 'ملغاة' : 'مسودة'}
-                  </Badge>
-                  {doc.status === 'posted' ? (
-                    <Badge tone={doc.paymentStatus === 'paid' ? 'info' : 'warn'}>
-                      {doc.paymentStatus === 'paid' ? 'مسدّدة' : 'غير مسدّدة'}
-                    </Badge>
-                  ) : null}
-                  {approval.data?.status === 'pending' ? <Badge tone="brand" dot>بانتظار موافقة</Badge> : null}
-                  {approval.data?.status === 'rejected' ? <Badge tone="danger" dot>رُفضت — ما زالت مسودة</Badge> : null}
-                </div>
-                <p className="m-0 mt-2 text-[13px] text-muted">
-                  {partyName} · {shortDate(doc.createdAt)}
-                  {referenceNumber ? <span className="text-muted"> · مرجع: <span dir="ltr">{referenceNumber}</span></span> : null}
-                  {costCenterLabel ? <span className="text-muted"> · مركز التكلفة: {costCenterLabel}</span> : null}
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Link href={`/print/sales-invoice/${doc.id}`}>
-                  <Button variant="primary" icon={<Printer size={15} />}>
-                    طباعة
-                  </Button>
-                </Link>
-                {can('sales.invoice.void') && doc.status === 'posted' ? (
-                  <Button variant="danger" icon={<Trash2 size={15} />} onClick={() => setVoidOpen(true)}>
-                    إلغاء الفاتورة
-                  </Button>
                 ) : null}
+                {approval.data?.status === 'pending' ? <Badge tone="brand" dot>بانتظار موافقة</Badge> : null}
+                {approval.data?.status === 'rejected' ? <Badge tone="danger" dot>رُفضت — ما زالت مسودة</Badge> : null}
               </div>
+              <p className="m-0 mt-2 text-[13px] text-muted">
+                {partyName} · {shortDate(doc.createdAt)}
+                {referenceNumber ? <span className="text-muted"> · مرجع: <span dir="ltr">{referenceNumber}</span></span> : null}
+                {costCenterLabel ? <span className="text-muted"> · مركز التكلفة: {costCenterLabel}</span> : null}
+              </p>
             </div>
-            <div className="mt-5">
-              <PaymentProgress doc={doc} />
+            <div className="flex flex-wrap gap-2">
+              <Link href={`/print/sales-invoice/${doc.id}`}>
+                <Button variant="primary" icon={<Printer size={15} />}>
+                  طباعة
+                </Button>
+              </Link>
+              {can('sales.invoice.void') && doc.status === 'posted' ? (
+                <Button variant="danger" icon={<Trash2 size={15} />} onClick={() => setVoidOpen(true)}>
+                  إلغاء الفاتورة
+                </Button>
+              ) : null}
             </div>
           </div>
-        </section>
-      </Reveal>
+          <div className="mt-5">
+            <PaymentProgress doc={doc} />
+          </div>
+        </div>
+      </section>
 
       {notice ? (
         <div
@@ -373,7 +370,7 @@ export default function SalesInvoiceDetailPage() {
       {/* ------------------------------------------------ two columns */}
       <div className="grid gap-4 grid-cols-1 xl:grid-cols-5 items-start">
         {/* lines */}
-        <Reveal delay={0.1} className="xl:col-span-3">
+        <div className="xl:col-span-3">
           <section className="rounded-xl border border-line bg-surface shadow-1">
             <header className="flex items-center justify-between px-4 pt-4 pb-2">
               <h3 className="m-0 text-[15px] font-bold text-ink">الأصناف ({doc.lines.length})</h3>
@@ -449,10 +446,10 @@ export default function SalesInvoiceDetailPage() {
               ]}
             />
           </section>
-        </Reveal>
+        </div>
 
         {/* financials */}
-        <Reveal delay={0.18} className="xl:col-span-2">
+        <div className="xl:col-span-2">
           <div className="grid gap-4">
             <section className="rounded-xl border border-line bg-surface p-4 shadow-1">
               <h3 className="m-0 text-[15px] font-bold text-ink mb-3">الملخص المالي</h3>
@@ -645,161 +642,157 @@ export default function SalesInvoiceDetailPage() {
               </ol>
             </section>
           </div>
-        </Reveal>
+        </div>
       </div>
 
       {doc.status === 'posted' && can('payments.links.manage') ? (
-        <Reveal delay={0.18}>
-          <section className="rounded-xl border border-line bg-surface p-4 shadow-1">
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-              <h3 className="m-0 text-[15px] font-bold text-ink">روابط الدفع</h3>
-              <div className="flex items-center gap-2">
-                <select className="h-10 px-3 rounded-[10px] border border-line-strong" value={payProvider} onChange={(event) => setPayProvider(event.target.value)}>
-                  <option value="moyasar">ميسر</option>
-                  <option value="hyperpay">HyperPay</option>
-                  <option value="tap">Tap</option>
-                </select>
-                <Button
-                  variant="primary"
-                  loading={busy}
-                  onClick={() =>
-                    void run(async () => {
-                      await apiPost('/payments/links', { invoice_id: doc.id, provider: payProvider });
-                      paymentLinks.reload();
-                    }, 'تم إنشاء رابط الدفع.')
-                  }
-                >
-                  💳 إنشاء رابط دفع
-                </Button>
-              </div>
+        <section className="rounded-xl border border-line bg-surface p-4 shadow-1">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+            <h3 className="m-0 text-[15px] font-bold text-ink">روابط الدفع</h3>
+            <div className="flex items-center gap-2">
+              <select className="h-10 px-3 rounded-[10px] border border-line-strong" value={payProvider} onChange={(event) => setPayProvider(event.target.value)}>
+                <option value="moyasar">ميسر</option>
+                <option value="hyperpay">HyperPay</option>
+                <option value="tap">Tap</option>
+              </select>
+              <Button
+                variant="primary"
+                loading={busy}
+                onClick={() =>
+                  void run(async () => {
+                    await apiPost('/payments/links', { invoice_id: doc.id, provider: payProvider });
+                    paymentLinks.reload();
+                  }, 'تم إنشاء رابط الدفع.')
+                }
+              >
+                💳 إنشاء رابط دفع
+              </Button>
             </div>
-            {(paymentLinks.data ?? []).length === 0 ? (
-              <p className="m-0 text-[13px] text-muted">لا روابط بعد. اربط المزوّد من إعدادات المدفوعات ثم أنشئ الرابط.</p>
-            ) : (
-              <DataTable
-                rows={paymentLinks.data ?? []}
-                rowKey={(row) => row.id}
-                dense
-                columns={[
-                  { key: 'provider', header: 'المزوّد', cell: (row) => row.provider },
-                  { key: 'amount', header: 'المبلغ', ltr: true, cell: (row) => money(row.amount, row.currency) },
-                  { key: 'status', header: 'الحالة', cell: (row) => row.status },
-                  { key: 'voucher', header: 'سند القبض', ltr: true, cell: (row) => row.voucherId ? row.voucherId.slice(0, 8) : '—' },
-                  {
-                    key: 'url',
-                    header: 'الرابط',
-                    cell: (row) => (
-                      <a className="text-brand-700" href={row.linkUrl} target="_blank" rel="noreferrer">
-                        فتح
-                      </a>
-                    ),
-                  },
-                  {
-                    key: 'sim',
-                    header: '',
-                    cell: (row) =>
-                      row.status === 'pending' ? (
-                        <button
-                          className="text-[12px] font-bold text-brand-700"
-                          type="button"
-                          onClick={() =>
-                            void run(async () => {
-                              await apiPost(`/payments/links/${row.id}/simulate`, {});
-                              paymentLinks.reload();
-                              invoice.reload();
-                            }, 'تمت محاكاة الدفع وإنشاء سند القبض.')
-                          }
-                        >
-                          محاكاة دفع
-                        </button>
-                      ) : null,
-                  },
-                ]}
-              />
-            )}
-          </section>
-        </Reveal>
+          </div>
+          {(paymentLinks.data ?? []).length === 0 ? (
+            <p className="m-0 text-[13px] text-muted">لا روابط بعد. اربط المزوّد من إعدادات المدفوعات ثم أنشئ الرابط.</p>
+          ) : (
+            <DataTable
+              rows={paymentLinks.data ?? []}
+              rowKey={(row) => row.id}
+              dense
+              columns={[
+                { key: 'provider', header: 'المزوّد', cell: (row) => row.provider },
+                { key: 'amount', header: 'المبلغ', ltr: true, cell: (row) => money(row.amount, row.currency) },
+                { key: 'status', header: 'الحالة', cell: (row) => row.status },
+                { key: 'voucher', header: 'سند القبض', ltr: true, cell: (row) => row.voucherId ? row.voucherId.slice(0, 8) : '—' },
+                {
+                  key: 'url',
+                  header: 'الرابط',
+                  cell: (row) => (
+                    <a className="text-brand-700" href={row.linkUrl} target="_blank" rel="noreferrer">
+                      فتح
+                    </a>
+                  ),
+                },
+                {
+                  key: 'sim',
+                  header: '',
+                  cell: (row) =>
+                    row.status === 'pending' ? (
+                      <button
+                        className="text-[12px] font-bold text-brand-700"
+                        type="button"
+                        onClick={() =>
+                          void run(async () => {
+                            await apiPost(`/payments/links/${row.id}/simulate`, {});
+                            paymentLinks.reload();
+                            invoice.reload();
+                          }, 'تمت محاكاة الدفع وإنشاء سند القبض.')
+                        }
+                      >
+                        محاكاة دفع
+                      </button>
+                    ) : null,
+                },
+              ]}
+            />
+          )}
+        </section>
       ) : null}
 
       {/* ------------------------------------------------ whatsapp */}
-      <Reveal delay={0.2}>
-        <section className="rounded-xl border border-line bg-surface p-4 shadow-1">
-          <div className="flex flex-wrap items-center gap-3 mb-3">
-            <h3 className="m-0 text-[15px] font-bold text-ink flex items-center gap-1.5">
-              <MessageCircle size={16} className="text-ok" /> واتساب
-            </h3>
-            <span className="text-[12px] font-semibold text-muted bg-surface-3 rounded-full px-3 py-1">
-              يُرسل إلى {previewPhone ? <span dir="ltr">{previewPhone}</span> : '— لا رقم —'}
-            </span>
-          </div>
-          {doc.status !== 'posted' ? (
-            <p className="m-0 alert warn">لا يمكن إرسال الفاتورة قبل الترحيل.</p>
-          ) : !previewPhone ? (
-            <p className="m-0 alert warn">لا يوجد رقم جوال للعميل — أضف رقم الجوال في بطاقة العميل، أو أضفه في الفاتورة النقدية.</p>
-          ) : can('sales.view') ? (
-            <>
-              <div className="grid gap-3 md:grid-cols-3 items-end">
-                <div className="md:col-span-2">
-                  <Labeled label="نص الرسالة" hint="إن تُرك فارغاً كُتبت التحية الافتراضية.">
-                    <input
-                      value={waMessage}
-                      onChange={(e) => setWaMessage(e.target.value)}
-                      placeholder={`مرحباً ${doc.cashCustomerName ?? partyName}، هذه فاتورتك رقم ${doc.number ?? ''} من …`}
-                      className="w-full h-10 px-3 rounded-[10px] border border-line-strong bg-surface text-[13.5px] focus:outline-none focus:border-brand-600 focus:shadow-[var(--ring-brand)] transition-all duration-150"
-                    />
-                  </Labeled>
-                </div>
-                <div className="flex items-center gap-4">
-                  <label className="flex items-center gap-2 text-[13px] font-semibold text-ink-2 cursor-pointer">
-                    <input type="checkbox" checked={waAttach} onChange={(e) => setWaAttach(e.target.checked)} className="size-4 accent-brand-600" />
-                    إرفاق الفاتورة
-                  </label>
-                  <Button variant="primary" loading={waBusy} onClick={() => {
-                    setWaBusy(true);
-                    setNotice(undefined);
-                    void sendWhatsapp({
-                      invoiceId: doc.id,
-                      attach: waAttach,
-                      ...(waMessage.trim() ? { message: waMessage.trim() } : {}),
-                    })
-                      .then((result) => {
-                        setNotice({
-                          kind: result.message.status === 'sent' ? 'ok' : 'warn',
-                          text: `${WHATSAPP_STATUS_LABELS[result.message.status] ?? result.message.status} — ${result.message.phone}${result.attachment === 'sent' ? ` · ${ATTACHMENT_STATUS_LABELS.sent}` : ''}${result.message.error ? ` · ${result.message.error}` : ''}`,
-                        });
-                        void sent.reload();
-                      })
-                      .catch((error: unknown) => setNotice({ kind: 'danger', text: error instanceof ApiError ? error.message : String(error) }))
-                      .finally(() => setWaBusy(false));
-                  }} icon={<MessageCircle size={15} />}>
-                    إرسال واتساب
-                  </Button>
-                </div>
-              </div>
-              {sent.data && sent.data.length > 0 ? (
-                <div className="mt-4">
-                  <p className="m-0 mb-2 text-[12px] font-bold text-muted">سجل الإرسال</p>
-                  <DataTable
-                    rows={sent.data}
-                    rowKey={(row) => row.id}
-                    dense
-                    columns={[
-                      { key: 'at', header: 'التاريخ', ltr: true, cell: (row) => (row.createdAt ? dateTime(row.createdAt) : '—') },
-                      { key: 'phone', header: 'الرقم', ltr: true, cell: (row) => row.phone },
-                      { key: 'status', header: 'الحالة', cell: (row) => WHATSAPP_STATUS_LABELS[row.status] ?? row.status },
-                      { key: 'attach', header: 'المرفق', cell: (row) => ATTACHMENT_STATUS_LABELS[row.attachmentStatus] ?? row.attachmentStatus },
-                      { key: 'message', header: 'الرسالة', cell: (row) => <span className="block max-w-56 truncate" title={row.message}>{row.message}</span> },
-                      { key: 'sim', header: 'النوع', cell: (row) => (row.simulation ? 'محاكاة' : 'فعلي') },
-                    ]}
+      <section className="rounded-xl border border-line bg-surface p-4 shadow-1">
+        <div className="flex flex-wrap items-center gap-3 mb-3">
+          <h3 className="m-0 text-[15px] font-bold text-ink flex items-center gap-1.5">
+            <MessageCircle size={16} className="text-ok" /> واتساب
+          </h3>
+          <span className="text-[12px] font-semibold text-muted bg-surface-3 rounded-full px-3 py-1">
+            يُرسل إلى {previewPhone ? <span dir="ltr">{previewPhone}</span> : '— لا رقم —'}
+          </span>
+        </div>
+        {doc.status !== 'posted' ? (
+          <p className="m-0 alert warn">لا يمكن إرسال الفاتورة قبل الترحيل.</p>
+        ) : !previewPhone ? (
+          <p className="m-0 alert warn">لا يوجد رقم جوال للعميل — أضف رقم الجوال في بطاقة العميل، أو أضفه في الفاتورة النقدية.</p>
+        ) : can('sales.view') ? (
+          <>
+            <div className="grid gap-3 md:grid-cols-3 items-end">
+              <div className="md:col-span-2">
+                <Labeled label="نص الرسالة" hint="إن تُرك فارغاً كُتبت التحية الافتراضية.">
+                  <input
+                    value={waMessage}
+                    onChange={(e) => setWaMessage(e.target.value)}
+                    placeholder={`مرحباً ${doc.cashCustomerName ?? partyName}، هذه فاتورتك رقم ${doc.number ?? ''} من …`}
+                    className="w-full h-10 px-3 rounded-[10px] border border-line-strong bg-surface text-[13.5px] focus:outline-none focus:border-brand-600 focus:shadow-[var(--ring-brand)] transition-all duration-150"
                   />
-                </div>
-              ) : null}
-            </>
-          ) : (
-            <p className="m-0 text-[13px] text-muted">لا تملك صلاحية إرسال الفاتورة.</p>
-          )}
-        </section>
-      </Reveal>
+                </Labeled>
+              </div>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 text-[13px] font-semibold text-ink-2 cursor-pointer">
+                  <input type="checkbox" checked={waAttach} onChange={(e) => setWaAttach(e.target.checked)} className="size-4 accent-brand-600" />
+                  إرفاق الفاتورة
+                </label>
+                <Button variant="primary" loading={waBusy} onClick={() => {
+                  setWaBusy(true);
+                  setNotice(undefined);
+                  void sendWhatsapp({
+                    invoiceId: doc.id,
+                    attach: waAttach,
+                    ...(waMessage.trim() ? { message: waMessage.trim() } : {}),
+                  })
+                    .then((result) => {
+                      setNotice({
+                        kind: result.message.status === 'sent' ? 'ok' : 'warn',
+                        text: `${WHATSAPP_STATUS_LABELS[result.message.status] ?? result.message.status} — ${result.message.phone}${result.attachment === 'sent' ? ` · ${ATTACHMENT_STATUS_LABELS.sent}` : ''}${result.message.error ? ` · ${result.message.error}` : ''}`,
+                      });
+                      void sent.reload();
+                    })
+                    .catch((error: unknown) => setNotice({ kind: 'danger', text: error instanceof ApiError ? error.message : String(error) }))
+                    .finally(() => setWaBusy(false));
+                }} icon={<MessageCircle size={15} />}>
+                  إرسال واتساب
+                </Button>
+              </div>
+            </div>
+            {sent.data && sent.data.length > 0 ? (
+              <div className="mt-4">
+                <p className="m-0 mb-2 text-[12px] font-bold text-muted">سجل الإرسال</p>
+                <DataTable
+                  rows={sent.data}
+                  rowKey={(row) => row.id}
+                  dense
+                  columns={[
+                    { key: 'at', header: 'التاريخ', ltr: true, cell: (row) => (row.createdAt ? dateTime(row.createdAt) : '—') },
+                    { key: 'phone', header: 'الرقم', ltr: true, cell: (row) => row.phone },
+                    { key: 'status', header: 'الحالة', cell: (row) => WHATSAPP_STATUS_LABELS[row.status] ?? row.status },
+                    { key: 'attach', header: 'المرفق', cell: (row) => ATTACHMENT_STATUS_LABELS[row.attachmentStatus] ?? row.attachmentStatus },
+                    { key: 'message', header: 'الرسالة', cell: (row) => <span className="block max-w-56 truncate" title={row.message}>{row.message}</span> },
+                    { key: 'sim', header: 'النوع', cell: (row) => (row.simulation ? 'محاكاة' : 'فعلي') },
+                  ]}
+                />
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <p className="m-0 text-[13px] text-muted">لا تملك صلاحية إرسال الفاتورة.</p>
+        )}
+      </section>
 
       {/* ------------------------------------------------ void dialog */}
       <Modal

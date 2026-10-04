@@ -23,7 +23,6 @@ import { DataTable, type SortState } from '@erp/ui';
 import { Labeled } from '@erp/ui';
 
 import { BarCardChart, LineCardChart } from '../../../components/ui/chart';
-import { Reveal } from '../../../components/ui/count-up';
 import {
   arabicName,
   itemLabel,
@@ -163,91 +162,87 @@ export default function ReportRunnerPage({ params }: { params: Promise<{ key: st
   return (
     <div className="grid gap-4">
       {/* header */}
-      <Reveal>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <Link href="/reports" className="grid place-items-center size-9 rounded-xl bg-surface border border-line shadow-1 text-muted hover:text-brand-600 hover:border-brand-200 transition-colors">
-              <ArrowRight size={17} />
-            </Link>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <h1 className="m-0 text-[22px] font-bold text-ink tracking-tight leading-tight truncate">{entry?.titleAr ?? 'تقرير'}</h1>
-                <Badge tone="info" dot>
-                  {REPORT_GROUP_LABELS[entry?.group ?? ''] ?? 'تقارير'}
-                </Badge>
-              </div>
-              {entry?.hintAr ? <p className="m-0 text-[12.5px] text-muted truncate">{entry.hintAr}</p> : null}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <Link href="/reports" className="grid place-items-center size-9 rounded-xl bg-surface border border-line shadow-1 text-muted hover:text-brand-600 hover:border-brand-200 transition-colors">
+            <ArrowRight size={17} />
+          </Link>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <h1 className="m-0 text-[22px] font-bold text-ink tracking-tight leading-tight truncate">{entry?.titleAr ?? 'تقرير'}</h1>
+              <Badge tone="info" dot>
+                {REPORT_GROUP_LABELS[entry?.group ?? ''] ?? 'تقارير'}
+              </Badge>
             </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link href="/settings/printing">
-              <Button variant="ghost" icon={<Printer size={15} />}>
-                إعدادات الطباعة
-              </Button>
-            </Link>
-            <Button variant="secondary" icon={<FileSpreadsheet size={15} />} disabled={!result || busy !== null} loading={busy === 'xlsx'} onClick={() => void download('xlsx')}>
-              Excel
-            </Button>
-            <Button variant="secondary" icon={<Download size={15} />} disabled={!result || busy !== null} loading={busy === 'csv'} onClick={() => void download('csv')}>
-              CSV
-            </Button>
-            <Button variant="primary" icon={<Printer size={15} />} disabled={!result || busy !== null} loading={busy === 'pdf'} onClick={() => void download('pdf')}>
-              طباعة / PDF
-            </Button>
+            {entry?.hintAr ? <p className="m-0 text-[12.5px] text-muted truncate">{entry.hintAr}</p> : null}
           </div>
         </div>
-      </Reveal>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link href="/settings/printing">
+            <Button variant="ghost" icon={<Printer size={15} />}>
+              إعدادات الطباعة
+            </Button>
+          </Link>
+          <Button variant="secondary" icon={<FileSpreadsheet size={15} />} disabled={!result || busy !== null} loading={busy === 'xlsx'} onClick={() => void download('xlsx')}>
+            Excel
+          </Button>
+          <Button variant="secondary" icon={<Download size={15} />} disabled={!result || busy !== null} loading={busy === 'csv'} onClick={() => void download('csv')}>
+            CSV
+          </Button>
+          <Button variant="primary" icon={<Printer size={15} />} disabled={!result || busy !== null} loading={busy === 'pdf'} onClick={() => void download('pdf')}>
+            طباعة / PDF
+          </Button>
+        </div>
+      </div>
 
       {/* filters */}
       {entry ? (
-        <Reveal delay={0.05}>
-          <form
-            className="rounded-xl border border-line bg-surface p-4 shadow-1"
-            onSubmit={(event) => {
-              event.preventDefault();
-              setNotice(null);
-              setApplied({ ...filters });
-            }}
-          >
-            <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 items-end">
-              {(layouts.data ?? []).length > 0 ? (
-                <Labeled label="التصميم">
-                  <select
-                    value={filters.layout ?? ''}
-                    onChange={(event) => setFilters((current) => ({ ...current, layout: event.target.value }))}
-                    className="w-full h-10 px-3 rounded-[10px] border border-line-strong bg-surface text-[13.5px] text-ink focus:outline-none focus:border-brand-600 focus:shadow-[var(--ring-brand)] transition-all duration-150"
-                  >
-                    <option value="">الافتراضي</option>
-                    {(layouts.data ?? []).map((layout) => (
-                      <option key={layout.id} value={layout.id}>
-                        {layout.name}
-                      </option>
-                    ))}
-                    <option value="none">كل الأعمدة</option>
-                  </select>
-                </Labeled>
-              ) : null}
-              {entry.params.map((param) => (
-                <FilterField
-                  key={param.name}
-                  param={param}
-                  value={filters[param.name] ?? ''}
-                  options={
-                    param.kind === 'select'
-                      ? (param.options ?? []).map((option) => ({ value: option.value, label: option.labelAr }))
-                      : optionsFor[param.kind as keyof typeof optionsFor] ?? []
-                  }
-                  onChange={(value) => setFilters((current) => ({ ...current, [param.name]: value }))}
-                />
-              ))}
-              <div className="col-span-2 sm:col-span-3 lg:col-span-4 xl:col-span-5 flex justify-end">
-                <Button type="submit" variant="primary" size="lg" icon={<Search size={16} />}>
-                  عرض التقرير
-                </Button>
-              </div>
+        <form
+          className="rounded-xl border border-line bg-surface p-4 shadow-1"
+          onSubmit={(event) => {
+            event.preventDefault();
+            setNotice(null);
+            setApplied({ ...filters });
+          }}
+        >
+          <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 items-end">
+            {(layouts.data ?? []).length > 0 ? (
+              <Labeled label="التصميم">
+                <select
+                  value={filters.layout ?? ''}
+                  onChange={(event) => setFilters((current) => ({ ...current, layout: event.target.value }))}
+                  className="w-full h-10 px-3 rounded-[10px] border border-line-strong bg-surface text-[13.5px] text-ink focus:outline-none focus:border-brand-600 focus:shadow-[var(--ring-brand)] transition-all duration-150"
+                >
+                  <option value="">الافتراضي</option>
+                  {(layouts.data ?? []).map((layout) => (
+                    <option key={layout.id} value={layout.id}>
+                      {layout.name}
+                    </option>
+                  ))}
+                  <option value="none">كل الأعمدة</option>
+                </select>
+              </Labeled>
+            ) : null}
+            {entry.params.map((param) => (
+              <FilterField
+                key={param.name}
+                param={param}
+                value={filters[param.name] ?? ''}
+                options={
+                  param.kind === 'select'
+                    ? (param.options ?? []).map((option) => ({ value: option.value, label: option.labelAr }))
+                    : optionsFor[param.kind as keyof typeof optionsFor] ?? []
+                }
+                onChange={(value) => setFilters((current) => ({ ...current, [param.name]: value }))}
+              />
+            ))}
+            <div className="col-span-2 sm:col-span-3 lg:col-span-4 xl:col-span-5 flex justify-end">
+              <Button type="submit" variant="primary" size="lg" icon={<Search size={16} />}>
+                عرض التقرير
+              </Button>
             </div>
-          </form>
-        </Reveal>
+          </div>
+        </form>
       ) : null}
 
       {notice ? (
@@ -326,32 +321,28 @@ export default function ReportRunnerPage({ params }: { params: Promise<{ key: st
 
           {/* chart */}
           {entry?.chart && result.columns.length > 0 ? (
-            <Reveal delay={0.1}>
-              <ReportChart entry={entry} result={result} />
-            </Reveal>
+            <ReportChart entry={entry} result={result} />
           ) : null}
 
           {/* table */}
-          <Reveal delay={0.15}>
-            <div className="rounded-xl border border-line bg-surface shadow-1 overflow-hidden">
-              <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-4 pb-1">
-                <h3 className="m-0 text-[15px] font-bold text-ink">نتائج التقرير</h3>
-                <div className="flex flex-wrap gap-1.5">
-                  {Object.entries(result.totals).map(([key, value]) => {
-                    const column = result.columns.find((col) => col.key === key);
-                    return (
-                      <Badge key={key} tone="neutral" dot>
-                        {column?.labelAr ?? key}: {formatCell(value, column?.type ?? 'money')}
-                      </Badge>
-                    );
-                  })}
-                </div>
-              </div>
-              <div className="px-1 pb-1">
-                <SortableReportTable result={result} />
+          <div className="rounded-xl border border-line bg-surface shadow-1 overflow-hidden">
+            <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-4 pb-1">
+              <h3 className="m-0 text-[15px] font-bold text-ink">نتائج التقرير</h3>
+              <div className="flex flex-wrap gap-1.5">
+                {Object.entries(result.totals).map(([key, value]) => {
+                  const column = result.columns.find((col) => col.key === key);
+                  return (
+                    <Badge key={key} tone="neutral" dot>
+                      {column?.labelAr ?? key}: {formatCell(value, column?.type ?? 'money')}
+                    </Badge>
+                  );
+                })}
               </div>
             </div>
-          </Reveal>
+            <div className="px-1 pb-1">
+              <SortableReportTable result={result} />
+            </div>
+          </div>
         </>
       )}
     </div>
