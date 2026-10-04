@@ -77,6 +77,8 @@ pnpm db:generate     # drizzle-kit draft → migrations/generated/ (review befor
 pnpm db:migrate      # applies migrations/*.sql in filename order, records checksums
 pnpm db:migrate:down # reverts the most recent migration
 pnpm db:roles        # grants LOGIN to erp_api / erp_migrator using env passwords
+                      # — run AFTER db:migrate: 0000_platform_identity.sql is what
+                      #   CREATES the two roles (NOLOGIN), and this only grants LOGIN
 pnpm db:seed         # (run from apps/api) idempotent platform seed
 ```
 

@@ -90,6 +90,37 @@ DEMO_CASHIER_PASSWORD=KwKDEMO_CASHIER_PASSWORD=WGXvFyN#w=ZwH6*
 و`$'` و`` $` `` و`$1`. وتُحقِّقُ من الحرس نفسه: بإرجاع الاستبدال النصّي تسقط خمسة
 اختبارات منها، فليس حرسًا شكليًّا.
 
+## عيب ترتيبي في التعليمات المكتوبة — `pnpm db:roles` قبل `pnpm db:migrate`
+
+كان `scripts/setup-env.mjs` يطبعُ خطواتٍ مُنذرةً:
+
+```
+1. pnpm db:up      2. pnpm db:roles      3. pnpm db:migrate      4. pnpm db:seed
+```
+
+وخطوة 2 **مستحيلةٌ قبـل** 3. فـ`configureDatabaseRoles` لا يُنشئ دورًا — إنما
+`ALTER ROLE` فقط، والدوران `erp_api` و`erp_migrator` ما يوجَدان إلا بترحيل
+`0000_platform_identity.sql` (يُننشئهما `NOLOGIN`؛ ومنح `LOGIN` هو مَهمّة
+`db:roles`). فأي مُستنسخة جديدة تتبع تعليمات المولّد نفسها تصطدم بـ:
+
+```
+role "erp_migrator" does not exist
+```
+
+وكان التعريف في مكانين آخرين **صحيحًا** (`PHASE_03_IMPLEMENTATION_REPORT.md` يقول
+«which must run after `db:migrate`»؛ و`RUN_LOCALLY.md` يُسقِط `db:roles` من مسار
+PostgreSQL المدمج كلّيًًا) — فالعيب حصرٌ في نصّ المولّد.
+
+**الإصلاح:** تبديل الخطوتين، وصار التعليق يقول الحقيقة (0000 هو المُنشئ، لا
+`db:roles`)، ومثلُه في `packages/database/README.md`. وتُحقِّقُ من المسارين:
+مع `db:local` (مدمج) ومع `db:up` (docker، فيه `POSTGRES_USER=app`) الترتيبُ الجديد
+يعمل والقديمُ يسقط.
+
+**ولماذا لم يُشتَبّه فيه:** `pnpm db:migrate` نفسه ينجحُ رغم الخطأ، لأنّه يتّصل عبر
+`DATABASE_MIGRATOR_URL` (مستخدمٌ `app` ذو `SUPERUSER` من `db:local` أو
+`POSTGRES_USER` في docker) لا عبر `erp_migrator`. فلهذا يُمرَّر الخطر: الترحيل
+يعمل والبذرة تعمل وشاشةٌ تُخرِّج سطرًا أحمر قبَلهما لا يُلاحَظ.
+
 ## ملاحظة عن النطاق
 
 قائمة المالك الأصلية منعت لمس `apps/api` و`apps/customer-portal` و`apps/migrator`

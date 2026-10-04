@@ -138,7 +138,7 @@ console.log(`  cashier           ${readEnv('DEMO_CASHIER_EMAIL')}  /  ${seedPass
 console.log('');
 console.log('Next steps:');
 console.log('  1. pnpm db:up            # postgres + redis + minio via docker compose');
-console.log('  2. pnpm db:roles         # create the erp_api / erp_migrator roles');
-console.log('  3. pnpm db:migrate       # apply the SQL migrations');
+console.log('  2. pnpm db:migrate       # apply the SQL migrations — 0000 CREATES erp_api / erp_migrator');
+console.log('  3. pnpm db:roles         # grant LOGIN + password to those two roles (needs 0000 first)');
 console.log('  4. pnpm db:seed          # reads the passwords above from .env');
 console.log('  5. pnpm dev              # api :3000, admin :3001, customer :3002');
