@@ -20,10 +20,10 @@ import { EmptyState } from '@erp/ui';
 import { Kpi } from '@erp/ui';
 import { SkeletonCard } from '@erp/ui';
 import { DataTable, type SortState } from '@erp/ui';
+import { Labeled } from '@erp/ui';
 
 import { BarCardChart, LineCardChart } from '../../../components/ui/chart';
 import { Reveal } from '../../../components/ui/count-up';
-import { Labeled } from '../../../components/ui/input';
 import {
   arabicName,
   itemLabel,

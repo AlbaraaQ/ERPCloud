@@ -7,8 +7,8 @@ import { Badge } from '@erp/ui';
 import { Button } from '@erp/ui';
 import { EmptyState } from '@erp/ui';
 import { DataTable, type SortState } from '@erp/ui';
+import { Labeled, Select } from '@erp/ui';
 
-import { Labeled, Select } from '../../../components/ui/input';
 import { apiList } from '../../../lib/api';
 import { listBranches, listParties, money, shortDate, type Branch, type Party } from '../../../lib/lookups';
 import { useSession } from '../../../lib/session';
@@ -172,22 +172,16 @@ function InvoicesInner() {
             </div>
           </div>
           <div className="xl:col-span-2">
-            <Select label="النوع" value={kind} onChange={(e) => setKind(e.target.value)} placeholder="كل الأنواع">
-              {Object.entries(KIND_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </Select>
+<Select
+  label="النوع" value={kind} onChange={(e) => setKind(e.target.value)} placeholder="كل الأنواع"
+  options={Object.entries(KIND_LABELS).map(([value, label]) => ({ value, label }))}
+/>
           </div>
           <div className="xl:col-span-2">
-            <Select label="الفرع" value={branchId} onChange={(e) => setBranchId(e.target.value)} placeholder="كل الفروع">
-              {(branches.data ?? []).map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.nameAr}
-                </option>
-              ))}
-            </Select>
+<Select
+  label="الفرع" value={branchId} onChange={(e) => setBranchId(e.target.value)} placeholder="كل الفروع"
+  options={(branches.data ?? []).map((b) => ({ value: b.id, label: b.nameAr ?? b.name_ar ?? b.nameEn ?? '—' }))}
+/>
           </div>
           <div className="xl:col-span-2">
             <Labeled label="من تاريخ">

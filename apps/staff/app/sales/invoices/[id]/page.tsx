@@ -21,11 +21,11 @@ import { EmptyState } from '@erp/ui';
 import { SkeletonCard } from '@erp/ui';
 import { Modal } from '@erp/ui';
 import { DataTable } from '@erp/ui';
+import { Input, Labeled } from '@erp/ui';
 
 import { CommentsPanel } from '../../../../components/comments-panel';
 import { DonutCardChart } from '../../../../components/ui/chart';
 import { Reveal } from '../../../../components/ui/count-up';
-import { Input, Labeled } from '../../../../components/ui/input';
 import { ApiError, apiData, apiList, apiPatch, apiPost } from '../../../../lib/api';
 import {
   arabicName,

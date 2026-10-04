@@ -548,3 +548,31 @@ export function DateRangePicker({
     </div>
   );
 }
+
+/**
+ * Labeled — a fixed label above a *legacy* control.
+ *
+ * `Input`, `Select` and `MoneyField` all carry their own floating label, so
+ * they never need this. It exists for the bare `<select>`/`<input>` a screen
+ * inherits from an older form, where re-styling the control itself is out of
+ * scope but leaving it unlabelled is not an option.
+ *
+ * The wrapping `<label>` is what associates the two — there is no `htmlFor`,
+ * because the control is a child rather than a sibling.
+ */
+export type LabeledProps = {
+  label: string;
+  children: ReactNode;
+  hint?: string;
+  className?: string;
+};
+
+export function Labeled({ label, children, hint, className = '' }: LabeledProps) {
+  return (
+    <label className={cn('grid min-w-0 gap-1.5', className)}>
+      <span className="text-[12.5px] font-bold text-ink-2">{label}</span>
+      {children}
+      {hint ? <span className="text-[11px] text-muted">{hint}</span> : null}
+    </label>
+  );
+}

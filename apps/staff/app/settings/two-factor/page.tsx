@@ -12,9 +12,9 @@ import {
 } from 'lucide-react';
 import { Badge } from '@erp/ui';
 import { Button } from '@erp/ui';
+import { Input } from '@erp/ui';
 
 import { Screen } from '../../../components/screen';
-import { Input } from '../../../components/ui/input';
 import { ApiError, apiData, apiFetch } from '../../../lib/api';
 import { useQuery } from '../../../lib/use-query';
 

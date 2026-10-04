@@ -89,6 +89,7 @@ export {
   Combobox,
   DateRangePicker,
   Input,
+  Labeled,
   MoneyField,
   SearchInput,
   Select,
@@ -98,9 +99,11 @@ export {
   type DateRange,
   type DateRangePickerProps,
   type InputProps,
+  type LabeledProps,
   type MoneyFieldProps,
   type SelectProps,
 } from './components/input';
+export { Toggle, type ToggleProps } from './components/toggle';
 export { ToastProvider, useToast, type Toast as ToastMessage, type ToastTone } from './components/toast';
 export { Tooltip, type TooltipProps } from './components/tooltip';
 export { Skeleton, SkeletonCard, SkeletonRows } from './components/skeleton';

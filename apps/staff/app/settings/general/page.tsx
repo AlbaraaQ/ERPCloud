@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react';
 import { Save } from 'lucide-react';
 import { Button } from '@erp/ui';
 import { DataTable } from '@erp/ui';
+import { Labeled } from '@erp/ui';
+import { Toggle } from '@erp/ui';
 
 import { Screen } from '../../../components/screen';
-import { Labeled } from '../../../components/ui/input';
-import { Toggle } from '../../../components/ui/toggle';
 import { ApiError, apiData, apiPut } from '../../../lib/api';
 import { useQuery } from '../../../lib/use-query';
 
