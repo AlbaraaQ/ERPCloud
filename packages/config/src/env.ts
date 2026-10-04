@@ -181,8 +181,11 @@ const envSchema = z.object({
   /** PHASE_04 idempotency — DATABASE_DESIGN §4 ("expires 24h"). */
   IDEMPOTENCY_TTL_HOURS: z.coerce.number().int().positive().default(24),
 
-  /** PHASE_04 mail — `console` writes to the log, `smtp` targets MailHog/SES. */
-  MAIL_TRANSPORT: z.enum(['console', 'smtp']).default('console'),
+  /**
+   * PHASE_04 mail — `console` writes to the log, `smtp` targets MailHog/SES, and
+   * `resend` delivers over the Resend HTTP API (Wave 3, RC-10).
+   */
+  MAIL_TRANSPORT: z.enum(['console', 'smtp', 'resend']).default('console'),
   MAIL_FROM: z.string().default('no-reply@erp.local'),
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.coerce.number().int().positive().default(1025),
@@ -196,6 +199,18 @@ const envSchema = z.object({
     .default('false'),
   /** EHLO identity (some relays reject 'localhost'). */
   SMTP_CLIENT_HOSTNAME: z.string().optional(),
+  /**
+   * RC-10 — Resend API key. Only required when `MAIL_TRANSPORT=resend`; the check
+   * happens where the value is used (see `assertResendEnv` in the mailer), not at
+   * boot, exactly as object storage does — an unconfigured optional integration must
+   * not stop the API from starting.
+   */
+  RESEND_API_KEY: z.string().optional(),
+  /**
+   * Overridable so a test can point the provider at a local stub instead of the real
+   * API. Empty means the production endpoint.
+   */
+  RESEND_ENDPOINT: z.string().trim().default('https://api.resend.com'),
   /** Public URL of the customer portal, used inside outbound e-mails. */
   CUSTOMER_PUBLIC_URL: z.string().default(''),
   /**

@@ -1,3 +1,85 @@
+# Release Notes — Mail provider and the AI key (Wave 3)
+
+Date: 2026-10-04
+Scope: `packages/config`, `packages/contracts`, `packages/database`, `apps/api`,
+`apps/staff`, `apps/platform-admin`.
+Records: RC-10, RC-11.
+
+## RC-10 — a third mail provider
+
+`email_settings.provider` offered `console` and `smtp` and nothing else, so an operator
+who wanted a hosted API had to run a relay. `resend` is now a first-class choice.
+
+**Three layers had to move together, and the third is the one that bites.**
+
+1. The contract: `emailProviders` is now `['console','smtp','resend']`, and the schemas
+   that derive from it follow.
+2. The mailer: `ResendMailer` posts one request to `/emails` with the bearer key, and
+   maps `from`/`to`/`subject`/`text` plus `html`, `reply_to` and RFC 8058 unsubscribe
+   headers when present. It is built on `fetch` — **no new dependency**.
+3. **The database.** Two `CHECK (provider IN ('console','smtp'))` constraints written in
+   `0070_email_service.sql` — `email_settings_provider_check` and
+   `email_messages_provider_check`. The Zod schema passed, the controller was happy, and
+   the API still answered **500**, because the constraint is what actually rejected the
+   row. Migration `0114` widens both; it does not drop them, and its `down` folds
+   existing `resend` rows to `console` before narrowing.
+
+Two rules the implementation keeps deliberately:
+
+- **`resendConfigured` is a boolean, never the key.** It mirrors `smtpConfigured` /
+  `smtpHost` so the settings screen can say "this provider will fail" without shipping a
+  secret to the browser.
+- **`assertResendEnv` throws where the value is used, not at boot.** An unconfigured
+  optional integration must not stop the server from starting — the same rule object
+  storage already follows. Without it the failure is a bare 401 from Resend that tells
+  the operator nothing about what to change.
+
+## RC-11 — the AI assistant was "on" with nothing behind it
+
+`GET /ai/settings` answered `{"enabled":true,"provider":null}`. A tenant that had never
+opened the AI screen looked configured, the gate accepted it, and chat answered from the
+local engine as though somebody had set an assistant up.
+
+The cause was one line: `tenant?.enabled !== false`. **Absence was read as consent.**
+A tenant with no row at all is now reported as off, and an explicit switch with no
+provider anywhere is not a working assistant either.
+
+The platform plane already had a key field. What was missing was the tenant's own:
+
+- **`ai_settings.api_key_enc`** (migration `0115`), sealed with the existing
+  `secret-box.ts` envelope — the same `v1:<iv>:<tag>:<ciphertext>` format as the MFA
+  secret and the e-invoicing credentials, so one `DATA_ENC_KEY` rotation covers all of
+  them. It is nullable and absent for existing rows on purpose: an empty key must stay
+  "no key", not "a key that fails to decrypt".
+- **Precedence.** A tenant key overrides the platform key. This needed
+  `openOwnKey` rather than reusing `openKey`, because `openKey` falls back to
+  `AI_API_KEY` from the environment — with it, the tenant slot could never be empty and
+  the platform key would never win. `openOwnKey` also fails closed: a key that cannot be
+  opened is not a key, so the assistant degrades instead of signing a request with a
+  value nobody could read.
+- **`hasApiKey` / `hasPlatformKey`** are presence booleans. The key never crosses the
+  wire, in either direction.
+- **Absent means "leave it".** The switch, the provider and the key all now distinguish
+  an omitted field from an explicit `null`, so a partial PUT that only rotates the key
+  no longer wipes the provider or re-enables the assistant.
+
+## What was removed rather than added
+
+`updateSettings` first gained a guard rejecting "enable with no provider". It was dead
+on arrival: `ai_platform_settings` is seeded with `provider NOT NULL DEFAULT 'local'`
+and `updatePlatform` can never write `null`, so the condition could not be reached. A
+validation that cannot fire is worse than none — it promises a check that does not
+happen. The rule lives in the gate, which is the one place that actually decides.
+
+## Verification
+
+lint exit 0 across all packages · contracts/config/database/testing/api builds clean ·
+**api 1547/1547** · `test:smoke` passed · `openapi:export` regenerated · migrations
+114 and 115 applied (115 total, 0 skipped) · `resend-mailer.spec.ts` 8/8 ·
+`platform-email.spec.ts` 22/22 · `tenant-ai-settings.spec.ts` 8/8.
+
+---
+
 # Release Notes — Password recovery (Wave 2)
 
 Date: 2026-10-04

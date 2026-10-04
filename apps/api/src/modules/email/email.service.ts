@@ -5,12 +5,14 @@ import {
   DomainError,
   emailAuditActions,
   emailEventDefinition,
+  emailProviders,
   errorCodes,
   renderEmailTemplate,
   type EmailEvent,
   type EmailLocale,
   type EmailMessage,
   type EmailMessageListQuery,
+  type EmailProvider,
   type EmailMessageListResponse,
   jobTypes,
   type EmailSendInput,
@@ -831,8 +833,15 @@ export class EmailService {
     return String(id);
   }
 
-  private asProvider(value: string): 'console' | 'smtp' {
-    return value === 'smtp' ? 'smtp' : 'console';
+  /**
+   * يُطبّع قيمة العمود إلى أحد مزوّدي العقد. القائمة تُقرأ من `emailProviders` لا
+   * من مقارنةٍ ثنائيّة، حتى لا يُسقِط مزوّدٌ جديد (مثل `resend` في RC-10) إلى
+   * `console` بصمتٍ فتكذب تفاصيل الرسالة عن مُرسِلها.
+   */
+  private asProvider(value: string): EmailProvider {
+    return (emailProviders as readonly string[]).includes(value)
+      ? (value as EmailProvider)
+      : 'console';
   }
 
   /** صفٌّ داخليّ: حقول العقد نفسها، مضافاً إليها ما يخصّ المحاولة والحصّة (لا يُصدَّر). */

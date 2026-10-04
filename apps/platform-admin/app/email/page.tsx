@@ -635,6 +635,7 @@ function SettingsTab() {
             >
               <option value="console">console — يطبع في السجلّ (تطوير)</option>
               <option value="smtp">smtp — عميل SMTP على node:net</option>
+              <option value="resend">resend — واجهة HTTP (RC-10)</option>
             </select>
           </label>
           <label>
@@ -727,6 +728,9 @@ function SettingsTab() {
           {current?.smtpConfigured
             ? ''
             : ' ولا اعتماد (SMTP_USER/SMTP_PASS) — الإرسال الفعلي عبر smtp سيفشل.'}
+          {current?.resendConfigured
+            ? ''
+            : ' ولا RESEND_API_KEY في البيئة — الإرسال الفعلي عبر resend سيفشل حتى يُضبط.'}
         </p>
       </div>
 

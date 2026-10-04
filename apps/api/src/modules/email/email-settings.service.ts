@@ -73,6 +73,8 @@ export class EmailSettingsService {
       monthlyLimit: pick<number | null>('monthly_limit', null),
       smtpHost: env.SMTP_HOST || null,
       smtpConfigured: Boolean(process.env.SMTP_USER && process.env.SMTP_PASS),
+      // RC-10 — presence only; the key itself is a secret and never crosses the wire.
+      resendConfigured: Boolean(process.env.RESEND_API_KEY),
       updatedAt: row?.updated_at ? new Date(row.updated_at as string).toISOString() : null,
       updatedBy: row?.updated_by ? String(row.updated_by) : null,
     };

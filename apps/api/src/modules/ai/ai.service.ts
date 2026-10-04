@@ -59,6 +59,8 @@ type TenantRow = {
   model: string | null;
   monthly_token_limit: number | null;
   monthly_cost_limit: string | null;
+  /** RC-11 — the tenant's own sealed provider key. `null` means "no key of my own". */
+  api_key_enc: string | null;
 };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -120,6 +122,27 @@ function openKey(sealed: string | null): string | undefined {
     }
   }
   return env.AI_API_KEY || undefined;
+}
+
+/**
+ * RC-11 — opens *only* what this row sealed, with no environment fallback.
+ *
+ * `openKey` answers "what key does the assistant run on", which for the platform row
+ * legitimately includes `AI_API_KEY` from the environment. The tenant row needs the
+ * narrower question "did the tenant store a key of their own", because the answer
+ * decides precedence: a tenant key overrides the platform key, and an empty slot must
+ * mean "no" rather than silently inheriting the operator's.
+ */
+function openOwnKey(sealed: string | null): string | undefined {
+  if (!sealed) return undefined;
+  try {
+    return openSecret(sealed).toString('utf8');
+  } catch {
+    // A key that cannot be opened is not a key. Failing closed here means the
+    // assistant degrades to `local` (or to the platform key) instead of sending a
+    // request signed with a value we could not read.
+    return undefined;
+  }
 }
 
 function monthStart(now = new Date()): string {
@@ -227,7 +250,10 @@ export class AiService {
       effectiveModel: gate.model,
       monthlyTokenLimit: gate.tenantTokenLimit,
       monthlyCostLimit: gate.tenantCostLimit,
-      hasPlatformKey: Boolean(gate.apiKey),
+      // RC-11 — presence booleans only. The key itself never crosses the wire, exactly
+      // as `hasPlatformKey` never did; the difference is that the tenant can now own one.
+      hasApiKey: gate.hasTenantKey,
+      hasPlatformKey: Boolean(gate.platformKey),
       usage: {
         tokens: gate.usage.tokensUsed,
         spent: gate.usage.costUsed,
@@ -239,21 +265,50 @@ export class AiService {
   }
 
   async updateSettings(tenantId: string, input: Record<string, unknown>) {
-    const enabled = input.enabled === undefined ? true : Boolean(input.enabled);
-    const provider = asProvider(input.provider, true);
+    // An omitted switch keeps its stored value rather than defaulting to "on": the
+    // platform plane and the settings form both PUT the whole object, but a caller that
+    // only wants to rotate the key must not silently re-enable the assistant.
+    const current = await withTenantTx(this.database.db, tenantId, (tx) =>
+      tx.execute(sql`
+        SELECT enabled, provider, model, monthly_token_limit, monthly_cost_limit::text, api_key_enc
+        FROM ai_settings
+        WHERE tenant_id = ${tenantId}::uuid
+        LIMIT 1
+      `),
+    );
+    const stored = rowsOf<TenantRow>(current)[0];
+    const enabled = input.enabled === undefined ? stored?.enabled === true : Boolean(input.enabled);
+    // Same convention as the key and the switch: an absent field means "leave it", an
+    // explicit `null` means "inherit the platform setting". The settings form always
+    // sends the field, so its "وراثة إعداد المنصة" option still clears the choice; what
+    // changes is that a partial PUT (rotating only the key) no longer wipes the provider.
+    const provider =
+      input.provider === undefined ? (stored?.provider ?? null) : asProvider(input.provider, true);
     const model = input.model === null || input.model === undefined || input.model === '' ? null : String(input.model).slice(0, 80);
     const monthlyTokenLimit = asLimit(input.monthlyTokenLimit);
     const monthlyCostLimit = asMoneyCap(input.monthlyCostLimit);
+    // RC-11 — the key is sealed before it reaches this statement and never read back:
+    // `clearApiKey` empties the slot, a non-empty `apiKey` refills it, and an absent
+    // field leaves whatever was stored exactly as it was. Re-PUTting the settings form
+    // must not wipe a key the operator typed last week.
+    let sealed = stored?.api_key_enc ?? null;
+    if (input.clearApiKey === true) sealed = null;
+    if (typeof input.apiKey === 'string') {
+      const trimmed = input.apiKey.trim();
+      // An empty string is a clear, not a no-op: the form posts '' for an empty box.
+      sealed = trimmed ? sealSecret(trimmed) : null;
+    }
     await withTenantTx(this.database.db, tenantId, (tx) =>
       tx.execute(sql`
-        INSERT INTO ai_settings (tenant_id, enabled, provider, model, monthly_token_limit, monthly_cost_limit, updated_at)
-        VALUES (${tenantId}::uuid, ${enabled}, ${provider}, ${model}, ${monthlyTokenLimit}, ${monthlyCostLimit}, now())
+        INSERT INTO ai_settings (tenant_id, enabled, provider, model, monthly_token_limit, monthly_cost_limit, api_key_enc, updated_at)
+        VALUES (${tenantId}::uuid, ${enabled}, ${provider}, ${model}, ${monthlyTokenLimit}, ${monthlyCostLimit}, ${sealed}, now())
         ON CONFLICT (tenant_id) DO UPDATE SET
           enabled = EXCLUDED.enabled,
           provider = EXCLUDED.provider,
           model = EXCLUDED.model,
           monthly_token_limit = EXCLUDED.monthly_token_limit,
           monthly_cost_limit = EXCLUDED.monthly_cost_limit,
+          api_key_enc = EXCLUDED.api_key_enc,
           updated_at = now()
       `),
     );
@@ -373,7 +428,7 @@ export class AiService {
     const platform = await this.readPlatform();
     const tenantResult = await withTenantTx(this.database.db, tenantId, (tx) =>
       tx.execute(sql`
-        SELECT enabled, platform_suspended, provider, model, monthly_token_limit, monthly_cost_limit::text
+        SELECT enabled, platform_suspended, provider, model, monthly_token_limit, monthly_cost_limit::text, api_key_enc
         FROM ai_settings
         WHERE tenant_id = ${tenantId}::uuid
         LIMIT 1
@@ -394,23 +449,42 @@ export class AiService {
     const tokenLimit = tenant?.monthly_token_limit ?? platform?.default_monthly_token_limit ?? 200000;
     const suspended = tenant?.platform_suspended === true;
     const platformEnabled = platform?.enabled !== false;
-    const tenantEnabled = tenant?.enabled !== false;
+    // RC-11 — "مُفعَّل" must mean "switched on *and* pointed at something".
+    //
+    // A tenant that never opened the AI screen has no row at all, and the old
+    // `tenant?.enabled !== false` read that absence as consent: the screen showed
+    // `{"enabled":true,"provider":null}` and chat answered from the local engine as if
+    // the tenant had configured an assistant. Now an absent row is not consent, and an
+    // explicit switch with no provider anywhere (neither tenant nor platform) is not a
+    // working assistant either — it is a promise the backend cannot keep.
+    const tenantProvider = tenant?.provider ?? null;
+    const hasProvider = Boolean(tenantProvider || platform?.provider);
+    const tenantEnabled = tenant?.enabled === true && hasProvider;
     let reason = '';
     if (!platformEnabled) reason = 'المساعد متوقف من المنصة.';
     else if (suspended) reason = 'أوقف مشغّل المنصة المساعد لهذه المنشأة.';
-    else if (!tenantEnabled) reason = 'المساعد غير مفعّل في إعدادات المنشأة.';
+    else if (!hasProvider) reason = 'لم يُختر مزوّد للمساعد — اختر مزوّداً في الإعدادات أو اطلب من مشغّل المنصة تهيئة مفتاح.';
+    else if (tenant?.enabled !== true) reason = 'المساعد غير مفعّل في إعدادات المنشأة.';
+    // A tenant that brought its own key uses it; otherwise the platform key is the one
+    // the assistant runs on. `local` needs no key at all.
+    const tenantKey = openOwnKey(tenant?.api_key_enc ?? null);
+    const platformKey = openKey(platform?.api_key_enc ?? null);
+    const apiKey = tenantKey ?? platformKey;
+    const hasTenantKey = Boolean(tenantKey);
     return {
       allowed: platformEnabled && tenantEnabled && !suspended,
       reason,
       provider: safeProvider,
       model: tenant?.model || platform?.model || env.AI_MODEL || 'local-grounded',
-      apiKey: openKey(platform?.api_key_enc ?? null),
+      apiKey,
       baseUrl: platform?.base_url || env.AI_BASE_URL || '',
       perMillionIn: platform?.cost_per_million_in ?? '0',
       perMillionOut: platform?.cost_per_million_out ?? '0',
       tenantEnabled,
       platformEnabled,
       suspended,
+      hasTenantKey,
+      platformKey,
       tenantProvider: tenant?.provider ?? null,
       tenantModel: tenant?.model ?? null,
       tenantTokenLimit: tenant?.monthly_token_limit ?? null,

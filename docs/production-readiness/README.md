@@ -14,11 +14,12 @@
 |---|---|
 | الفرع | `arena/01a0f4e4-erpcloud` |
 | آخر إيداع | انظر `git log` — الموجة 1 مُنفَّذة ومُختبَرة |
-| البيئة المُعادة إنتاجها هنا | PostgreSQL 16 (embedded) + 112 ترحيلًا + بذرة demo + API على `:3000` |
+| البيئة المُعاد إنتاج هنا | PostgreSQL 16 (embedded) + 115 ترحيلاً + بذرة demo + API على `:3000` |
 | نتيجة الـ build | staff ✓ · platform-admin ✓ · marketing ✓ |
-| نتيجة الاختبارات | ui 21/21 · contracts 232/232 · staff 70/70 · platform-admin 24/24 · marketing 98/99 · database 53/53 · config 10/10 · testing 12/12 · api 1512/1514 |
+| نتيجة الاختبارات | ui 21/21 · contracts 233/233 · staff 70/70 · platform-admin 24/24 · marketing 98/99 · database 53/53 · config 10/10 · testing 12/12 · migrator 4/4 · customer-portal 6/6 · **api 1547/1547** |
 |  | **يفشل عند عتبة tsc** — 363 خطأً موجودة على الـ base commit نفسه؛ بقية البوابات تُشغَّل يدويًا وتنجح (انظر ) |
-| lint | `pnpm -r run lint` → exit 0 |
+| lint | `pnpm -r run lint` → exit 0 (clean after RC-10/RC-11) |
+| فشل معروف سابق لهذا العمل | `apps/marketing/tests/verify.spec.ts` — يطابق أرقام أسطر `apps/staff/lib/navigation.ts` التي انزلقت؛ **يفشل على الـ base commit أيضاً** |
 | `tsc -p tsconfig.base.json` | 363 خطأ — **عدد الـ base commit بالضبط**، لا يساهم فيه هذا العمل |
 
 ## البنود كما وردت من المالك، وحالة كلٍّ منها

@@ -5,6 +5,7 @@ import { DomainError } from '../problem.js';
 import {
   emailEventRegistry,
   emailEvents,
+  emailProviderSchema,
   emailRetrySchema,
   emailSettingsPatchKeys,
   emailSettingsUpdateSchema,
@@ -165,6 +166,16 @@ describe('email payload schemas (P-C6)', () => {
     expect(emailSettingsUpdateSchema.safeParse({ sendingDomain: 'erp.example.com' }).success).toBe(true);
     expect(emailSettingsUpdateSchema.safeParse({ provider: 'sendgrid' }).success).toBe(false);
   });
+
+  it('accepts the resend provider on both planes and refuses anything else (RC-10)', () => {
+    // `emailProviders` is the single list the settings screen is allowed to send and the
+    // mailer is allowed to build. A provider added to one and not the other is exactly
+    // the defect this pins down, so both spellings are asserted here.
+    expect(emailSettingsUpdateSchema.safeParse({ provider: 'resend' }).success).toBe(true);
+    expect(emailSettingsUpdateSchema.safeParse({ provider: 'mailgun' }).success).toBe(false);
+    expect(emailProviderSchema.safeParse('resend').success).toBe(true);
+    expect(emailProviderSchema.safeParse('mailgun').success).toBe(false);
+  });
 });
 
 describe('مخططات الحمولة للبريد', () => {
@@ -185,6 +196,7 @@ describe('مخططات الحمولة للبريد', () => {
     expect(emailSettingsUpdateSchema.safeParse({ dailyLimit: 50, reason: 'سقف مؤقت' }).success).toBe(true);
     expect(emailSettingsUpdateSchema.safeParse({ provider: 'console' }).success).toBe(true);
     expect(emailSettingsUpdateSchema.safeParse({ provider: 'ses' }).success).toBe(false);
+    expect(emailSettingsUpdateSchema.safeParse({ provider: 'resend' }).success).toBe(true);
     expect(emailSettingsUpdateSchema.safeParse({ unknownField: 1 }).success).toBe(false);
     expect(emailSettingsPatchKeys).toContain('monthlyLimit');
   });

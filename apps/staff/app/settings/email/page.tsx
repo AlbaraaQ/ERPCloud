@@ -449,6 +449,18 @@ function SenderTab({ canEdit }: { canEdit: boolean }) {
           المزوّد الفعّال: <strong>{current?.provider}</strong> — يختاره المشغّل من لوحة المنصة (اعتمادات
           الإرسال في بيئته، لا في جدول). آخر تعديل: {dateTime(current?.updatedAt ?? null)}.
         </p>
+        {current?.provider === 'resend' && !current.resendConfigured && (
+          <p className="alert warn">
+            المزوّد المختار <strong>resend</strong> لكن <code>RESEND_API_KEY</code> غير مضبوط في بيئة الخادم —
+            رسائل هذا المستأجر ستفشل حتى يضبطه المشغّل. اطلب منه تبديل المزوّد أو إضافة المفتاح.
+          </p>
+        )}
+        {current?.provider === 'smtp' && !current.smtpConfigured && (
+          <p className="alert warn">
+            المزوّد المختار <strong>smtp</strong> لكن لا اعتماد <code>SMTP_USER</code>/<code>SMTP_PASS</code> في
+            بيئة الخادم — الإرسال الفعلي سيفشل حتى يضبطهما المشغّل.
+          </p>
+        )}
       </div>
 
       <Notice notice={notice} />
