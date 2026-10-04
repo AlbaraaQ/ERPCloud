@@ -404,3 +404,108 @@ number — so this package contributes zero and the pre-existing count is unchan
 APIs into server code, which is a real weakening); adding `.js` extensions to the
 package (breaks bundler resolution and buys nothing); `// @ts-expect-error` on the
 offending lines (hides the mismatch rather than naming it).
+
+## 2026-10-04 (Production readiness — الموجة 1: رفع المنع عن الاستخدام)
+
+### CR-010 — مزامنة حقوق الخطة مع `tenant_settings` عند التفعيل — APPROVED (applied)
+
+| | |
+|---|---|
+| Raised by | Production readiness, الموجة 1 (RC-1 / RC-6) |
+| Affects | `apps/api/src/modules/platform/billing/billing.service.ts`, `packages/database/src/seed-demo.ts` |
+| Type | Behaviour repair — لا يمسّ أي عقد |
+
+`billing_plan_entitlements` (0068) كتالوج ما تشتريه الخطة، و`tenant_settings` هو ما
+تقرأه الوحدات لحظة الطلب. **ولا شيء كان يربط بينهما.** فمستأجر يحمل اشتراك
+`pro-monthly` نشطًا كان يظل يراه `feature.pos: false` ويستقبل 404 من كل شاشة محميّة
+براية. الدليل التشغيلي: `GET /billing/subscription` → `{"data":null}` مع
+`GET /settings` → `"feature.pos": false`.
+
+**ما أُضيف:** `BillingService.applyEntitlements(tenantId, planId)` تُنسخ صفوف
+`kind = 'module'` من الخطة إلى `tenant_settings` داخل معاملة يربط فيها GUC المستأجر.
+تُستدعى من `reviewActivation` (التفعيل اليدوي) ومن `handleStripeWebhook` (Stripe)،
+ومن `ensureSubscription` في البذرة. النطاق ضيّق عن قصد: صفوف `limit` يفرضها مدقّق
+الحصص، وصفوف `flag` ليست مفاتيح وحدات — وكتابة أيٍّ منهما في `tenant_settings` كانت
+ستُنشئ مفاتيح لا يعرفها السجلّ المُنمَّط في `packages/config`.
+
+**لم يُمسّ:** لا endpoint، لا DTO، لا ترحيل، لا إذن. والنتيجة بعد الإصلاح:
+`feature.pos/projects/hrm = true` و`GET /pos/settings` → 200.
+
+### CR-011 — `BillingService` يقرأ ويكتب بـ`withTenantTx` / `withPlatformAdminTx` — APPROVED (applied)
+
+| | |
+|---|---|
+| Raised by | Production readiness, الموجة 1 (RC-12) |
+| Affects | `apps/api/src/modules/platform/billing/billing.service.ts` |
+| Type | Isolation-correctness repair |
+
+`TenantGuard` ينشر سياق الطلب لكنه لا ينفّذ `set_config('app.tenant_id', …)`،
+و`setTenantContext` يمرّر `is_local = true` عمدًا (`packages/database/src/rls.ts`)
+حتى لا يتسرّب مستأجرٌ إلى الطلب التالي عبر تجمّع الاتصالات. فخدمةٌ تنفّذ
+`db.execute(...)` خارج معاملة تقارن `tenant_id` بـ`NULL` وترى **صفر صفوف** — بلا خطأ.
+
+**الدليل:** الاشتراك موجود في القاعدة (تحقّقتُ باستعلام مباشر مع ربط GUC فرجع صفًّا
+واحدًا `active / pro-monthly`)، لكن `GET /billing/subscription` كان يُعيد
+`{"data":null}`. بعد الإصلاح يُعيد الاشتراك كاملًا.
+
+**ما أُصلح:** `mySubscription` و`requestManualActivation` و`createStripeCheckout`
+داخل `withTenantTx`؛ و`listActivationRequests` و`reviewActivation` داخل
+`withPlatformAdminTx` (مسارا مشغّل منصة، والجدولان محميّان بسياسة المنصة 0020).
+أثر هذه الأخيرة كان مزدوجًا: القراءة تُرجع `[]` والكتابة تفشل `WITH CHECK`.
+
+**وفي المسار المدفوع، وهو ما لا يشتكي منه أحد:** `handleStripeWebhook` كان يُحدّث
+`tenant_subscriptions` بـ`db.execute` بلا GUC إطلاقًا — لأن webhook من Stripe لا
+يمرّ على `TenantGuard`. المحصّلة: التحديثان لا يُغيّران صفًّا واحدًا، فيبقى الاشتراك
+`incomplete` ولا يُتقاعد الترخيص المستبدَّل، بينما `applyEntitlements` تُشعل الوحدات
+لمستأجر بلا ترخيص نشط — وهو ما يصطدم لاحقًا بالفهرس الفريد 0068 (ترخيص نشط واحد
+لكل مستأجر). الربط الآن قائم.
+
+**مسح شامل بعد الإصلاح:** `billing.service.ts` كان الاستثناء الوحيد؛ كل وحدة أخرى
+في `apps/api` تستخدم `withTenantTx` / `withPlatformAdminTx` باستمرار.
+
+### CR-012 — `throw new Error` → `DomainError` في خدمة الفوترة — APPROVED (applied)
+
+| | |
+|---|---|
+| Raised by | Production readiness, الموجة 1 (RC-2) |
+| Affects | `apps/api/src/modules/platform/billing/billing.service.ts` |
+| Type | Error-contract repair |
+
+`listActivationRequests` و`reviewActivation` كانا يرميان `Error` عاديًّا عند غياب
+صلاحية مشغّل المنصة. `AllExceptionsFilter` لا يعرف كيف يصنّفه فيُعيد **500**
+(`"msg":"Unhandled exception","code":"INTERNAL"` في السجل). والمتصل هنا مستأجر عادي،
+فالنداء يفشل دائمًا — وهذا ما جعل شاشة الترخيص معطّلة تمامًا.
+
+**ما أُصلح:** `DomainError('FORBIDDEN', …, 403)` للموضعين، وأيضًا:
+`VALIDATION_FAILED` 422 لخطة غير مهيّأة لـStripe، `NOT_FOUND` 404 لخطة أو طلب تفعيل
+غير موجود، و`CONFIGURATION_MISSING` 503 لغياب إعداد Stripe. بعد الإصلاح:
+`GET /billing/activation-requests` → `403 {"code":"FORBIDDEN"}` منظّمٌ لا 500.
+
+### CR-013 — بذرة «عميل عام» و«مورد عام» وأصناف كتالوج ورصيد افتتاحي — APPROVED (applied)
+
+| | |
+|---|---|
+| Raised by | Production readiness, الموجة 1 (RC-3 / RC-13 / RC-14) |
+| Affects | `packages/database/src/seed-demo.ts`, `apps/staff/app/sales/pos/page.tsx` |
+| Type | Seed data + UI wiring — لا endpoint ولا DTO |
+
+ثلاث فراغات في البذرة جعلت «حفظ الفواتير في نقطة البيع» مستحيلًا:
+
+1. **`items` فارغ** (`SELECT count(*)` → 0) مع أن الفئات والوحدات ومجموعات الضريبة
+   مُبذَّرة. أُضيفت عشرة أصناف (ثمانية بضاعة + خدمتان).
+2. **`stock_balances` فارغ** ⇒ كل بيعٍ يُرفض بـ`422 STOCK_INSUFFICIENT`. أُضيف رصيد
+   افتتاحي 50 وحدة لكل صنف بضاعة، بقيمة = الكمية × سعر الشراء.
+3. **`parties` فارغ** ⇒ لا عميل عام ولا مورد عام. أُضيف الطرفان، **بلا رقم ضريبيّ
+   عن قصد** حتى تسقط فاتورة العميل العام تلقائيًّا في «مبوّبة» (0200000) بقاعدة
+   `einvoicing.service.ts:492` القائمة أصلاً.
+
+وفي الواجهة: وضع «عميل نقدي» في POS كان يرسل `cashCustomerName` نصًّا حرًّا. الآن
+يرسل `partyId` طرف «عميل العام» (يُعرَف بالرمز `CUST-GENERAL` لا بالاسم، لأن الاسم
+يُترجم والرمز لا)، فتقع الفاتورة على حساب ذمم حقيقي وتُطبَّق قاعدة ZATCA على مشترٍ
+موجود.
+
+**التحقّق التشغيلي:** `POST /pos/checkout` → 201، `SI-000001`،
+`subtotal 130.0000 + taxTotal 19.5000 = total 149.5000`، مدفوع 200، باقي 50.50.
+
+**لم يُمسّ:** منطق اختيار البروفايل في `einvoicing.service.ts:492` — كان صحيحًا من
+البداية، وكان ينقصه مشترٍ موجود.

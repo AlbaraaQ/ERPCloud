@@ -1,3 +1,90 @@
+# Release Notes — Production readiness, Wave 1: remove the blockers
+
+Date: 2026-10-04
+Scope: `apps/api`, `packages/database`, `apps/staff`.
+Records: CR-012, CR-13, CR-14, CR-15.
+
+## Why this release exists
+
+The three surfaces were built and the design system was shared, but the system could
+not actually be *used*: the demo tenant held no active subscription, so every module
+flag in `tenant_settings` was `false` and every feature-gated screen answered 404.
+POS could not save an invoice, the licence screen showed nothing, and the parties
+ledger was empty. This release removes that, verified against a running stack
+(embedded PostgreSQL 16, 112 migrations, demo seed, API on `:3000`).
+
+## What was wrong, and what changed
+
+| | Root cause | Fix |
+|---|---|---|
+| **POS could not save an invoice** | `feature.pos = false` because nothing ever synced a plan's module entitlements into `tenant_settings`; plus `items` and `stock_balances` were empty in the seed | `applyEntitlements()` mirrors `kind='module'` rows on manual activation, Stripe webhook and seed (CR-010); the seed now ships 10 catalogue items and opening stock (CR-013) |
+| **Licence screen showed nothing** | `BillingService` read `tenant_subscriptions` with no tenant GUC bound — `TenantGuard` publishes the request context but never sets `app.tenant_id`, and `setTenantContext` is transaction-local by design — so RLS matched NULL and returned zero rows | Wrapped in `withTenantTx` (CR-011) |
+| **Licence screen answered 500** | `listActivationRequests` threw a bare `Error`, which `AllExceptionsFilter` turns into 500 instead of 403 | `DomainError('FORBIDDEN', …, 403)` (CR-012) |
+| **No general customer or supplier** | `parties` was empty in the seed | Seeded, deliberately **without** a VAT number so the ZATCA rule already in the API classifies their invoices as simplified (CR-013) |
+| **Activation review could not write** | Same missing-GUC bug, on the platform-admin plane | `withPlatformAdminTx` (CR-011) |
+
+## The proof
+
+One real `POST /pos/checkout`, after the fixes:
+
+```json
+{
+  "number": "SI-000001",
+  "subtotal": "130.0000",
+  "taxTotal": "19.5000",
+  "total": "149.5000",
+  "paidTotal": "149.5000",
+  "paymentStatus": "paid",
+  "method": "cash",
+  "tendered": "200.0000",
+  "change": "50.5000"
+}
+```
+
+2 x 65.00 = 130.00, +15% VAT = 19.50, total 149.50, tendered 200, change 50.50.
+
+And the flags that were off: `feature.pos`, `feature.projects`, `feature.hrm` ->
+`true`. And `GET /billing/subscription` -> the full `pro-monthly` subscription instead
+of `null`. And `GET /billing/activation-requests` -> `403 {"code":"FORBIDDEN"}` instead
+of `500`.
+
+## What was deliberately NOT changed
+
+- **`einvoicing.service.ts:492`** — `buyer?.vatNo ? 'standard' : 'simplified'`. The
+  rule was correct from the start; what it lacked was a buyer to classify. General
+  customer has no VAT number => simplified. A customer with one => standard. No user
+  decision, no UI flag.
+- **No endpoint, DTO, permission code, guard ordering or migration.** Nothing in
+  `API_CONTRACT.md`, `SECURITY_ARCHITECTURE.md` or the guard chain moved.
+- **No ceiling was raised** anywhere.
+
+## Gates
+
+| Gate | Result |
+|---|---|
+| `pnpm -r run lint` | **exit 0** |
+| `tsc -p tsconfig.base.json --noEmit` | **363 errors - the base-commit count, unchanged** |
+| `@erp/staff` build · lint · test | `✓ Compiled successfully in 42s` · clean · **70 / 70** |
+| `apps/api` test | **1512 passed / 2 failed** — both failures pre-existing at the base commit (verified by stashing the whole change set and rebuilding) |
+| `packages/*` tests | ui 21/21 · contracts 232/232 · config 10/10 · database 53/53 · testing 12/12 |
+| `apps/platform-admin` · `apps/marketing` tests | **24 / 24** · **98 / 99** (the one marketing failure is the pre-existing P-M8) |
+
+The two pre-existing API failures are stale snapshots, not logic: `ai-help.spec.ts`
+expects 261 ready screens while `navigation.ts` lists 274, and `isolation.spec.ts`
+expects 60 protected tables while the schema now has 81. Both fail identically on a
+clean tree.
+
+## Not delivered
+
+- The rest of Wave 1: the browser-side visual pass of POS, the licence screen and the
+  notifications screen. The API behaviour is verified by direct calls; a signed-in
+  browser pass is Wave 4's job.
+- Waves 2-5: password recovery, desktop-screen cleanup, browser-only checks, and the
+  visual redesign. See `docs/production-readiness/03-PLAN.md`.
+- **Open risk:** the missing-GUC pattern (RC-12) may exist in other services that call
+  `db.execute` on tenant-scoped tables outside a transaction. The repo was not swept
+  for it. It is declared in `docs/production-readiness/04-BACKLOG.md`.
+
 # Release Notes — Design System v3, PR-1: the shared kit
 
 Date: 2026-10-01
