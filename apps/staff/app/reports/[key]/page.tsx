@@ -14,15 +14,8 @@ import {
   Search,
   Timer,
 } from 'lucide-react';
-import { Badge } from '@erp/ui';
-import { Button } from '@erp/ui';
-import { EmptyState } from '@erp/ui';
-import { Kpi } from '@erp/ui';
-import { SkeletonCard } from '@erp/ui';
-import { DataTable, type SortState } from '@erp/ui';
-import { Labeled } from '@erp/ui';
+import { Badge, BarSeries, Button, DataTable, EmptyState, Kpi, Labeled, LineSeries, SkeletonCard, type SortState } from '@erp/ui';
 
-import { BarCardChart, LineCardChart } from '../../../components/ui/chart';
 import {
   arabicName,
   itemLabel,
@@ -378,9 +371,21 @@ function ReportChart({ entry, result }: { entry: ReportEntry; result: ReportResu
       </div>
       {data.length > 0 ? (
         entry.chart === 'line' ? (
-          <LineCardChart data={data} xKey="name" dataKey="value" name={valueCol} height={300} formatter={(v) => formatCell(String(v), 'money')} />
+          <LineSeries
+          data={data}
+          xKey="name"
+          series={[{ key: 'value', label: valueCol }]}
+          height={300}
+          format={(v) => formatCell(String(v), 'money')}
+        />
         ) : (
-          <BarCardChart data={data} xKey="name" dataKey="value" name={valueCol} height={300} formatter={(v) => formatCell(String(v), 'money')} />
+          <BarSeries
+          data={data}
+          xKey="name"
+          series={[{ key: 'value', label: valueCol }]}
+          height={300}
+          format={(v) => formatCell(String(v), 'money')}
+        />
         )
       ) : (
         <EmptyState icon={<ListChecks size={24} strokeWidth={1.5} />} title="لا توجد قيم للرسم" />

@@ -112,6 +112,7 @@ export { Avatar, initials, type AvatarProps, type AvatarSize } from './component
 export { Meter, Progress, type MeterProps, type ProgressProps } from './components/progress';
 export {
   AXIS_STYLE,
+  AreaSeries,
   BarSeries,
   ChartLegend,
   Donut,

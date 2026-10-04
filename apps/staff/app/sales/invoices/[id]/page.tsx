@@ -15,16 +15,9 @@ import {
   Wallet,
 } from 'lucide-react';
 import { useState } from 'react';
-import { Badge } from '@erp/ui';
-import { Button } from '@erp/ui';
-import { EmptyState } from '@erp/ui';
-import { SkeletonCard } from '@erp/ui';
-import { Modal } from '@erp/ui';
-import { DataTable } from '@erp/ui';
-import { Input, Labeled } from '@erp/ui';
+import { Badge, Button, DataTable, Donut, EmptyState, Input, Labeled, Modal, SkeletonCard } from '@erp/ui';
 
 import { CommentsPanel } from '../../../../components/comments-panel';
-import { DonutCardChart } from '../../../../components/ui/chart';
 import { ApiError, apiData, apiList, apiPatch, apiPost } from '../../../../lib/api';
 import {
   arabicName,
@@ -501,16 +494,17 @@ export default function SalesInvoiceDetailPage() {
               {Number(doc.taxTotal) > 0 || Number(doc.subtotal) > 0 ? (
                 <div className="mt-4">
                   <p className="m-0 mb-1 text-[11.5px] font-bold text-muted">توزيع الضريبة</p>
-                  <DonutCardChart
+                  <Donut
                     data={[
                       { name: 'قبل الضريبة', value: Number(doc.subtotal) },
                       { name: 'الضريبة', value: Number(doc.taxTotal), color: 'var(--warn)' },
                     ]}
                     height={150}
-                    formatter={(v) => money(v)}
+                    format={(v) => money(v)}
                     centerValue={money(doc.total)}
                     centerLabel="الصافي"
-                  />
+                    legend
+/>
                 </div>
               ) : null}
             </section>

@@ -13,12 +13,8 @@ import {
   Wallet,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { EmptyState } from '@erp/ui';
-import { Kpi } from '@erp/ui';
-import { SkeletonCard } from '@erp/ui';
-import { Badge } from '@erp/ui';
+import { AreaSeries, Badge, Donut, EmptyState, Kpi, SkeletonCard } from '@erp/ui';
 
-import { AreaCardChart, DonutCardChart } from '../components/ui/chart';
 import { UserDashboard } from '../components/dashboard/user-dashboard';
 import { useSession } from '../lib/session';
 import { money, quantity, shortDate } from '../lib/lookups';
@@ -226,7 +222,13 @@ export default function DashboardPage() {
             {data.status === 'loading' ? (
               <SkeletonCard lines={5} />
             ) : stats ? (
-              <AreaCardChart data={stats.week} xKey="label" dataKey="total" formatter={SAR} name="المبيعات" height={264} />
+              <AreaSeries
+              data={stats.week}
+              xKey="label"
+              series={[{ key: 'total', label: "المبيعات" }]}
+              format={SAR}
+              height={264}
+            />
             ) : null}
           </section>
         </div>
@@ -242,13 +244,14 @@ export default function DashboardPage() {
             {data.status === 'loading' ? (
               <SkeletonCard lines={5} />
             ) : stats && stats.branchTotals.length > 0 ? (
-              <DonutCardChart
+              <Donut
                 data={stats.branchTotals.map((entry) => ({ name: entry.label, value: entry.total }))}
-                formatter={SAR}
+                format={SAR}
                 centerValue={money(stats.branchTotals.reduce((sum, entry) => sum + entry.total, 0))}
                 centerLabel="الإجمالي"
                 height={210}
-              />
+                legend
+/>
             ) : (
               <EmptyState
                 tone="neutral"

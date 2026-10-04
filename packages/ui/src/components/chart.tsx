@@ -1,6 +1,8 @@
 'use client';
 
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
@@ -14,7 +16,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import type { ReactNode } from 'react';
+import { Fragment, useId, type ReactNode } from 'react';
 
 import { cn } from '../lib/cn';
 
@@ -185,6 +187,73 @@ export function LineSeries({
   );
 }
 
+/**
+ * Area chart — a trend whose *volume* matters, not only its direction.
+ *
+ * It is LineSeries with a gradient wash under the stroke, which is the whole
+ * point: «المبيعات آخر 7 أيام» is read as an amount, and a bare line makes the
+ * reader compare slopes where they should be comparing areas.
+ *
+ * The gradient id is derived from `useId()` rather than from the series key,
+ * because two area charts sharing a `dataKey` on one page would otherwise
+ * resolve to the same `<linearGradient>` and paint each other's colour.
+ * React's generated id contains `:` in React 19, which is not safe inside an
+ * SVG `url(#…)` reference, so it is stripped down to alphanumerics.
+ */
+export function AreaSeries({
+  data,
+  series,
+  xKey,
+  height = 220,
+  className = '',
+  format,
+  grid = true,
+}: SeriesChartProps) {
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
+  return (
+    <div className={cn('w-full', className)} style={{ height }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={data} margin={{ top: 6, right: 8, left: 8, bottom: 0 }}>
+          {grid ? <CartesianGrid stroke="var(--line)" strokeDasharray="3 3" vertical={false} /> : null}
+          <XAxis dataKey={xKey} tickLine={false} axisLine={{ stroke: 'var(--line)' }} tick={TICK} />
+          <YAxis
+            tickLine={false}
+            axisLine={false}
+            tick={TICK}
+            width={44}
+            tickFormatter={(value: number) => (format ? format(value) : String(value))}
+          />
+          <RechartsTooltip content={<ChartTooltip formatter={format ? (value) => format(value) : undefined} />} />
+          {series.map((entry, index) => {
+            const color = entry.color ?? SERIES_COLORS[index % SERIES_COLORS.length];
+            const gradientId = `erp-area-${uid}-${index}`;
+            return (
+              <Fragment key={entry.key}>
+                <defs>
+                  <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={color} stopOpacity={0.28} />
+                    <stop offset="100%" stopColor={color} stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                <Area
+                  type="monotone"
+                  dataKey={entry.key}
+                  name={entry.label}
+                  stroke={color}
+                  strokeWidth={2}
+                  fill={`url(#${gradientId})`}
+                  dot={false}
+                  activeDot={{ r: 4, strokeWidth: 2, stroke: 'var(--surface)' }}
+                />
+              </Fragment>
+            );
+          })}
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
 export type DonutProps = {
   data: ChartDatum[];
   height?: number;
@@ -193,6 +262,13 @@ export type DonutProps = {
   centerLabel?: string;
   centerValue?: string;
   format?: (value: number) => string;
+  /**
+   * Render the share legend beneath the ring. Off by default because
+   * marketing's donuts sit next to their own legend; a donut whose slices
+   * cannot be named is unreadable, so any screen showing more than one
+   * category should turn this on rather than hand-building a legend.
+   */
+  legend?: boolean;
 };
 
 /** Donut — a share split: فاتورة vs POS, tenants by plan. */
@@ -203,43 +279,55 @@ export function Donut({
   centerLabel,
   centerValue,
   format,
+  legend = false,
 }: DonutProps) {
   const sum = data.reduce((accumulator, entry) => accumulator + entry.value, 0);
   return (
-    <div className={cn('relative w-full', className)} style={{ height }}>
-      <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
-          <RechartsTooltip content={<ChartTooltip formatter={format ? (value) => format(value) : undefined} />} />
-          <Pie
-            data={data}
-            dataKey="value"
-            nameKey="name"
-            innerRadius="62%"
-            outerRadius="88%"
-            paddingAngle={2}
-            stroke="var(--surface)"
-            strokeWidth={2}
-          >
-            {data.map((entry, index) => (
-              <Cell key={entry.name} fill={entry.color ?? SERIES_COLORS[index % SERIES_COLORS.length]} />
-            ))}
-          </Pie>
-        </PieChart>
-      </ResponsiveContainer>
-      {centerLabel || centerValue ? (
-        <div className="pointer-events-none absolute inset-0 grid place-items-center text-center">
-          <div>
-            {centerValue ? (
-              <p className="num m-0 text-[20px] leading-none font-bold text-ink">{centerValue}</p>
-            ) : null}
-            {centerLabel ? <p className="m-0 mt-1 text-[11.5px] text-muted">{centerLabel}</p> : null}
+    <div className={cn('grid w-full gap-2', className)}>
+      <div className="relative w-full" style={{ height }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <RechartsTooltip content={<ChartTooltip formatter={format ? (value) => format(value) : undefined} />} />
+            <Pie
+              data={data}
+              dataKey="value"
+              nameKey="name"
+              innerRadius="62%"
+              outerRadius="88%"
+              paddingAngle={2}
+              stroke="var(--surface)"
+              strokeWidth={2}
+            >
+              {data.map((entry, index) => (
+                <Cell key={entry.name} fill={entry.color ?? SERIES_COLORS[index % SERIES_COLORS.length]} />
+              ))}
+            </Pie>
+          </PieChart>
+        </ResponsiveContainer>
+        {centerLabel || centerValue ? (
+          <div className="pointer-events-none absolute inset-0 grid place-items-center text-center">
+            <div>
+              {centerValue ? (
+                <p className="num m-0 text-[20px] leading-none font-bold text-ink">{centerValue}</p>
+              ) : null}
+              {centerLabel ? <p className="m-0 mt-1 text-[11.5px] text-muted">{centerLabel}</p> : null}
+            </div>
           </div>
-        </div>
-      ) : null}
-      {sum === 0 ? (
-        <div className="pointer-events-none absolute inset-0 grid place-items-center">
-          <span className="rounded-md bg-surface-2 px-2 py-1 text-[11.5px] text-muted">لا بيانات</span>
-        </div>
+        ) : null}
+        {sum === 0 ? (
+          <div className="pointer-events-none absolute inset-0 grid place-items-center">
+            <span className="rounded-md bg-surface-2 px-2 py-1 text-[11.5px] text-muted">لا بيانات</span>
+          </div>
+        ) : null}
+      </div>
+      {legend ? (
+        <ChartLegend
+          items={data.map((entry) => ({
+            name: entry.name,
+            color: entry.color,
+            value: sum > 0 ? `${Math.round((entry.value / sum) * 100)}%` : '0%',
+          }))}
+        />
       ) : null}
     </div>
   );
