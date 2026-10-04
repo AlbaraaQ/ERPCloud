@@ -307,8 +307,17 @@ export async function seedDemoData(
       `seed  catalog: ${catalog.units} units, ${catalog.categories} categories, ${catalog.taxGroups} tax groups`,
     );
 
+    const items = await seedCatalogItems(client, tenantId);
+    log(`seed  catalog items: ${items.size} (POS has something to sell)`);
+
+    const openingStock = await seedOpeningStock(client, tenantId, org.warehouseId);
+    log(`seed  opening stock: ${openingStock} items × 50 in the main warehouse`);
+
     const costCenters = await seedCostCenters(client, tenantId, org.branchId);
     log(`seed  cost centers: ${costCenters}`);
+
+    await seedGeneralParties(client, tenantId, chart.byCode);
+    log('seed  general parties: عميل عام + مورد عام (no VAT number → simplified)');
 
     const postingProfile = await seedPostingProfile(client, tenantId, chart.byCode);
     log(`seed  posting profile (tenant-wide): ${postingProfile}`);
@@ -425,6 +434,18 @@ async function ensureSubscription(
        (id, tenant_id, plan_id, status, provider, activated_at, current_period_start, current_period_end)
      VALUES ($1, $2, $3, 'active', 'manual', now(), now(), now() + ($4 || ' months')::interval)`,
     [newId(), tenantId, planId, String(months)],
+  );
+  // RC-1/RC-6 — a subscription row alone switches nothing on. The modules read
+  // `tenant_settings` at request time, so the plan's module entitlements have to be
+  // mirrored there or the tenant 404s from every gated screen while holding a paid
+  // plan. `BillingService.applyEntitlements` does the same on the live paths.
+  await client.query(
+    `INSERT INTO tenant_settings (tenant_id, key, value, updated_at)
+     SELECT $1, e.key, e.value, now()
+       FROM billing_plan_entitlements e
+      WHERE e.plan_id = $2 AND e.kind = 'module'
+     ON CONFLICT (tenant_id, key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`,
+    [tenantId, planId],
   );
   return 'created';
 }
@@ -700,6 +721,229 @@ async function seedCatalogBasics(
   }
 
   return { units: DEMO_UNITS.length, categories: DEMO_CATEGORIES.length, taxGroups: DEMO_TAX_GROUPS.length };
+}
+
+/**
+ * أصناف كتالوجية — بلا هذه لا تعمل نقطة البيع ولا المبيعات ولا المشتريات.
+ *
+ * RC-3 امتدّ: البذرة كانت تُنشئ الوحدات والفئات ومجموعات الضريبة والمستودعات،
+ * لكن جدول `items` يبقى **فارغًا**. وأثره مباشر: شاشة POS تبني تذكرة من أصناف،
+ * فلا صنف ⇒ لا تذكرة ⇒ لا فاتورة. هذا ما كان يظهر كـ«خطأ عند حفظ الفواتير».
+ *
+ * عشرة أصناف: ثمانية بضاعة (مع سعر بيع وشراء وضريبة 15%) واثنان خدمة (بلا مخزون).
+ * الأسعار مُدخلة كنصٍّ عشري لا كأرقام — نفس قاعدة المال في العقد (§3).
+ */
+const DEMO_ITEMS: Array<{
+  sku: string;
+  nameAr: string;
+  nameEn: string;
+  categoryCode: string;
+  unitCode: string;
+  salePrice: string;
+  purchasePrice: string;
+  vat: boolean;
+  kind: 'stock' | 'service';
+}> = [
+  { sku: 'SKU-0001', nameAr: 'أرز بسموتي 5 كجم', nameEn: 'Basmati Rice 5 kg', categoryCode: 'GEN', unitCode: 'BOX', salePrice: '65.00', purchasePrice: '48.00', vat: true, kind: 'stock' },
+  { sku: 'SKU-0002', nameAr: 'زيت ذرة 1.8 لتر', nameEn: 'Corn Oil 1.8 L', categoryCode: 'GEN', unitCode: 'LTR', salePrice: '32.50', purchasePrice: '24.00', vat: true, kind: 'stock' },
+  { sku: 'SKU-0003', nameAr: 'سكر ناعم 10 كجم', nameEn: 'Fine Sugar 10 kg', categoryCode: 'GEN', unitCode: 'BOX', salePrice: '54.00', purchasePrice: '41.00', vat: true, kind: 'stock' },
+  { sku: 'SKU-0004', nameAr: 'شاي أخضر 400 غم', nameEn: 'Green Tea 400 g', categoryCode: 'GEN', unitCode: 'PCS', salePrice: '18.75', purchasePrice: '13.50', vat: true, kind: 'stock' },
+  { sku: 'SKU-0005', nameAr: 'معجون طماطم 850 غم', nameEn: 'Tomato Paste 850 g', categoryCode: 'GEN', unitCode: 'PCS', salePrice: '9.25', purchasePrice: '6.80', vat: true, kind: 'stock' },
+  { sku: 'SKU-0006', nameAr: 'مياه معدنية 40×330 مل', nameEn: 'Mineral Water 40×330 ml', categoryCode: 'GEN', unitCode: 'BOX', salePrice: '16.00', purchasePrice: '11.50', vat: true, kind: 'stock' },
+  { sku: 'SKU-0007', nameAr: 'منظّف أرضيات 4 لتر', nameEn: 'Floor Cleaner 4 L', categoryCode: 'GEN', unitCode: 'LTR', salePrice: '27.40', purchasePrice: '20.00', vat: true, kind: 'stock' },
+  { sku: 'SKU-0008', nameAr: 'مناديل ورقية 10 علب', nameEn: 'Paper Tissues 10 packs', categoryCode: 'GEN', unitCode: 'BOX', salePrice: '38.00', purchasePrice: '29.00', vat: true, kind: 'stock' },
+  { sku: 'SKU-0009', nameAr: 'خدمة توصيل', nameEn: 'Delivery service', categoryCode: 'SRV', unitCode: 'PCS', salePrice: '20.00', purchasePrice: '0.00', vat: true, kind: 'service' },
+  { sku: 'SKU-0010', nameAr: 'خدمة تركيب', nameEn: 'Installation service', categoryCode: 'SRV', unitCode: 'PCS', salePrice: '75.00', purchasePrice: '0.00', vat: true, kind: 'service' },
+];
+
+/**
+ * يبذر الأصناف ويُعيد خريطة `sku → id` حتى تُستخدم في الرصيد الافتتاحي.
+ * مُعرَّفٌ بالـ`sku` لا باسمه: الاسم يتغيّر بالترجمة، والرمز لا.
+ */
+async function seedCatalogItems(
+  client: Client,
+  tenantId: string,
+): Promise<Map<string, string>> {
+  const byCode = new Map<string, string>();
+
+  const categories = await client.query<{ id: string; code: string }>(
+    `SELECT id, code FROM item_categories WHERE tenant_id = $1 AND deleted_at IS NULL`,
+    [tenantId],
+  );
+  const categoryByCode = new Map(categories.rows.map((row) => [row.code, row.id]));
+
+  const units = await client.query<{ id: string; code: string }>(
+    `SELECT id, code FROM units_of_measure WHERE tenant_id = $1 AND deleted_at IS NULL`,
+    [tenantId],
+  );
+  const unitByCode = new Map(units.rows.map((row) => [row.code, row.id]));
+
+  const taxGroups = await client.query<{ id: string; name_ar: string }>(
+    `SELECT id, name_ar FROM tax_groups WHERE tenant_id = $1 AND deleted_at IS NULL`,
+    [tenantId],
+  );
+  const vatGroup = taxGroups.rows.find((row) => row.name_ar.includes('15'))?.id ?? null;
+
+  for (const item of DEMO_ITEMS) {
+    const categoryId = categoryByCode.get(item.categoryCode);
+    const unitId = unitByCode.get(item.unitCode);
+    if (!categoryId || !unitId) continue;
+
+    const existing = await client.query<{ id: string }>(
+      `SELECT id FROM items WHERE tenant_id = $1 AND sku = $2 AND deleted_at IS NULL`,
+      [tenantId, item.sku],
+    );
+    if ((existing.rowCount ?? 0) > 0) {
+      byCode.set(item.sku, existing.rows[0]!.id);
+      continue;
+    }
+
+    const id = newId();
+    await client.query(
+      `INSERT INTO items
+         (id, tenant_id, sku, name_ar, name_en, category_id, base_unit_id, kind,
+          sale_price, purchase_price, tax_group_id, show_in_pos, version)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, true, 1)`,
+      [
+        id,
+        tenantId,
+        item.sku,
+        item.nameAr,
+        item.nameEn,
+        categoryId,
+        unitId,
+        item.kind,
+        item.salePrice,
+        item.purchasePrice,
+        item.vat ? vatGroup : null,
+      ],
+    );
+    byCode.set(item.sku, id);
+  }
+
+  return byCode;
+}
+
+/**
+ * رصيد افتتاحي للأصناف — بلا هذا كل بيعٍ يُرفض بـ`STOCK_INSUFFICIENT`.
+ *
+ * الأثر مباشر: صنفٌ بلا رصيد يعني تذكرة POS لا تُحفظ. وقد تحقّقتُ من ذلك
+ * تشغيليًّا: `POST /pos/checkout` كان يصل إلى التحقّق من المخزون ثم يُرجع 422
+ * لأن `stock_balances` فارغة. فالرصيد الافتتاحي جزءٌ من «النظام يعمل»، لا زينة.
+ *
+ * الخدمات لا رصيد لها (`kind = 'service'`) — لا مخزون لشيء لا يُخزَّن.
+ */
+async function seedOpeningStock(
+  client: Client,
+  tenantId: string,
+  warehouseId: string,
+): Promise<number> {
+  const items = await client.query<{ id: string; kind: string; purchase_price: string | null }>(
+    `SELECT id, kind, purchase_price::text FROM items WHERE tenant_id = $1 AND deleted_at IS NULL`,
+    [tenantId],
+  );
+
+  let written = 0;
+  for (const item of items.rows) {
+    if (item.kind !== 'stock') continue;
+    const quantity = '50.0000';
+    const unitCost = item.purchase_price ?? '0';
+    const value = (Number(quantity) * Number(unitCost)).toFixed(4);
+
+    const existing = await client.query(
+      `SELECT 1 FROM stock_balances WHERE tenant_id = $1 AND item_id = $2 AND warehouse_id = $3`,
+      [tenantId, item.id, warehouseId],
+    );
+    if ((existing.rowCount ?? 0) > 0) continue;
+
+    await client.query(
+      `INSERT INTO stock_balances (tenant_id, item_id, warehouse_id, quantity, value, average_cost)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT (tenant_id, item_id, warehouse_id) DO NOTHING`,
+      [tenantId, item.id, warehouseId, quantity, value, unitCost],
+    );
+    written += 1;
+  }
+  return written;
+}
+
+/**
+ * RC-3 — طرفان نظاميَّان لكل مستأجر: «عميل عام» و«مورد عام».
+ *
+ * لماذا: دفتر الطرفين كان يُبذر فارغًا، فلا عميل افتراضي للمبيعات النقدية ولا
+ * مورد افتراضي للمشتريات. وأثره ممتدّ: قاعدة ZATCA في
+ * `einvoicing.service.ts:492` تختار المبسّطة أو القياسية بوجود رقم ضريبي للمشتري،
+ * فبلا طرفٍ عامٍّ بلا رقمٍ ضريبيّ لا توجد فاتورة مبوّبة أصلاً.
+ *
+ * **بلا رقم ضريبي عن قصد.** العامّ نقدي؛ والنقدي لا يحمل رقمًا ضريبيًّا، فتسقط
+ * فاتورته تلقائيًّا في «مبوّبة» (0200000) بلا قرارٍ من المستخدم. لو حُمِّل رقمًا
+ * لَخرجت كل مبيعاته «قياسية» ظلمًا.
+ *
+ * **محميَّان من الحذف** (`deleted_at` يبقى NULL ولا تمسّهما شاشة الحذف): هما ليسا
+ * بيانات عمل، هما مرجعٌ تشير إليه آلاف الفواتير النقدية.
+ */
+async function seedGeneralParties(
+  client: Client,
+  tenantId: string,
+  byCode: Map<string, string>,
+): Promise<{ customer: boolean; supplier: boolean }> {
+  const receivableAccountId = byCode.get(DEMO_POSTING_PROFILE.receivableAccountId ?? '') ?? null;
+  const payableAccountId = byCode.get(DEMO_POSTING_PROFILE.payableAccountId ?? '') ?? null;
+
+  const parties: Array<{
+    code: string;
+    kind: 'customer' | 'supplier';
+    nameAr: string;
+    nameEn: string;
+    accountId: string | null;
+    flag: 'customer' | 'supplier';
+  }> = [
+    {
+      code: 'CUST-GENERAL',
+      kind: 'customer',
+      nameAr: 'عميل عام',
+      nameEn: 'General Customer',
+      accountId: receivableAccountId,
+      flag: 'customer',
+    },
+    {
+      code: 'SUPP-GENERAL',
+      kind: 'supplier',
+      nameAr: 'مورد عام',
+      nameEn: 'General Supplier',
+      accountId: payableAccountId,
+      flag: 'supplier',
+    },
+  ];
+
+  for (const party of parties) {
+    const existing = await client.query<{ id: string }>(
+      `SELECT id FROM parties WHERE tenant_id = $1 AND code = $2 AND deleted_at IS NULL`,
+      [tenantId, party.code],
+    );
+    if ((existing.rowCount ?? 0) > 0) continue;
+
+    await client.query(
+      `INSERT INTO parties
+         (id, tenant_id, code, kind, name, legal_name, tax_no,
+          receivable_account_id, payable_account_id, credit_limit, version)
+       VALUES ($1, $2, $3, $4, $5, NULL, NULL, $6, $7, 0, 1)`,
+      [
+        newId(),
+        tenantId,
+        party.code,
+        party.kind,
+        party.nameAr,
+        party.accountId,
+        party.accountId,
+      ],
+    );
+  }
+
+  return {
+    customer: parties[0] !== undefined,
+    supplier: parties[1] !== undefined,
+  };
 }
 
 async function seedPostingProfile(
