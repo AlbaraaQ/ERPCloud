@@ -7,6 +7,8 @@ import { ApiError } from '../lib/api';
 import { useLang } from '../lib/i18n';
 import { useSession } from '../lib/session';
 
+import { RecoverScreen } from './recover-screen';
+
 const MARKETING_URL = (process.env.NEXT_PUBLIC_MARKETING_URL ?? '').replace(/\/+$/, '');
 
 /**
@@ -19,6 +21,10 @@ export function LoginScreen({ initialError }: { initialError?: string }) {
   const { signIn } = useSession();
   const { t } = useLang();
   const params = useSearchParams();
+  // P-R1 — recovery is a step of *this* screen, not a route of its own. The e-mailed link
+  // points back here with `?reset=<token>`, so a user who clicks it from their inbox
+  // lands on the same page they know, already in the right step.
+  const [recovering, setRecovering] = useState(params.get('reset') !== null);
   const [step, setStep] = useState<'credentials' | 'mfa'>('credentials');
   const [tenantCode, setTenantCode] = useState(params.get('tenant') ?? '');
   const [email, setEmail] = useState(params.get('email') ?? '');
@@ -27,6 +33,10 @@ export function LoginScreen({ initialError }: { initialError?: string }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | undefined>(initialError);
   const justJoined = params.get('joined') === '1';
+
+  // The whole sign-in card is replaced, not decorated: a recovery in progress has nothing
+  // to do with a password the user cannot remember.
+  if (recovering) return <RecoverScreen />;
 
   async function attempt(code?: string) {
     setBusy(true);
@@ -161,9 +171,16 @@ export function LoginScreen({ initialError }: { initialError?: string }) {
             {t('mfa.back')}
           </button>
         ) : (
-          <a className="btn block" href={`${MARKETING_URL}/onboarding`}>
-            {t('login.signup')}
-          </a>
+          <>
+            <a className="btn block" href={`${MARKETING_URL}/onboarding`}>
+              {t('login.signup')}
+            </a>
+            {/* Placed after the primary action on purpose: recovery is the exception
+                path, and it must never compete with the sign-in button for attention. */}
+            <button className="btn block" type="button" onClick={() => setRecovering(true)}>
+              {t('login.forgot')}
+            </button>
+          </>
         )}
       </form>
     </div>

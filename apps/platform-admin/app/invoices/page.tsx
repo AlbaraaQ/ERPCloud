@@ -3,19 +3,19 @@
 import Link from 'next/link';
 import { FilePlus2 } from 'lucide-react';
 import { useState } from 'react';
+import { Badge } from '@erp/ui';
+import { Button } from '@erp/ui';
+import { DataTable } from '@erp/ui';
+import { Select } from '@erp/ui';
 
 import { Empty, ErrorBox, Loading, Screen } from '../../components/screen';
-import { Badge } from '../../components/ui/badge';
-import { Button } from '../../components/ui/button';
-import { Select } from '../../components/ui/input';
-import { Table } from '../../components/ui/table';
 import { ApiError, apiData, apiPost } from '../../lib/api';
 import { useQuery } from '../../lib/use-query';
 
-const INVOICE_STATUS_TONE: Record<InvoiceStatus, 'blue' | 'purple' | 'green' | 'neutral'> = {
-  draft: 'blue',
-  issued: 'purple',
-  paid: 'green',
+const INVOICE_STATUS_TONE: Record<InvoiceStatus, 'info' | 'brand' | 'ok' | 'neutral'> = {
+  draft: 'info',
+  issued: 'brand',
+  paid: 'ok',
   void: 'neutral',
 };
 
@@ -168,24 +168,26 @@ export default function InvoicesPage() {
       actions={
         <>
           <div style={{ width: 150 }}>
-            <Select label="الحالة" value={status} onChange={(e) => setStatus(e.target.value)}>
-              <option value="">كل الحالات</option>
-              {(Object.keys(STATUS_LABEL) as InvoiceStatus[]).map((key) => (
-                <option key={key} value={key}>
-                  {STATUS_LABEL[key]}
-                </option>
-              ))}
-            </Select>
+            <Select
+            label="الحالة"
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            placeholder="كل الحالات"
+            options={[
+  ...(Object.keys(STATUS_LABEL) as InvoiceStatus[]).map((key) => ({ value: key, label: STATUS_LABEL[key] })),
+]}
+            />
           </div>
           <div style={{ width: 150 }}>
-            <Select label="النوع" value={kind} onChange={(e) => setKind(e.target.value)}>
-              <option value="">النوعان</option>
-              {(Object.keys(KIND_LABEL) as InvoiceKind[]).map((key) => (
-                <option key={key} value={key}>
-                  {KIND_LABEL[key]}
-                </option>
-              ))}
-            </Select>
+            <Select
+            label="النوع"
+            value={kind}
+            onChange={(e) => setKind(e.target.value)}
+            placeholder="النوعان"
+            options={[
+  ...(Object.keys(KIND_LABEL) as InvoiceKind[]).map((key) => ({ value: key, label: KIND_LABEL[key] })),
+]}
+            />
           </div>
           <Button variant="primary" icon={<FilePlus2 size={14} />} onClick={() => setCreating(!creating)}>
             {creating ? 'إغلاق' : 'فاتورة جديدة'}
@@ -245,7 +247,7 @@ export default function InvoicesPage() {
       {message && (
         <div
           className={`mb-4 flex items-center gap-2 rounded-[10px] border px-4 py-2.5 text-[13px] font-semibold ${
-            message.kind === 'ok' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-700'
+            message.kind === 'ok' ? 'border-ok-line bg-ok-soft text-ok-ink' : 'border-danger-line bg-danger-soft text-danger-ink'
           }`}
         >
           {message.text}
@@ -261,19 +263,19 @@ export default function InvoicesPage() {
           <>
             <div className="mb-4 grid grid-cols-2 gap-3 xl:grid-cols-4">
               {[
-                { label: 'عدد المستندات', value: String(rows.length), cls: 'text-slate-900' },
-                { label: 'المفوتر', value: totals.billed.toLocaleString('en-US', { minimumFractionDigits: 2 }), cls: 'text-slate-900' },
-                { label: 'المحصَّل', value: totals.paid.toLocaleString('en-US', { minimumFractionDigits: 2 }), cls: 'text-emerald-600' },
-                { label: 'المتبقّي', value: totals.remaining.toLocaleString('en-US', { minimumFractionDigits: 2 }), cls: 'text-amber-600' },
+                { label: 'عدد المستندات', value: String(rows.length), cls: 'text-ink' },
+                { label: 'المفوتر', value: totals.billed.toLocaleString('en-US', { minimumFractionDigits: 2 }), cls: 'text-ink' },
+                { label: 'المحصَّل', value: totals.paid.toLocaleString('en-US', { minimumFractionDigits: 2 }), cls: 'text-ok' },
+                { label: 'المتبقّي', value: totals.remaining.toLocaleString('en-US', { minimumFractionDigits: 2 }), cls: 'text-warn' },
               ].map((stat) => (
-                <div key={stat.label} className="rounded-[10px] border border-slate-200 bg-white px-4 py-3 shadow-1">
-                  <p className="m-0 text-[12px] font-bold text-slate-400">{stat.label}</p>
+                <div key={stat.label} className="rounded-[10px] border border-line bg-surface px-4 py-3 shadow-1">
+                  <p className="m-0 text-[12px] font-bold text-muted">{stat.label}</p>
                   <p className={`m-0 mt-1 font-mono text-[19px] font-bold ${stat.cls}`} dir="ltr">{stat.value}</p>
                 </div>
               ))}
             </div>
-            <div className="overflow-hidden rounded-[10px] border border-slate-200 bg-white shadow-1">
-              <Table
+            <div className="overflow-hidden rounded-[10px] border border-line bg-surface shadow-1">
+              <DataTable
                 rows={rows}
                 rowKey={(row) => row.id}
                 dense
@@ -284,12 +286,12 @@ export default function InvoicesPage() {
                     header: 'العميل',
                     cell: (row) => (
                       <span className="block">
-                        <span className="block text-[13px] font-bold text-slate-800">{row.tenantName}</span>
-                        <span className="block font-mono text-[11px] text-slate-400" dir="ltr">{row.tenantCode}</span>
+                        <span className="block text-[13px] font-bold text-ink">{row.tenantName}</span>
+                        <span className="block font-mono text-[11px] text-muted" dir="ltr">{row.tenantCode}</span>
                       </span>
                     ),
                   },
-                  { key: 'kind', header: 'النوع', cell: (row) => <span className="text-[12.5px] text-slate-500">{KIND_LABEL[row.kind]}</span> },
+                  { key: 'kind', header: 'النوع', cell: (row) => <span className="text-[12.5px] text-muted">{KIND_LABEL[row.kind]}</span> },
                   {
                     key: 'status',
                     header: 'الحالة',
@@ -297,16 +299,16 @@ export default function InvoicesPage() {
                       <span className="block">
                         <Badge tone={INVOICE_STATUS_TONE[row.status]} dot>{STATUS_LABEL[row.status]}</Badge>
                         {row.daysOverdue > 0 && row.status === 'issued' && (
-                          <span className="mt-0.5 block text-[11px] font-semibold text-red-500">متأخّرة {row.daysOverdue} يوماً</span>
+                          <span className="mt-0.5 block text-[11px] font-semibold text-danger">متأخّرة {row.daysOverdue} يوماً</span>
                         )}
                       </span>
                     ),
                   },
-                  { key: 'issue', header: 'الإصدار', ltr: true, cell: (row) => <span className="font-mono text-[11.5px] text-slate-500">{dateText(row.issueDate)}</span> },
-                  { key: 'due', header: 'الاستحقاق', ltr: true, cell: (row) => <span className="font-mono text-[11.5px] text-slate-500">{dateText(row.dueDate)}</span> },
+                  { key: 'issue', header: 'الإصدار', ltr: true, cell: (row) => <span className="font-mono text-[11.5px] text-muted">{dateText(row.issueDate)}</span> },
+                  { key: 'due', header: 'الاستحقاق', ltr: true, cell: (row) => <span className="font-mono text-[11.5px] text-muted">{dateText(row.dueDate)}</span> },
                   { key: 'total', header: 'الإجمالي', numeric: true, ltr: true, cell: (row) => <span className="font-mono text-[12px] font-bold">{money(row.total, row.currency)}</span> },
-                  { key: 'paid', header: 'المدفوع', numeric: true, ltr: true, cell: (row) => <span className="font-mono text-[12px] text-emerald-700">{money(row.paidAmount, row.currency)}</span> },
-                  { key: 'remaining', header: 'المتبقّي', numeric: true, ltr: true, cell: (row) => <span className={`font-mono text-[12px] ${Number(row.remaining) > 0 ? 'font-bold text-amber-700' : 'text-slate-400'}`}>{money(row.remaining, row.currency)}</span> },
+                  { key: 'paid', header: 'المدفوع', numeric: true, ltr: true, cell: (row) => <span className="font-mono text-[12px] text-ok-ink">{money(row.paidAmount, row.currency)}</span> },
+                  { key: 'remaining', header: 'المتبقّي', numeric: true, ltr: true, cell: (row) => <span className={`font-mono text-[12px] ${Number(row.remaining) > 0 ? 'font-bold text-warn-ink' : 'text-muted'}`}>{money(row.remaining, row.currency)}</span> },
                   {
                     key: 'actions',
                     header: '',

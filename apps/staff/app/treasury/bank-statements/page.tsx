@@ -3,10 +3,11 @@
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
+import { FilterBar } from '@erp/ui';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
-import { FilterBar } from '../../../components/ui';
 import { apiList, apiPost } from '../../../lib/api';
 import { useSession } from '../../../lib/session';
 import { useQuery } from '../../../lib/use-query';
@@ -111,8 +112,8 @@ export default function BankStatementsPage() {
       {manage ? (
         <form className="card grid gap-3 mb-4" onSubmit={importStatement}>
           <div>
-            <h2 className="m-0 text-[16px] font-bold text-slate-800">معالج استيراد كشف الحساب</h2>
-            <p className="m-0 mt-1 text-[12px] text-slate-500">الخطوة 1 رفع الملف · الخطوة 2 تأكيد الحساب · الخطوة 3 مراجعة الحركات.</p>
+            <h2 className="m-0 text-[16px] font-bold text-ink">معالج استيراد كشف الحساب</h2>
+            <p className="m-0 mt-1 text-[12px] text-muted">الخطوة 1 رفع الملف · الخطوة 2 تأكيد الحساب · الخطوة 3 مراجعة الحركات.</p>
           </div>
           <FilterBar>
             <label className="field"><span>الحساب البنكي</span><select required value={bankAccountId} onChange={(event) => setBankAccountId(event.target.value)}><option value="">اختر الحساب</option>{(accounts.data ?? []).map((account) => <option key={account.id} value={account.id}>{account.bankName} — {account.accountNo ?? account.iban ?? account.id.slice(0, 8)}</option>)}</select></label>
@@ -120,13 +121,13 @@ export default function BankStatementsPage() {
             <label className="field"><span>رصيد بداية الكشف، اختياري</span><input dir="ltr" inputMode="decimal" value={openingBalance} onChange={(event) => setOpeningBalance(event.target.value)} placeholder="0.00" /></label>
           </FilterBar>
           <label className="field"><span>المحتوى — للمعاينة أو اللصق اليدوي</span><textarea dir="ltr" rows={5} value={csv} onChange={(event) => setCsv(event.target.value)} placeholder="Date,Description,Amount,Balance" /></label>
-          <div className="flex items-center justify-between gap-3"><span className="text-[12px] text-slate-500">{csv ? `${csv.split(/\r?\n/).filter(Boolean).length - 1} سطر تقريباً` : 'لم يُرفع ملف بعد'}</span><button className="btn primary" disabled={busy} type="submit">{busy ? 'جارٍ الاستيراد…' : 'رفع ومراجعة الكشف'}</button></div>
+          <div className="flex items-center justify-between gap-3"><span className="text-[12px] text-muted">{csv ? `${csv.split(/\r?\n/).filter(Boolean).length - 1} سطر تقريباً` : 'لم يُرفع ملف بعد'}</span><button className="btn primary" disabled={busy} type="submit">{busy ? 'جارٍ الاستيراد…' : 'رفع ومراجعة الكشف'}</button></div>
         </form>
       ) : null}
 
       <QueryView query={statements} empty="لا توجد كشوف مستوردة" emptyDetail="ارفع CSV من المعالج أعلاه لتظهر حركات البنك هنا.">
         {(rows) => (
-          <DataTable
+          <Table
             rows={rows}
             rowKey={(row) => row.id}
             columns={[

@@ -3,10 +3,10 @@
 import Link from 'next/link';
 import { LayoutDashboard } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { SkeletonCard } from '@erp/ui';
 
 import { dashboardData, listDashboards, type WidgetFigure } from '../../lib/bi-dashboards';
 import { useSession } from '../../lib/session';
-import { SkeletonCard } from '../ui/skeleton';
 
 import { WidgetCard } from './widget-card';
 
@@ -42,7 +42,7 @@ export function UserDashboard() {
   return (
     <section className="grid gap-3">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="m-0 flex items-center gap-2 text-[15px] font-bold text-slate-800">
+        <h2 className="m-0 flex items-center gap-2 text-[15px] font-bold text-ink">
           <LayoutDashboard size={16} className="text-brand-600" />
           لوحتك
         </h2>

@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 
-import { DataTable, Notice } from '../../../components/data-view';
+import { Notice } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { ErrorBox, Loading, Screen } from '../../../components/screen';
 import { ApiError, apiData, apiPost } from '../../../lib/api';
 import { listParties, partyLabel, type Party } from '../../../lib/lookups';
@@ -223,7 +224,7 @@ export default function MarinaVesselsPage() {
 
       <div className="card">
         <h2>المراكب</h2>
-        <DataTable
+        <Table
           rows={vessels}
           rowKey={(row) => row.id}
           columns={[
@@ -237,7 +238,7 @@ export default function MarinaVesselsPage() {
 
       <div className="card">
         <h2>المجموعات</h2>
-        <DataTable
+        <Table
           rows={groups}
           rowKey={(row) => row.id}
           columns={[

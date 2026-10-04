@@ -4,6 +4,7 @@ import { connect as tlsConnect } from 'node:tls';
 
 import { Injectable, Logger } from '@nestjs/common';
 import { env } from '@erp/config';
+import type { EmailProvider } from '@erp/contracts';
 
 /**
  * Mail port — TARGET_ARCHITECTURE §8 ("email (SMTP/SES port)").
@@ -368,9 +369,101 @@ export function formatFrom(fromName?: string, from?: string): string | undefined
   return `${encodedWord(fromName)} <${from}>`;
 }
 
+/**
+ * RC-10 — مزوّد `resend`: الوجهة عبر HTTP بدل SMTP.
+ *
+ * Resend ليس بريد relay بل واجهة REST، فلا معنى لدفع الرسالة عبر عميل SMTP مكتوب
+ * على `node:net`. هنا نداءٌ واحد بـ`fetch` (المدمج في Node 18+، فالسطح الخارجيّ
+ * يبقى صفرًا كما في عميل SMTP) يحمل `from` و`to` و`subject` والنصّ والـHTML.
+ *
+ * التحقّق من المفتاح يقع **حيث تُستعمل القيمة** لا عند الإقلاع (`assertResendEnv`):
+ * تكاملٌ اختياريٌّ غير مُهيّأ يجب ألّا يمنع الخادم من العمل — نفس قاعدة تخزين
+ * الكائنات في `env.ts`.
+ *
+ * `RESEND_ENDPOINT` قابلٌ للتجاوز كي يشير الاختبار إلى خادم محلّي بدل الواجهة
+ * الحقيقية؛ الفارغ يعني نقطة النهاية الإنتاجيّة.
+ */
+export type ResendOptions = {
+  apiKey: string;
+  endpoint: string;
+  /** Fallback `from` when the message carries no identity of its own. */
+  from: string;
+  timeoutMs?: number;
+};
+
+export function resendOptionsFromEnv(): ResendOptions {
+  return {
+    apiKey: process.env.RESEND_API_KEY ?? '',
+    endpoint: (process.env.RESEND_ENDPOINT || 'https://api.resend.com').replace(/\/+$/, ''),
+    from: live('MAIL_FROM', env.MAIL_FROM),
+    timeoutMs: 10_000,
+  };
+}
+
+/** Throws where the value is used, so an unconfigured optional provider never blocks boot. */
+export function assertResendEnv(candidate: { RESEND_API_KEY?: string } = env): void {
+  if (!candidate.RESEND_API_KEY) {
+    throw new Error(
+      'The resend provider is selected but RESEND_API_KEY is not set. ' +
+        'Object storage and SMTP follow the same rule: configure it or pick another provider.',
+    );
+  }
+}
+
+export class ResendMailer implements MailerPort {
+  readonly transport = 'resend';
+
+  constructor(private readonly options: ResendOptions) {}
+
+  async send(message: MailMessage): Promise<void> {
+    // Fail here rather than at boot, and with a message that names the fix — an
+    // empty bearer token would otherwise come back as a bare 401 from Resend.
+    assertResendEnv({ RESEND_API_KEY: this.options.apiKey });
+    const from = formatFrom(message.fromName, message.from) ?? this.options.from;
+    const payload: Record<string, unknown> = {
+      from,
+      to: [message.to],
+      subject: message.subject,
+      text: message.text,
+    };
+    if (message.html) payload.html = message.html;
+    if (message.replyTo) payload.reply_to = message.replyTo;
+    // RFC 8058 one-click unsubscribe, passed straight through.
+    if (message.headers) payload.headers = message.headers;
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), this.options.timeoutMs ?? 10_000);
+    let response: globalThis.Response;
+    try {
+      response = await fetch(`${this.options.endpoint}/emails`, {
+        method: 'POST',
+        headers: {
+          authorization: `Bearer ${this.options.apiKey}`,
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+    } catch (error) {
+      // A network failure is a delivery failure, not a programming error: the caller
+      // records it against the message and retries, exactly as an SMTP refusal is.
+      throw new Error(`resend: request failed — ${(error as Error).message}`);
+    } finally {
+      clearTimeout(timer);
+    }
+
+    if (!response.ok) {
+      const detail = await response.text().catch(() => '');
+      throw new Error(`resend: ${response.status} ${response.statusText}${detail ? ` — ${detail}` : ''}`);
+    }
+  }
+}
+
 /** Chooses the wired implementation from `MAIL_TRANSPORT` (read live — see `live`). */
 export function createMailer(): MailerPort {
-  if (live('MAIL_TRANSPORT', env.MAIL_TRANSPORT) === 'smtp') return new SmtpMailer(smtpOptionsFromEnv());
+  const transport = live('MAIL_TRANSPORT', env.MAIL_TRANSPORT);
+  if (transport === 'smtp') return new SmtpMailer(smtpOptionsFromEnv());
+  if (transport === 'resend') return new ResendMailer(resendOptionsFromEnv());
   return new ConsoleMailer();
 }
 
@@ -379,7 +472,8 @@ export function createMailer(): MailerPort {
  * `console` ↔ `smtp` من الشاشة بلا إعادة نشر (نصّ الخطة §7.2). واعتمادات SMTP تبقى في
  * البيئة ولا تُخزَّن في جدول. و`MAIL_TRANSPORT` يظلّ الافتراضيّ حين لا صفَّ إعدادات.
  */
-export function createMailerFor(provider: 'console' | 'smtp'): MailerPort {
+export function createMailerFor(provider: EmailProvider): MailerPort {
   if (provider === 'smtp') return new SmtpMailer(smtpOptionsFromEnv());
+  if (provider === 'resend') return new ResendMailer(resendOptionsFromEnv());
   return new ConsoleMailer();
 }

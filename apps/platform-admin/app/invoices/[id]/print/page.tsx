@@ -86,7 +86,7 @@ export default function InvoicePrintPage({ params }: { params: Promise<{ id: str
             title="فاتورة المنصة"
             srcDoc={html}
             sandbox="allow-same-origin allow-modals"
-            style={{ width: '100%', height: '80vh', border: 0, background: '#fff' }}
+            style={{ width: '100%', height: '80vh', border: 0, background: 'var(--surface)' }}
           />
         </div>
       )}

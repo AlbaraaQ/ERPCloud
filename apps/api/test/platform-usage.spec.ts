@@ -9,6 +9,8 @@ import {
 } from '@erp/contracts';
 import { newId, withPlatformAdminTx, withTenantTx } from '@erp/database';
 
+import { OBJECT_STORAGE } from '../src/modules/platform-services/index.js';
+
 import {
   ALL_ORGANIZATION_PERMISSIONS,
   ALL_TENANT_PERMISSIONS,
@@ -16,6 +18,7 @@ import {
   type Actor,
   type ActorOptions,
 } from './fixtures.js';
+import { FakeObjectStorage } from './fakes.js';
 import { api } from './http.js';
 import { createTestApp, type TestApp } from './test-app.js';
 
@@ -93,7 +96,16 @@ describe('platform usage & quotas (P-C5)', () => {
     );
 
   beforeAll(async () => {
-    ctx = await createTestApp('platform-usage');
+    // `POST /files/presign` has to hand out a URL that actually works. Without MinIO in
+    // the sandbox the real `S3ObjectStorage` is unconfigured, and it answers 503 by
+    // design — "a file endpoint must fail loudly rather than hand out an unusable URL"
+    // (env.ts, PHASE_04 §5.3). That made the second half of the storage-limit test
+    // fail for a reason that has nothing to do with quotas. The fake is the one
+    // `files.spec.ts` already uses; the quota check runs before the presign, so the
+    // refusal half of the assertion stays fully covered.
+    ctx = await createTestApp('platform-usage', (builder) =>
+      builder.overrideProvider(OBJECT_STORAGE).useValue(new FakeObjectStorage()),
+    );
     const { UsageService } = await import('../src/modules/usage/usage.service.js');
     usage = ctx.app.get(UsageService);
 

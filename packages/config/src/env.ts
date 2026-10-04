@@ -62,10 +62,29 @@ const envSchema = z.object({
   AUTH_LOGIN_MAX_FAILURES: z.coerce.number().int().positive().default(5),
   AUTH_LOCKOUT_MINUTES: z.coerce.number().int().positive().default(15),
 
+  /**
+   * Password recovery (P-R1). The TTL is a *bearer credential* lifetime, so it is
+   * deliberately short: the longer a reset link lives, the longer a stolen mailbox is
+   * an account takeover. Thirty minutes is enough for a person to reach their phone.
+   */
+  AUTH_PASSWORD_RESET_TTL_MINUTES: z.coerce.number().int().positive().default(30),
+  /**
+   * Where the recovery link points — the staff app, not the API. Empty by default
+   * because there is no safe default: guessing an origin and mailing a link built from
+   * it is worse than mailing nothing, so an operator must set it deliberately.
+   */
+  AUTH_PASSWORD_RESET_URL_BASE: z.string().trim().default(''),
+
   /** SECURITY_ARCHITECTURE §8 — token buckets. */
   RATE_LIMIT_DEFAULT_PER_MINUTE: z.coerce.number().int().positive().default(600),
   RATE_LIMIT_LOGIN_PER_MINUTE: z.coerce.number().int().positive().default(10),
   RATE_LIMIT_REGISTER_PER_MINUTE: z.coerce.number().int().positive().default(5),
+  /**
+   * P-R1 — استعادة كلمة السر. أدنىّ من حدّ الدخول نفسه (١٠/دقيقة) لأن كل نداءٍ مُقبول
+   * يجعل النظام يُرسل بريداً باسم المنصّة إلى عنوانٍ لا نتحكّم به: الرقم المنخفض هو ما
+   * يمنعEndpoint الاستعادة من أن يكون وسيلة إحراق حصّة بريد منشأةٍ كاملة.
+   */
+  RATE_LIMIT_PASSWORD_RESET_PER_MINUTE: z.coerce.number().int().positive().default(3),
   /**
    * P-M6 — استمارات الموقع العامّة (تواصل · طلب عرض · نشرة). دلوٌ خاصٌّ بها لا دلو الدخول:
    * حدُّ الدخول (١٠/دقيقة) يخصّ محاولات كلمة المرور، وحدُّ الاستمارة يخصّ **عدد الرسائل التي
@@ -162,8 +181,11 @@ const envSchema = z.object({
   /** PHASE_04 idempotency — DATABASE_DESIGN §4 ("expires 24h"). */
   IDEMPOTENCY_TTL_HOURS: z.coerce.number().int().positive().default(24),
 
-  /** PHASE_04 mail — `console` writes to the log, `smtp` targets MailHog/SES. */
-  MAIL_TRANSPORT: z.enum(['console', 'smtp']).default('console'),
+  /**
+   * PHASE_04 mail — `console` writes to the log, `smtp` targets MailHog/SES, and
+   * `resend` delivers over the Resend HTTP API (Wave 3, RC-10).
+   */
+  MAIL_TRANSPORT: z.enum(['console', 'smtp', 'resend']).default('console'),
   MAIL_FROM: z.string().default('no-reply@erp.local'),
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.coerce.number().int().positive().default(1025),
@@ -177,6 +199,18 @@ const envSchema = z.object({
     .default('false'),
   /** EHLO identity (some relays reject 'localhost'). */
   SMTP_CLIENT_HOSTNAME: z.string().optional(),
+  /**
+   * RC-10 — Resend API key. Only required when `MAIL_TRANSPORT=resend`; the check
+   * happens where the value is used (see `assertResendEnv` in the mailer), not at
+   * boot, exactly as object storage does — an unconfigured optional integration must
+   * not stop the API from starting.
+   */
+  RESEND_API_KEY: z.string().optional(),
+  /**
+   * Overridable so a test can point the provider at a local stub instead of the real
+   * API. Empty means the production endpoint.
+   */
+  RESEND_ENDPOINT: z.string().trim().default('https://api.resend.com'),
   /** Public URL of the customer portal, used inside outbound e-mails. */
   CUSTOMER_PUBLIC_URL: z.string().default(''),
   /**

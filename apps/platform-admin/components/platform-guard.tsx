@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ThemeToggle } from '@erp/ui/theme';
 
 import { apiData } from '../lib/api';
 import { groupForPath, visibleConsoleGroups, type ConsoleItem } from '../lib/navigation';
@@ -140,6 +141,10 @@ export function PlatformGuard({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="row" style={{ alignItems: 'center' }}>
+            {/* Design v3 §2.1 — the console is dark-first; this is the same
+                switch and the same `erp.theme` key as the two other surfaces,
+                so an operator who prefers light gets a complete light console. */}
+            <ThemeToggle compact />
             <button className="btn sm" type="button" onClick={() => setPaletteOpen(true)}>
               🔍 بحث شامل <span className="muted small">Ctrl+K</span>
             </button>

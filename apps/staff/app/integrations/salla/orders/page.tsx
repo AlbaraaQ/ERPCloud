@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
-import { DataTable, QueryView } from '../../../../components/data-view';
+import { QueryView } from '../../../../components/data-view';
+import { Table } from '../../../../components/table';
 import { Screen } from '../../../../components/screen';
 import { ApiError, apiData, apiDelete, apiFetch, apiPut } from '../../../../lib/api';
 import { dateTime, money, statusLabel } from '../../../../lib/lookups';
@@ -138,7 +139,7 @@ export default function SallaOrdersPage() {
       >
         {(rows) => (
           <div className="card">
-            <DataTable
+            <Table
               columns={[
                 { key: 'number', header: 'رقم الفاتورة', align: 'ltr', cell: (row: Order) => row.number ?? 'مسودة' },
                 { key: 'remote', header: 'رقم الطلب', align: 'ltr', cell: (row: Order) => row.remoteId ?? '—' },

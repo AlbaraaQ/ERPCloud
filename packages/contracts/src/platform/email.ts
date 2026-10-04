@@ -68,8 +68,12 @@ export type EmailMessageStatus = (typeof emailMessageStatuses)[number];
 export const emailSuppressionReasons = ['bounce', 'complaint', 'unsubscribe', 'manual'] as const;
 export type EmailSuppressionReason = (typeof emailSuppressionReasons)[number];
 
-/** `console` للتطوير، و`smtp` هو العميل المكتوب على `node:net` القائم منذ PHASE_04. */
-export const emailProviders = ['console', 'smtp'] as const;
+/**
+ * `console` للتطوير، و`smtp` هو العميل المكتوب على `node:net` القائم منذ PHASE_04،
+ * و`resend` هو الوجهة عبر HTTP (RC-10). هذه القائمة هي ما تقبل شاشة الإعدادات
+ * إرساله، فلا يجوز إضافة مزوّد إلى المهايئ وحده دون إضافته هنا.
+ */
+export const emailProviders = ['console', 'smtp', 'resend'] as const;
 export type EmailProvider = (typeof emailProviders)[number];
 
 /** مخططات القيم المفردة — تُستعمل في الاستعلامات (`?locale=ar`) لا في الجسم وحده. */
@@ -815,6 +819,12 @@ export const emailSettingsSchema = z.object({
   /** مُضيف SMTP من البيئة (ليس سرّاً) — تُعرض للتشخيص، ولا تُخزَّن اعتمادات في جدول. */
   smtpHost: z.string().nullable(),
   smtpConfigured: z.boolean(),
+  /**
+   * RC-10 — هل `RESEND_API_KEY` مضبوط في البيئة؟ علمٌ منطقيٌّ صرف: المفتاح نفسه سرٌّ
+   * ولا يُرسل إلى الشاشة أبدًا، كما لا تُرسل `SMTP_PASS`. الشاشة تحتاجه كي تقول الحقيقة
+   * عن المزوّد المختار بدل أن تَعِد بإرسالٍ سيفشل.
+   */
+  resendConfigured: z.boolean(),
   updatedAt: z.string().nullable(),
   updatedBy: z.string().nullable(),
 });

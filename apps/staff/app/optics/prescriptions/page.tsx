@@ -204,7 +204,7 @@ function OpticsPrescriptions() {
       {error && <p className="alert danger">{error}</p>}
       {notice && <p className="alert ok">{notice}</p>}
       {lineIdFilter && (
-        <div className="card tight" style={{ background: '#fffbe6', borderColor: '#f0d000' }}>
+        <div className="card tight" style={{ background: 'var(--warn-soft)', borderColor: 'var(--warn-line)' }}>
           🔍 تم فتح بيانات النظارات للسطر <code dir="ltr">{lineIdFilter}</code> من فاتورة المبيعات (Alt+G) — الوصفات المرتبطة بهذا السطر مميزة أدناه.
         </div>
       )}
@@ -266,10 +266,10 @@ function OpticsPrescriptions() {
                   <tr>
                     <th rowSpan={2}>👤 العميل</th>
                     <th rowSpan={2}>📅 التاريخ</th>
-                    <th colSpan={5} style={{ background: '#E8EAF6' }}>
+                    <th colSpan={5} style={{ background: 'var(--brand-soft)' }}>
                       🔴 العين اليمنى (RE)
                     </th>
-                    <th colSpan={5} style={{ background: '#E8F5E9' }}>
+                    <th colSpan={5} style={{ background: 'var(--ok-soft)' }}>
                       🟢 العين اليسرى (LE)
                     </th>
                     <th rowSpan={2}>📝 الملاحظات</th>
@@ -277,12 +277,12 @@ function OpticsPrescriptions() {
                   </tr>
                   <tr>
                     {rightLabels.map((label) => (
-                      <th key={`r-${label.key}`} style={{ background: '#E8EAF6' }}>
+                      <th key={`r-${label.key}`} style={{ background: 'var(--brand-soft)' }}>
                         {label.label}
                       </th>
                     ))}
                     {leftLabels.map((label) => (
-                      <th key={`l-${label.key}`} style={{ background: '#E8F5E9' }}>
+                      <th key={`l-${label.key}`} style={{ background: 'var(--ok-soft)' }}>
                         {label.label}
                       </th>
                     ))}
@@ -367,8 +367,8 @@ function OpticsPrescriptions() {
 
               {(
                 [
-                  { side: 'right' as const, title: '🔴 العين اليمنى (RE)', background: '#E8EAF6', captions: rightLabels },
-                  { side: 'left' as const, title: '🟢 العين اليسرى (LE)', background: '#E8F5E9', captions: leftLabels },
+                  { side: 'right' as const, title: '🔴 العين اليمنى (RE)', background: 'var(--brand-soft)', captions: rightLabels },
+                  { side: 'left' as const, title: '🟢 العين اليسرى (LE)', background: 'var(--ok-soft)', captions: leftLabels },
                 ]
               ).map((column) => (
                 <fieldset key={column.side} className="card tight" style={{ margin: 0, background: column.background }}>

@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { FilterBar, Tabs } from '@erp/ui';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import type { SerialTrace } from '../../../lib/lookups';
-import { FilterBar, StatTile, StatTiles, Tabs } from '../../../components/ui';
+import { StatTile, StatTiles } from '../../../components/ui';
 import { ApiError, apiPost } from '../../../lib/api';
 import {
   arabicName,
@@ -149,57 +151,7 @@ export default function SerialsPage() {
         <StatTile label="مُرتجع" value={count('returned')} hint="أُعيد إلى المخزون" />
       </StatTiles>
 
-      <FilterBar
-        actions={
-          manage ? (
-            <>
-              <button
-                className="btn sm"
-                type="button"
-                disabled={busy || checked.length === 0}
-                onClick={() => void act(() => reserveSerials(checked), 'حُجزت الأرقام المحددة.')}
-              >
-                حجز
-              </button>
-              <button
-                className="btn sm"
-                type="button"
-                disabled={busy || checked.length === 0}
-                onClick={() => void act(() => releaseSerials(checked), 'أُفرج عن الأرقام المحجوزة.')}
-              >
-                إفراج
-              </button>
-              <button
-                className="btn sm primary"
-                type="button"
-                disabled={busy || checked.length === 0}
-                onClick={() => void act(() => consumeSerials(checked), 'خُرّجت الأرقام من المخزون.')}
-              >
-                استهلاك (بيع)
-              </button>
-              <button
-                className="btn sm"
-                type="button"
-                disabled={busy || checked.length === 0}
-                onClick={() => void act(() => returnSerials(checked), 'أُعيدت الأرقام إلى المخزون.')}
-              >
-                إرجاع
-              </button>
-              <button
-                className="btn sm danger"
-                type="button"
-                disabled={busy || checked.length === 0}
-                onClick={() => {
-                  if (!window.confirm(`حذف ${checked.length} رقم تسلسلي؟ الأرقام غير المتاحة لا تُحذف.`)) return;
-                  void act(() => Promise.all(checked.map((id) => deleteSerial(id))), 'حُذفت الأرقام المحددة.');
-                }}
-              >
-                حذف
-              </button>
-            </>
-          ) : undefined
-        }
-      >
+      <FilterBar>
         <label className="field">
           <span>المادة</span>
           <select className="input" value={itemId} onChange={(event) => setItemId(event.target.value)}>
@@ -238,8 +190,8 @@ export default function SerialsPage() {
 
       <Tabs<TabId>
         items={[
-          { id: 'available', label: `📋 الأرقام المتاحة (${count('available') + count('reserved')})` },
-          { id: 'sold', label: `📤 الأرقام المباعة (${count('sold') + count('returned')})` },
+          { key: 'available', label: `📋 الأرقام المتاحة (${count('available') + count('reserved')})` },
+          { key: 'sold', label: `📤 الأرقام المباعة (${count('sold') + count('returned')})` },
         ]}
         value={tab}
         onChange={(next) => {
@@ -247,6 +199,54 @@ export default function SerialsPage() {
           setSelected([]);
         }}
       />
+
+      {manage ? (
+        <>
+          <button
+            className="btn sm"
+            type="button"
+            disabled={busy || checked.length === 0}
+            onClick={() => void act(() => reserveSerials(checked), 'حُجزت الأرقام المحددة.')}
+          >
+            حجز
+          </button>
+          <button
+            className="btn sm"
+            type="button"
+            disabled={busy || checked.length === 0}
+            onClick={() => void act(() => releaseSerials(checked), 'أُفرج عن الأرقام المحجوزة.')}
+          >
+            إفراج
+          </button>
+          <button
+            className="btn sm primary"
+            type="button"
+            disabled={busy || checked.length === 0}
+            onClick={() => void act(() => consumeSerials(checked), 'خُرّجت الأرقام من المخزون.')}
+          >
+            استهلاك (بيع)
+          </button>
+          <button
+            className="btn sm"
+            type="button"
+            disabled={busy || checked.length === 0}
+            onClick={() => void act(() => returnSerials(checked), 'أُعيدت الأرقام إلى المخزون.')}
+          >
+            إرجاع
+          </button>
+          <button
+            className="btn sm danger"
+            type="button"
+            disabled={busy || checked.length === 0}
+            onClick={() => {
+              if (!window.confirm(`حذف ${checked.length} رقم تسلسلي؟ الأرقام غير المتاحة لا تُحذف.`)) return;
+              void act(() => Promise.all(checked.map((id) => deleteSerial(id))), 'حُذفت الأرقام المحددة.');
+            }}
+          >
+            حذف
+          </button>
+        </>
+      ) : undefined}
 
       <QueryView
         query={serials}
@@ -258,7 +258,7 @@ export default function SerialsPage() {
         }
       >
         {() => (
-          <DataTable
+          <Table
             rows={rows}
             rowKey={(row) => row.id}
             footer={[

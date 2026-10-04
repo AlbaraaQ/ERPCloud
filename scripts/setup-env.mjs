@@ -84,10 +84,32 @@ const replacements = {
   ...seedPasswords,
 };
 
-for (const [key, value] of Object.entries(replacements)) {
-  const pattern = new RegExp(`^${key}=.*$`, 'm');
-  content = pattern.test(content) ? content.replace(pattern, `${key}=${value}`) : `${content}\n${key}=${value}\n`;
+/**
+ * Writes each `KEY=value` pair into the template, replacing the placeholder line
+ * when one exists and appending when it does not.
+ *
+ * The replacer is a **function**, never a string: generated secrets legitimately
+ * contain `$` (the symbol alphabet `!@#$%^&*?-_+=` includes it), and
+ * `String.prototype.replace` expands `$&`, `$'`, `` $` `` and `$$` in a string
+ * replacement into parts of the matched text. That once silently turned a
+ * password such as `KwK$&WGXvFyN#w=ZwH6*` into the line
+ * `DEMO_CASHIER_PASSWORD=KwKDEMO_CASHIER_PASSWORD=WGXvFyN#w=ZwH6*`, which the
+ * tenant password policy then rejects for containing "password". A function
+ * replacer disables every `$` pattern.
+ *
+ * Exported so the invariant is unit-tested rather than trusted.
+ */
+export function writeEnvLines(template, pairs) {
+  let out = template;
+  for (const [key, value] of Object.entries(pairs)) {
+    const line = `${key}=${value}`;
+    const pattern = new RegExp(`^${key}=.*$`, 'm');
+    out = pattern.test(out) ? out.replace(pattern, () => line) : `${out}\n${line}\n`;
+  }
+  return out;
 }
+
+content = writeEnvLines(content, replacements);
 
 writeFileSync(target, content, { mode: 0o600 });
 
@@ -116,7 +138,7 @@ console.log(`  cashier           ${readEnv('DEMO_CASHIER_EMAIL')}  /  ${seedPass
 console.log('');
 console.log('Next steps:');
 console.log('  1. pnpm db:up            # postgres + redis + minio via docker compose');
-console.log('  2. pnpm db:roles         # create the erp_api / erp_migrator roles');
-console.log('  3. pnpm db:migrate       # apply the SQL migrations');
+console.log('  2. pnpm db:migrate       # apply the SQL migrations — 0000 CREATES erp_api / erp_migrator');
+console.log('  3. pnpm db:roles         # grant LOGIN + password to those two roles (needs 0000 first)');
 console.log('  4. pnpm db:seed          # reads the passwords above from .env');
 console.log('  5. pnpm dev              # api :3000, admin :3001, customer :3002');

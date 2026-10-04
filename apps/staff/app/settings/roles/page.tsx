@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from 'react';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Forbidden, Screen } from '../../../components/screen';
 import { apiList, apiPost, apiPut } from '../../../lib/api';
 import { useSession } from '../../../lib/session';
@@ -158,7 +159,7 @@ export default function RolesPage() {
           query={roles}
           empty="لا توجد أدوار"
           children={(list) => (
-            <DataTable
+            <Table
               rows={list}
               rowKey={(row) => row.id}
               columns={[

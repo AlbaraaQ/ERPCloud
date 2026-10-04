@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
-import { DataTable, QueryView } from '../../../../components/data-view';
+import { QueryView } from '../../../../components/data-view';
+import { Table } from '../../../../components/table';
 import { Screen } from '../../../../components/screen';
 import { apiData, apiList } from '../../../../lib/api';
 import { listParties, money, partyLabel, shortDate, type Party } from '../../../../lib/lookups';
@@ -107,7 +108,7 @@ export default function QuotationDetailPage() {
                 </p>
               </section>
               <div className="card">
-                <DataTable
+                <Table
                   columns={[
                     { key: 'line', header: '#', cell: (line: Line) => line.lineNo },
                     { key: 'description', header: 'البيان', cell: (line: Line) => line.description || '—' },
@@ -128,7 +129,7 @@ export default function QuotationDetailPage() {
       {canSign ? <QueryView query={requests} empty="لم يُرسل هذا العرض للتوقيع بعد">
         {(rows) => (
           <div className="card">
-            <DataTable
+            <Table
               columns={[
                 { key: 'email', header: 'الموقّع', cell: (entry: SignatureRequest) => entry.signerName || entry.signerEmail },
                 { key: 'mail', header: 'البريد', cell: (entry: SignatureRequest) => entry.signerEmail },

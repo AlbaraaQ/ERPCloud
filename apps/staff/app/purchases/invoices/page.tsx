@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
-import { DataTable, QueryView } from '../../../components/data-view';
+import { QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { apiList } from '../../../lib/api';
 import { listParties, money, partyLabel, shortDate, statusLabel, type Party } from '../../../lib/lookups';
@@ -66,7 +67,7 @@ export default function PurchaseInvoicesPage() {
 
       <QueryView query={invoices} isEmpty={() => rows.length === 0} empty="لا توجد فواتير مشتريات" emptyDetail="سجّل أول فاتورة مورد.">
         {() => (
-          <DataTable
+          <Table
             rows={rows}
             rowKey={(row) => row.id}
             columns={[

@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { downloadCsv } from '../../../lib/accounts';
 import { apiData } from '../../../lib/api';
@@ -90,7 +91,7 @@ export default function PartyStatementPage() {
 
           <QueryView query={statement} isEmpty={() => withBalance.length === 0} empty="لا توجد حركة" emptyDetail="لم تُرحَّل أي قيود على هذا الطرف بعد.">
             {() => (
-              <DataTable
+              <Table
                 rows={withBalance}
                 rowKey={(row, index) => `${row.entryId}:${index}`}
                 columns={[

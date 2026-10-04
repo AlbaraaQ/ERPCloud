@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
-import { DataTable, QueryView } from '../../../components/data-view';
+import { QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { FormFields, type FormValues } from '../../../components/directory';
 import { Screen } from '../../../components/screen';
 import { apiDelete, apiList, apiPatch, apiPost, ApiError } from '../../../lib/api';
@@ -167,7 +168,7 @@ export default function PortalAccessPage() {
 
       <QueryView query={accounts} empty="لا يوجد عملاء لديهم وصول للبوابة" emptyDetail="امنح أول وصول من النموذج أعلاه.">
         {(rows) => (
-          <DataTable
+          <Table
             rowKey={(row: PortalAccount) => row.id}
             rows={rows}
             columns={[

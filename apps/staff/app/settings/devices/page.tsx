@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { FormFields, type FormValues } from '../../../components/directory';
 import { Screen } from '../../../components/screen';
 import { ApiError, apiData, apiPatch, apiPost } from '../../../lib/api';
@@ -88,7 +89,7 @@ export default function SyncDevicesPage() {
       <QueryView query={devices} empty="لا توجد أجهزة" emptyDetail="أنشئ جهازاً لتتمكن تطبيقات الكاشير من المزامنة.">
         {(rows) => (
           <div className="card">
-            <DataTable
+            <Table
               columns={[
                 { key: 'name', header: 'الجهاز', cell: (row: Device) => row.name },
                 { key: 'branch', header: 'الفرع', cell: (row: Device) => arabicName(branchRows.find((branch) => branch.id === row.branchId) ?? { code: '—' }) },

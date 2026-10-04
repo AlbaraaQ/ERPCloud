@@ -3,7 +3,8 @@
 import Decimal from 'decimal.js';
 import { useMemo, useState } from 'react';
 
-import { DataTable, Notice } from '../../../components/data-view';
+import { Notice } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { StatTile, StatTiles } from '../../../components/ui';
 import { ApiError, apiData, apiList, apiPost } from '../../../lib/api';
@@ -368,7 +369,7 @@ export default function DayClosePage() {
         ) : rows.length === 0 ? (
           <p className="muted">لا توجد إغلاقات في الفترة المحددة.</p>
         ) : (
-          <DataTable
+          <Table
             rows={rows}
             rowKey={(row) => row.id}
             onRowClick={(row) => (row.status === 'open' ? setOpened(row) : void showDetail(row))}
@@ -451,7 +452,7 @@ export default function DayClosePage() {
                 header: '📉 الفرق',
                 align: 'num',
                 cell: (row) => (
-                  <strong style={new Decimal(row.diff || '0').abs().gt(0) ? { color: '#b3261e' } : undefined}>
+                  <strong style={new Decimal(row.diff || '0').abs().gt(0) ? { color: 'var(--danger)' } : undefined}>
                     {money(row.diff)}
                   </strong>
                 ),

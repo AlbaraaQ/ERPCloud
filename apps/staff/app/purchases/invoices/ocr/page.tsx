@@ -67,7 +67,7 @@ type ReviewValues = {
 };
 
 const band = (score: number | undefined) =>
-  score !== undefined && score > 0.9 ? { label: 'ثقة عالية', color: '#047857', background: '#ecfdf5' } : score !== undefined && score >= 0.7 ? { label: 'تحتاج مراجعة', color: '#b45309', background: '#fffbeb' } : { label: 'ثقة منخفضة', color: '#b91c1c', background: '#fef2f2' };
+  score !== undefined && score > 0.9 ? { label: 'ثقة عالية', color: 'var(--ok)', background: 'var(--ok-soft)' } : score !== undefined && score >= 0.7 ? { label: 'تحتاج مراجعة', color: 'var(--warn)', background: 'var(--warn-soft)' } : { label: 'ثقة منخفضة', color: 'var(--danger)', background: 'var(--danger-soft)' };
 
 function Confidence({ score }: { score?: number }) {
   const tone = band(score);

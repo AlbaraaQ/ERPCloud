@@ -67,7 +67,18 @@ export function assertReplyParent(parent: { parentId: string | null; isResolved:
   if (parent.isResolved) throw new CommentRuleError('RESOLVED');
 }
 
-export function resolveOpenComment<T extends { isResolved: boolean }>(comment: T): T & { isResolved: true } {
+/**
+ * Marks an open comment resolved, refusing one that already is.
+ *
+ * The return type omits `isResolved` from `T` before re-adding it as `true`.
+ * Intersecting directly with `T` looks equivalent but is not: when `T` is
+ * inferred from a literal (`{ isResolved: false }`), `T & { isResolved: true }`
+ * reduces to `never` because the two constituents disagree, and every property
+ * the caller then reads disappears. `Omit` keeps the literal's other fields.
+ */
+export function resolveOpenComment<T extends { isResolved: boolean }>(
+  comment: T,
+): Omit<T, 'isResolved'> & { isResolved: true } {
   if (comment.isResolved) throw new CommentRuleError('RESOLVED');
   return { ...comment, isResolved: true };
 }

@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from 'react';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { ApiError, apiData, apiList, apiPost } from '../../../lib/api';
 import { cashLocationLabel, listCashLocations, money, shortDate, statusLabel, today, type CashLocation } from '../../../lib/lookups';
@@ -276,7 +277,7 @@ export default function ContractorPaymentPage() {
         <h3>السندات</h3>
         <QueryView query={payments} empty="لا توجد سندات دفع" emptyDetail="أنشئ سنداً من النموذج أعلاه.">
           {(rows) => (
-            <DataTable
+            <Table
               rows={rows}
               rowKey={(row) => row.id}
               columns={[

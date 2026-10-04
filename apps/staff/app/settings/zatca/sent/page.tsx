@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import { DataTable, Notice } from '../../../../components/data-view';
+import { Notice } from '../../../../components/data-view';
+import { Table } from '../../../../components/table';
 import { Screen } from '../../../../components/screen';
 import { ApiError } from '../../../../lib/api';
 import { filingDetail, filingsPage, retryFiling, zatcaChain, type ChainState, type FilingDetail, type FilingRow } from '../../../../lib/einvoice';
@@ -238,7 +239,7 @@ export default function SentEinvoicesPage() {
       <div className="card">
         <h3>📋 قائمة الفواتير المرفوعة</h3>
         {loading && rows.length === 0 && <p className="muted">جارٍ التحميل…</p>}
-        <DataTable
+        <Table
           rows={rows}
           rowKey={(row) => row.id}
           columns={[
@@ -348,7 +349,7 @@ export default function SentEinvoicesPage() {
               </div>
 
               <h3>🏷️ رمز الاستجابة السريعة — الوسوم الثمانية</h3>
-              <DataTable
+              <Table
                 rows={detail.qr.tags}
                 rowKey={(tag) => String(tag.tag)}
                 columns={[

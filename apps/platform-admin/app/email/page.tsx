@@ -17,9 +17,10 @@ import {
   type EmailTemplateListResponse,
   type EmailTestResult,
 } from '@erp/contracts';
+import { Tabs } from '@erp/ui';
 
 import { Empty, ErrorBox, Forbidden, Loading, Screen } from '../../components/screen';
-import { SourceTag, Tabs } from '../../components/ui';
+import { SourceTag } from '../../components/ui';
 import { ApiError, apiData, apiFetch } from '../../lib/api';
 import { useQuery } from '../../lib/use-query';
 
@@ -78,10 +79,10 @@ export default function EmailPage() {
         value={tab}
         onChange={setTab}
         items={[
-          { id: 'templates', label: 'القوالب' },
-          { id: 'messages', label: 'السجلّ' },
-          { id: 'settings', label: 'الإعدادات' },
-          { id: 'suppressions', label: 'الحجر' },
+          { key: 'templates', label: 'القوالب' },
+          { key: 'messages', label: 'السجلّ' },
+          { key: 'settings', label: 'الإعدادات' },
+          { key: 'suppressions', label: 'الحجر' },
         ]}
       />
       {tab === 'templates' && <TemplatesTab />}
@@ -635,6 +636,7 @@ function SettingsTab() {
             >
               <option value="console">console — يطبع في السجلّ (تطوير)</option>
               <option value="smtp">smtp — عميل SMTP على node:net</option>
+              <option value="resend">resend — واجهة HTTP (RC-10)</option>
             </select>
           </label>
           <label>
@@ -727,6 +729,9 @@ function SettingsTab() {
           {current?.smtpConfigured
             ? ''
             : ' ولا اعتماد (SMTP_USER/SMTP_PASS) — الإرسال الفعلي عبر smtp سيفشل.'}
+          {current?.resendConfigured
+            ? ''
+            : ' ولا RESEND_API_KEY في البيئة — الإرسال الفعلي عبر resend سيفشل حتى يُضبط.'}
         </p>
       </div>
 

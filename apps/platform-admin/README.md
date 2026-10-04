@@ -252,3 +252,20 @@ line that says what it is: proof that *this browser* reaches the API.
   audited act on `/roles` (the API suite builds a read-only operator that way and proves the
   read-only operator still cannot revoke a session).
 - CSP headers are configured in `next.config.mjs`.
+
+## Design System v3
+
+The platform console is built on the shared kit in `packages/ui` (see its README for
+the full contract). Local notes for this app:
+
+- **Dark is the default.** `app/layout.tsx` starts the theme at `dark`; the topbar
+  `ThemeToggle` can still switch it, because the mechanism is one and shared. The
+  console is tuned dark-first: 260 px rail, dense rows, monospace numerals.
+- **Destructive actions** (suspend tenant, delete, impersonate, force sign-out) go
+  through a reason/confirm modal before anything is sent.
+- **Impersonation banner is not dismissible** while the token lives (P-C8). It states
+  whose identity is being assumed and offers only one action: stop.
+- **`/design`** renders `DesignGallery` — every component once, in both themes. It is
+  `notFound()` in production. It sits behind the app's own `AuthGate` like every other
+  route; the gate was **not** relaxed to open a colour palette to anonymous visitors,
+  so sign in first.

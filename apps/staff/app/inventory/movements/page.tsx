@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { FilterBar } from '@erp/ui';
 
-import { DataTable, QueryView } from '../../../components/data-view';
+import { QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
-import { FilterBar, StatTile, StatTiles } from '../../../components/ui';
+import { StatTile, StatTiles } from '../../../components/ui';
 import {
   ItemPicker,
   PeriodPicker,
@@ -72,7 +74,7 @@ export default function MovementsPage() {
       </StatTiles>
 
       <FilterBar
-        actions={<span className="small muted">{rows.length === 0 ? 'لا حركات' : `${rows.length} حركة`}</span>}
+        summary={<span className="small muted">{rows.length === 0 ? 'لا حركات' : `${rows.length} حركة`}</span>}
       >
         <ItemPicker value={itemId} onChange={setItemId} />
         <WarehousePicker value={warehouseId} onChange={setWarehouseId} includeAll />
@@ -85,7 +87,7 @@ export default function MovementsPage() {
         emptyDetail="تظهر الحركات بعد ترحيل فاتورة أو مناقلة أو تسوية."
       >
         {(rows) => (
-          <DataTable
+          <Table
             rows={rows}
             rowKey={(row) => row.id}
             columns={[

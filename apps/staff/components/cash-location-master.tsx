@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { Tabs } from '@erp/ui';
 
 import { accountLabel, listAccounts, postableOf, type Account } from '../lib/accounts';
 import { ApiError, apiDelete, apiList, apiPatch, apiPost } from '../lib/api';
@@ -14,7 +15,7 @@ import {
 import { useSession } from '../lib/session';
 import { useQuery } from '../lib/use-query';
 
-import { ActionBar, DocField, DocHead, StatTile, StatTiles, Tabs } from './ui';
+import { ActionBar, DocField, DocHead, StatTile, StatTiles } from './ui';
 import { Screen } from './screen';
 import { Notice, QueryView } from './data-view';
 
@@ -223,9 +224,9 @@ export function CashLocationMaster({ kind }: { kind: 'safe' | 'bank' }) {
 
       <Tabs
         items={[
-          { id: 'data' as const, label: isBank ? '📋 بيانات البنوك' : '📋 بيانات الصناديق' },
-          { id: 'custodians' as const, label: '👤 مسئولي الصندوق' },
-          { id: 'notes' as const, label: '📝 ملاحظات' },
+          { key: 'data' as const, label: isBank ? '📋 بيانات البنوك' : '📋 بيانات الصناديق' },
+          { key: 'custodians' as const, label: '👤 مسئولي الصندوق' },
+          { key: 'notes' as const, label: '📝 ملاحظات' },
         ]}
         value={tab}
         onChange={setTab}

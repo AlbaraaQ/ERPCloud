@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { FilterBar } from '@erp/ui';
 
-import { DataTable, QueryView } from '../../../components/data-view';
+import { QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
-import { FilterBar, StatTile, StatTiles } from '../../../components/ui';
+import { StatTile, StatTiles } from '../../../components/ui';
 import { apiList } from '../../../lib/api';
 import { downloadCsv } from '../../../lib/accounts';
 import { arabicName, itemLabel, listItems, listWarehouses, money, quantity, type Item, type Warehouse } from '../../../lib/lookups';
@@ -81,7 +83,7 @@ export default function StockLevelsPage() {
       </StatTiles>
 
       <FilterBar
-        actions={<span className="small muted">{levelRows.length === 0 ? 'لا أرصدة' : `${levelRows.length} صف رصيد`}</span>}
+        summary={<span className="small muted">{levelRows.length === 0 ? 'لا أرصدة' : `${levelRows.length} صف رصيد`}</span>}
       >
         <label className="field">
           <span>المستودع</span>
@@ -109,7 +111,7 @@ export default function StockLevelsPage() {
 
       <QueryView query={levels} empty="لا توجد أرصدة" emptyDetail="لم تُسجَّل أي حركة مخزنية بعد.">
         {(rows) => (
-          <DataTable
+          <Table
             rows={rows}
             rowKey={(row) => `${row.itemId}:${row.warehouseId}`}
             columns={[

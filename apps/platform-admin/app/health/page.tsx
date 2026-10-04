@@ -1,13 +1,13 @@
 'use client';
 
 import { AlertTriangle, Database, Gauge, HardDrive, Mail, RefreshCw, Server, Timer } from 'lucide-react';
+import { Badge } from '@erp/ui';
+import { Button } from '@erp/ui';
+import { EmptyState } from '@erp/ui';
+import { SkeletonRows } from '@erp/ui';
 
-import { Screen } from '../../components/screen';
-import { Badge } from '../../components/ui/badge';
-import { Button } from '../../components/ui/button';
-import { EmptyState } from '../../components/ui/empty-state';
 import { MetricCard } from '../../components/ui/metric-card';
-import { SkeletonRows } from '../../components/ui/skeleton';
+import { Screen } from '../../components/screen';
 import { apiBaseUrl, apiData } from '../../lib/api';
 import { useQuery } from '../../lib/use-query';
 
@@ -65,9 +65,9 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const OVERALL: Record<string, { label: string; cls: string }> = {
-  ok: { label: 'الخدمة سليمة', cls: 'text-emerald-700' },
-  degraded: { label: 'الخدمة متدهوّرة', cls: 'text-amber-700' },
-  down: { label: 'الخدمة متوقّفة', cls: 'text-red-700' },
+  ok: { label: 'الخدمة سليمة', cls: 'text-ok-ink' },
+  degraded: { label: 'الخدمة متدهوّرة', cls: 'text-warn-ink' },
+  down: { label: 'الخدمة متوقّفة', cls: 'text-danger-ink' },
 };
 
 export default function HealthPage() {
@@ -86,28 +86,28 @@ export default function HealthPage() {
       }
     >
       {health.status === 'loading' ? (
-        <div className="rounded-[10px] border border-slate-200 bg-white p-4 shadow-1">
+        <div className="rounded-[10px] border border-line bg-surface p-4 shadow-1">
           <SkeletonRows rows={5} />
         </div>
       ) : health.status === 'forbidden' ? (
-        <div className="rounded-[10px] border border-slate-200 bg-white p-4 shadow-1">لا تملك console.health.view.</div>
+        <div className="rounded-[10px] border border-line bg-surface p-4 shadow-1">لا تملك console.health.view.</div>
       ) : health.status === 'error' ? (
-        <EmptyState tone="red" icon={<AlertTriangle size={26} strokeWidth={1.5} />} title="تعذّر الفحص" description={health.error} />
+        <EmptyState tone="danger" icon={<AlertTriangle size={26} strokeWidth={1.5} />} title="تعذّر الفحص" description={health.error} />
       ) : null}
 
       {health.status === 'success' && data && (
         <>
           {data.incident.active && (
-            <div className="flex items-start gap-3 rounded-[10px] border-2 border-red-300 bg-red-50 px-4 py-3">
+            <div className="flex items-start gap-3 rounded-[10px] border-2 border-danger-line bg-danger-soft px-4 py-3">
               <span className="relative mt-1 flex size-3 flex-none">
-                <span className="absolute inline-flex size-full animate-ping rounded-full bg-red-400 opacity-70" />
-                <span className="relative inline-flex size-3 rounded-full bg-red-500" />
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-danger opacity-70" />
+                <span className="relative inline-flex size-3 rounded-full bg-danger" />
               </span>
               <div>
-                <p className="m-0 text-[14px] font-extrabold text-red-800">
+                <p className="m-0 text-[14px] font-extrabold text-danger-ink">
                   حادثة معلَنة: {data.incident.message ?? 'صيانة جارية'}
                 </p>
-                <p className="m-0 mt-1 text-[12px] text-red-600/80">
+                <p className="m-0 mt-1 text-[12px] text-danger">
                   اللافتة من platform.maintenance* في إعدادات المنصة — لا نصٌّ في هذه الشاشة.
                 </p>
               </div>
@@ -115,25 +115,25 @@ export default function HealthPage() {
           )}
 
           {/* overall strip */}
-          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[10px] border border-slate-200 bg-white px-4 py-3 shadow-1">
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[10px] border border-line bg-surface px-4 py-3 shadow-1">
             <span className="flex items-center gap-2.5">
               <span className="relative flex size-3">
                 {data.status !== 'down' && (
-                  <span className={`absolute inline-flex size-full animate-ping rounded-full opacity-50 ${data.status === 'ok' ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+                  <span className={`absolute inline-flex size-full animate-ping rounded-full opacity-50 ${data.status === 'ok' ? 'bg-ok' : 'bg-warn'}`} />
                 )}
-                <span className={`relative inline-flex size-3 rounded-full ${data.status === 'ok' ? 'bg-emerald-500' : data.status === 'degraded' ? 'bg-amber-500' : 'bg-red-500'}`} />
+                <span className={`relative inline-flex size-3 rounded-full ${data.status === 'ok' ? 'bg-ok' : data.status === 'degraded' ? 'bg-warn' : 'bg-danger'}`} />
               </span>
-              <span className={`text-[15px] font-extrabold ${OVERALL[data.status]?.cls ?? 'text-slate-600'}`}>
+              <span className={`text-[15px] font-extrabold ${OVERALL[data.status]?.cls ?? 'text-ink-2'}`}>
                 {OVERALL[data.status]?.label ?? data.status}
               </span>
             </span>
-            <span className="font-mono text-[12px] text-slate-500" dir="ltr">
+            <span className="font-mono text-[12px] text-muted" dir="ltr">
               uptime {formatDuration(data.uptimeSeconds)}
             </span>
-            <span className="text-[12px] text-slate-400">آخر فحص {new Date(data.checkedAt).toLocaleTimeString('ar-SA')}</span>
+            <span className="text-[12px] text-muted">آخر فحص {new Date(data.checkedAt).toLocaleTimeString('ar-SA')}</span>
             <span className="ms-auto flex flex-wrap gap-2">
-              <Badge tone={data.backlog.dead > 0 ? 'red' : 'neutral'} dot>ميتة: {data.backlog.dead}</Badge>
-              <Badge tone={data.requests.errorRate > 0.01 ? 'amber' : 'green'} dot>
+              <Badge tone={data.backlog.dead > 0 ? 'danger' : 'neutral'} dot>ميتة: {data.backlog.dead}</Badge>
+              <Badge tone={data.requests.errorRate > 0.01 ? 'warn' : 'ok'} dot>
                 أخطاء {(data.requests.errorRate * 100).toFixed(2)}٪
               </Badge>
             </span>
@@ -147,39 +147,39 @@ export default function HealthPage() {
               return (
                 <div
                   key={probe.name}
-                  className="rounded-[10px] border border-slate-200 bg-white p-3.5 shadow-1 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-2"
+                  className="rounded-[10px] border border-line bg-surface p-3.5 shadow-1 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-2"
                 >
                   <div className="flex items-center gap-2.5">
                     <span
                       className={`grid size-9 flex-none place-items-center rounded-lg ${
-                        up ? 'bg-emerald-50 text-emerald-600' : down ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'
+                        up ? 'bg-ok-soft text-ok' : down ? 'bg-danger-soft text-danger' : 'bg-warn-soft text-warn'
                       }`}
                     >
                       {PROBE_ICON[probe.name] ?? <Gauge size={16} />}
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[13.5px] font-bold text-slate-800">{PROBE_LABEL[probe.name] ?? probe.name}</span>
+                      <span className="block truncate text-[13.5px] font-bold text-ink">{PROBE_LABEL[probe.name] ?? probe.name}</span>
                       <span
                         className={`inline-flex items-center gap-1.5 text-[11.5px] font-bold ${
-                          up ? 'text-emerald-600' : down ? 'text-red-600' : 'text-amber-600'
+                          up ? 'text-ok' : down ? 'text-danger' : 'text-warn'
                         }`}
                       >
                         {up || down ? (
                           <span className="relative flex size-1.5">
-                            <span className={`absolute inline-flex size-full animate-ping rounded-full opacity-60 ${up ? 'bg-emerald-400' : 'bg-red-400'}`} />
-                            <span className={`relative inline-flex size-1.5 rounded-full ${up ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                            <span className={`absolute inline-flex size-full animate-ping rounded-full opacity-60 ${up ? 'bg-ok' : 'bg-danger'}`} />
+                            <span className={`relative inline-flex size-1.5 rounded-full ${up ? 'bg-ok' : 'bg-danger'}`} />
                           </span>
                         ) : (
-                          <span className="size-1.5 rounded-full bg-amber-400" />
+                          <span className="size-1.5 rounded-full bg-warn" />
                         )}
                         {STATUS_LABEL[probe.status] ?? probe.status}
                       </span>
                     </span>
-                    <span className="flex-none font-mono text-[12px] font-bold text-slate-500" dir="ltr">
+                    <span className="flex-none font-mono text-[12px] font-bold text-muted" dir="ltr">
                       {probe.latencyMs === null ? '—' : `${probe.latencyMs}ms`}
                     </span>
                   </div>
-                  <p className="m-0 mt-2 truncate text-[11.5px] text-slate-400" title={probe.detail}>
+                  <p className="m-0 mt-2 truncate text-[11.5px] text-muted" title={probe.detail}>
                     {probe.detail}
                   </p>
                 </div>
@@ -189,8 +189,8 @@ export default function HealthPage() {
 
           {/* requests + backlog */}
           <div className="mt-3 grid gap-3 xl:grid-cols-2">
-            <section className="rounded-[10px] border border-slate-200 bg-white p-4 shadow-1">
-              <h3 className="m-0 mb-3 text-[15px] font-bold text-slate-900">الطلبات</h3>
+            <section className="rounded-[10px] border border-line bg-surface p-4 shadow-1">
+              <h3 className="m-0 mb-3 text-[15px] font-bold text-ink">الطلبات</h3>
               <div className="grid grid-cols-2 gap-3">
                 <MetricCard label="العدد الكلي" value={data.requests.count} tone="violet" delay={0} />
                 <MetricCard label="أخطاء 5xx" value={data.requests.errors} tone={data.requests.errors > 0 ? 'red' : 'green'} delay={0.04} />
@@ -203,14 +203,14 @@ export default function HealthPage() {
                 />
                 <MetricCard label="p95" value={data.requests.p95Ms} suffix="ms" tone="sky" delay={0.12} />
               </div>
-              <p className="m-0 mt-3 text-[11.5px] text-slate-400 leading-relaxed">
+              <p className="m-0 mt-3 text-[11.5px] text-muted leading-relaxed">
                 الأرقام من عدّاد العملية ودلائها (تُجمع من كل مسار) — لا من تخزينٍ ثانٍ ولا من تقدير. p95 هي أقلّ
                 دلوٍّ يغطّي 95٪ من الطلبات.
               </p>
             </section>
 
-            <section className="rounded-[10px] border border-slate-200 bg-white p-4 shadow-1">
-              <h3 className="m-0 mb-3 text-[15px] font-bold text-slate-900">الطابور</h3>
+            <section className="rounded-[10px] border border-line bg-surface p-4 shadow-1">
+              <h3 className="m-0 mb-3 text-[15px] font-bold text-ink">الطابور</h3>
               <div className="grid grid-cols-2 gap-3">
                 <MetricCard
                   label="بانتظار النشر"
@@ -220,34 +220,34 @@ export default function HealthPage() {
                 />
                 <MetricCard label="نُشرت" value={data.backlog.published} tone="sky" delay={0.08} />
                 <MetricCard label="ميتة" value={data.backlog.dead} tone={data.backlog.dead > 0 ? 'red' : 'green'} delay={0.12} />
-                <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-3">
-                  <p className="m-0 text-[11.5px] font-bold text-slate-400">أقدم معلَّقة</p>
-                  <p className="m-0 mt-1 font-mono text-[18px] font-bold text-slate-700" dir="ltr">
+                <div className="rounded-xl border border-line bg-surface-2 p-3">
+                  <p className="m-0 text-[11.5px] font-bold text-muted">أقدم معلَّقة</p>
+                  <p className="m-0 mt-1 font-mono text-[18px] font-bold text-ink-2" dir="ltr">
                     {data.backlog.oldestPendingAgeSeconds === null ? 'لا شيء' : formatDuration(data.backlog.oldestPendingAgeSeconds)}
                   </p>
                 </div>
               </div>
-              <p className="m-0 mt-3 text-[11.5px] text-slate-400 leading-relaxed">
+              <p className="m-0 mt-3 text-[11.5px] text-muted leading-relaxed">
                 الفعل على هذه الصفوف في <a className="font-bold text-brand-600 underline" href="/jobs">المهام والطوابير</a> — هذه الشاشة تقيس ولا تعالج.
               </p>
             </section>
           </div>
 
           {/* local API note */}
-          <section className="mt-3 rounded-[10px] border border-slate-200 bg-white p-4 shadow-1">
+          <section className="mt-3 rounded-[10px] border border-line bg-surface p-4 shadow-1">
             <dl className="m-0 grid gap-2 md:grid-cols-2">
               <div>
-                <dt className="text-[12px] font-bold text-slate-400 m-0">عنوان الـ API المستخدم</dt>
-                <dd className="m-0 mt-0.5 font-mono text-[12.5px] text-slate-700" dir="ltr">{apiBaseUrl}</dd>
+                <dt className="text-[12px] font-bold text-muted m-0">عنوان الـ API المستخدم</dt>
+                <dd className="m-0 mt-0.5 font-mono text-[12.5px] text-ink-2" dir="ltr">{apiBaseUrl}</dd>
               </div>
               <div>
-                <dt className="text-[12px] font-bold text-slate-400 m-0">وضع الاتصال</dt>
-                <dd className="m-0 mt-0.5 text-[12.5px] text-slate-600">
+                <dt className="text-[12px] font-bold text-muted m-0">وضع الاتصال</dt>
+                <dd className="m-0 mt-0.5 text-[12.5px] text-ink-2">
                   {apiBaseUrl.startsWith('/') ? 'نفس المصدر عبر وسيط Next.js (موصى به)' : 'مصدر خارجي — يتطلب ضبط CORS'}
                 </dd>
               </div>
             </dl>
-            <p className="m-0 mt-3 text-[11.5px] text-slate-400">
+            <p className="m-0 mt-3 text-[11.5px] text-muted">
               هذه الصفحة تقرأ من الـAPI نفسه، فوصولها دليلٌ على أن الجلسة والوسيط سليمان — أما المجسّات أعلاه فهي
               التي تُجيب «هل الخدمة بخير؟».
             </p>

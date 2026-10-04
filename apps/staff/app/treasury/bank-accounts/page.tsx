@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { apiList, apiPost } from '../../../lib/api';
 import { accountLabel, listAccounts, type Account } from '../../../lib/accounts';
@@ -71,8 +72,8 @@ export default function BankAccountsPage() {
       {manage ? (
         <form className="card grid gap-3 mb-4" onSubmit={create}>
           <div>
-            <h2 className="m-0 text-[16px] font-bold text-slate-800">إضافة حساب بنكي</h2>
-            <p className="m-0 mt-1 text-[12px] text-slate-500">ابدأ بحساب واحد ثم اربطه بحساب الأستاذ لمقارنة الرصيدين.</p>
+            <h2 className="m-0 text-[16px] font-bold text-ink">إضافة حساب بنكي</h2>
+            <p className="m-0 mt-1 text-[12px] text-muted">ابدأ بحساب واحد ثم اربطه بحساب الأستاذ لمقارنة الرصيدين.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
             <label className="field"><span>اسم البنك</span><input required value={form.bankName} onChange={(event) => setForm({ ...form, bankName: event.target.value })} placeholder="مصرف الراجحي" /></label>
@@ -87,7 +88,7 @@ export default function BankAccountsPage() {
 
       <QueryView query={accounts} empty="لا توجد حسابات بنكية" emptyDetail="أضف الحساب البنكي الأول من النموذج أعلاه.">
         {(rows) => (
-          <DataTable
+          <Table
             rows={rows}
             rowKey={(row) => row.id}
             columns={[

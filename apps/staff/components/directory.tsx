@@ -5,7 +5,8 @@ import { useState, type ReactNode } from 'react';
 import { ApiError } from '../lib/api';
 import type { QueryState } from '../lib/use-query';
 
-import { DataTable, Notice, QueryView, type Column } from './data-view';
+import { Notice, QueryView } from './data-view';
+import { Table, type TableColumn } from './table';
 import { Screen } from './screen';
 import { StatTiles, type Tone } from './ui';
 
@@ -78,7 +79,7 @@ export function Directory<T>({
   subtitle?: string;
   crumbs?: string[];
   query: QueryState<T[]>;
-  columns: Array<Column<T>>;
+  columns: Array<TableColumn<T>>;
   rowKey: (row: T, index: number) => string;
   empty?: string;
   emptyDetail?: string;
@@ -172,7 +173,7 @@ export function Directory<T>({
     }
   }
 
-  const rowColumns: Array<Column<T>> =
+  const rowColumns: Array<TableColumn<T>> =
     edit || onDelete
       ? [
           ...columns,
@@ -254,7 +255,7 @@ export function Directory<T>({
 
       <QueryView query={query} empty={empty} emptyDetail={emptyDetail}>
         {(rows) => (
-          <DataTable
+          <Table
             rows={rows}
             rowKey={rowKey}
             columns={rowColumns}

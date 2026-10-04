@@ -3,7 +3,8 @@
 import { use, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-import { DataTable, Notice, QueryView } from '../../../../components/data-view';
+import { Notice, QueryView } from '../../../../components/data-view';
+import { Table } from '../../../../components/table';
 import { FormFields, type FormValues } from '../../../../components/directory';
 import { Screen } from '../../../../components/screen';
 import { ApiError, apiList, apiPost } from '../../../../lib/api';
@@ -80,7 +81,7 @@ export default function SalesNotePage({ params }: { params: Promise<{ kind: stri
   return (
     <Screen title={meta.title} subtitle={meta.hint} crumbs={['المبيعات', 'الإشعارات']}>
       {highlightedId && (
-        <div className="card tight" style={{ background: '#fffbe6', borderColor: '#f0d000' }}>
+        <div className="card tight" style={{ background: 'var(--warn-soft)', borderColor: 'var(--warn-line)' }}>
           🔍 تم فتح الإشعار <code dir="ltr">{highlightedId}</code> من تقرير عمولات المندوب — الصف المميز أدناه هو المطلوب.
         </div>
       )}
@@ -115,7 +116,7 @@ export default function SalesNotePage({ params }: { params: Promise<{ kind: stri
       <QueryView query={notes} empty="لا توجد إشعارات من هذا النوع">
         {(rows) => (
           <div className="card">
-            <DataTable
+            <Table
               activeKey={highlightedId ?? undefined}
               columns={[
                 { key: 'number', header: 'رقم الإشعار', align: 'ltr', cell: (row: Note) => row.number ?? 'مسودة' },

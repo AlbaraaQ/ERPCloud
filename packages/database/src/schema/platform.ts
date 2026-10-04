@@ -110,6 +110,49 @@ export const refreshTokens = pgTable(
 );
 
 /**
+ * Password-recovery links — migration 0113.
+ *
+ * `refreshTokens` above stores only a SHA-256 digest of its secret, and this table does
+ * the same: a database dump must not be a set of live reset links. The value that
+ * travels in the email is the only copy that exists.
+ *
+ * `tenant_id` is carried on the row even though `users` itself is a platform table
+ * without one, because the request that consumes the token is `@Public()` — there is no
+ * session and therefore no tenant GUC to inherit. The endpoint resolves the typed
+ * `tenantCode` against `tenants` (readable without a GUC, exactly as `login` does) and
+ * then binds the GUC with `withTenantTx` before reading this table, which is what makes
+ * the lookup both isolated and reachable.
+ */
+export const passwordResetTokens = pgTable(
+  'password_reset_tokens',
+  {
+    id: uuid('id').primaryKey(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    /** SHA-256 hex of the emailed token. The plaintext is never stored. */
+    tokenHash: text('token_hash').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    usedAt: timestamp('used_at', { withTimezone: true }),
+    requestedIp: text('requested_ip'),
+    requestedUserAgent: text('requested_user_agent'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    passwordResetTokensHashUnique: uniqueIndex('password_reset_tokens_token_hash_key').on(
+      table.tokenHash,
+    ),
+    passwordResetTokensUserIdx: index('password_reset_tokens_user_idx').on(
+      table.userId,
+      table.createdAt.desc(),
+    ),
+  }),
+);
+
+/**
  * One-time 2FA recovery codes — migration 0031. Platform table (no `tenant_id`) for the
  * same reason `users` is one: they belong to the person and must be verifiable before any
  * tenant context exists. Only SHA-256 hashes are stored.

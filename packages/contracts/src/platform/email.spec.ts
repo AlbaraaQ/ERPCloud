@@ -5,6 +5,7 @@ import { DomainError } from '../problem.js';
 import {
   emailEventRegistry,
   emailEvents,
+  emailProviderSchema,
   emailRetrySchema,
   emailSettingsPatchKeys,
   emailSettingsUpdateSchema,
@@ -37,6 +38,14 @@ describe('email event registry (P-C6)', () => {
     expect(emailEventRegistry.find((entry) => entry.event === 'report.weekly')?.scope).toBe('platform');
     // وكذلك رمز التسجيل: الزائر ليس عميلاً بعد، فلا حصّة عميلٍ تُحتسب عليه.
     expect(emailEventRegistry.find((entry) => entry.event === 'signup.verify')?.scope).toBe('platform');
+    // P-R1 — `password.reset` موجودٌ منذ الخطة الأصلية، فلم يُضَف هنا شيء. ما جرى هو أن
+    // الـendpoint الذي يُطلقه أخيرًا بُني: الحدث كان معرَّفًا بلا مُطلِق. نطاقه `tenant`
+    // كما صُمِم، والحماية من إحراق الحصّة هي حدُّ المعدل (٣/دقيقة) لا النطاق.
+    expect(emailEventRegistry.find((entry) => entry.event === 'password.reset')?.variables).toEqual([
+      'name',
+      'link',
+      'expires',
+    ]);
     // وكذلك حدثا P-M6: الزائر لم يُصبح عميلاً بعد، فلا حصّة عميلٍ تُحتسب عليهما.
     expect(emailEventRegistry.find((entry) => entry.event === 'lead.received')?.scope).toBe('platform');
     expect(
@@ -157,6 +166,16 @@ describe('email payload schemas (P-C6)', () => {
     expect(emailSettingsUpdateSchema.safeParse({ sendingDomain: 'erp.example.com' }).success).toBe(true);
     expect(emailSettingsUpdateSchema.safeParse({ provider: 'sendgrid' }).success).toBe(false);
   });
+
+  it('accepts the resend provider on both planes and refuses anything else (RC-10)', () => {
+    // `emailProviders` is the single list the settings screen is allowed to send and the
+    // mailer is allowed to build. A provider added to one and not the other is exactly
+    // the defect this pins down, so both spellings are asserted here.
+    expect(emailSettingsUpdateSchema.safeParse({ provider: 'resend' }).success).toBe(true);
+    expect(emailSettingsUpdateSchema.safeParse({ provider: 'mailgun' }).success).toBe(false);
+    expect(emailProviderSchema.safeParse('resend').success).toBe(true);
+    expect(emailProviderSchema.safeParse('mailgun').success).toBe(false);
+  });
 });
 
 describe('مخططات الحمولة للبريد', () => {
@@ -177,6 +196,7 @@ describe('مخططات الحمولة للبريد', () => {
     expect(emailSettingsUpdateSchema.safeParse({ dailyLimit: 50, reason: 'سقف مؤقت' }).success).toBe(true);
     expect(emailSettingsUpdateSchema.safeParse({ provider: 'console' }).success).toBe(true);
     expect(emailSettingsUpdateSchema.safeParse({ provider: 'ses' }).success).toBe(false);
+    expect(emailSettingsUpdateSchema.safeParse({ provider: 'resend' }).success).toBe(true);
     expect(emailSettingsUpdateSchema.safeParse({ unknownField: 1 }).success).toBe(false);
     expect(emailSettingsPatchKeys).toContain('monthlyLimit');
   });

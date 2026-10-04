@@ -2,7 +2,8 @@
 
 import { use } from 'react';
 
-import { DataTable, QueryView } from '../../../../components/data-view';
+import { QueryView } from '../../../../components/data-view';
+import { Table } from '../../../../components/table';
 import { Screen } from '../../../../components/screen';
 import { dateTime, money, quantity, shortDate, statusLabel } from '../../../../lib/lookups';
 import { SYNC_DOCUMENT_ENTITIES, SYNC_ENTITY_LABELS, fetchSyncDocuments, type SyncDocument } from '../../../../lib/sync';
@@ -29,7 +30,7 @@ export default function SyncDocumentsPage({ params }: { params: Promise<{ entity
       <QueryView query={documents} empty="لم يصل أي مستند بعد" emptyDetail="سيظهر هنا كل مستند يدفعه جهاز مرتبط عبر بوابة التوافق.">
         {(rows) => (
           <div className="card">
-            <DataTable
+            <Table
               columns={columnsFor(entity)}
               rows={rows}
               rowKey={(row) => row.id}

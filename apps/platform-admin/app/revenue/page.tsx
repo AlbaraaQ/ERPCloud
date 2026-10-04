@@ -10,16 +10,14 @@ import {
   TrendingUp,
   Wallet,
 } from 'lucide-react';
+import { AreaSeries, Badge } from '@erp/ui';
+import { Button } from '@erp/ui';
+import { EmptyState } from '@erp/ui';
+import { SkeletonRows } from '@erp/ui';
+import { DataTable } from '@erp/ui';
 
-import { Screen } from '../../components/screen';
-import { Badge } from '../../components/ui/badge';
-import { Button } from '../../components/ui/button';
-import { AreaCardChart } from '../../components/ui/chart';
-import { Reveal } from '../../components/ui/count-up';
-import { EmptyState } from '../../components/ui/empty-state';
 import { MetricCard } from '../../components/ui/metric-card';
-import { SkeletonRows } from '../../components/ui/skeleton';
-import { Table } from '../../components/ui/table';
+import { Screen } from '../../components/screen';
 import { apiData } from '../../lib/api';
 import { useQuery } from '../../lib/use-query';
 
@@ -95,11 +93,11 @@ export default function RevenuePage() {
       }
     >
       {revenue.status === 'loading' ? (
-        <div className="rounded-[10px] border border-slate-200 bg-white p-4 shadow-1">
+        <div className="rounded-[10px] border border-line bg-surface p-4 shadow-1">
           <SkeletonRows rows={6} />
         </div>
       ) : revenue.status === 'error' ? (
-        <EmptyState tone="red" icon={<Wallet size={26} strokeWidth={1.5} />} title="تعذر تحميل الإيراد" description={revenue.error} />
+        <EmptyState tone="danger" icon={<Wallet size={26} strokeWidth={1.5} />} title="تعذر تحميل الإيراد" description={revenue.error} />
       ) : data ? (
         <>
           {/* top metrics */}
@@ -142,66 +140,60 @@ export default function RevenuePage() {
           </div>
 
           {/* big MRR chart */}
-          <Reveal delay={0.1}>
-            <section className="rounded-[10px] border border-slate-200 bg-white p-4 shadow-1">
-              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <h3 className="m-0 text-[15px] font-bold text-slate-900">منحنى MRR — 12 شهراً</h3>
-                  <p className="m-0 mt-0.5 text-[12px] text-slate-400">الإيراد الشهري المتكرر كما حُسب في العقود (بلا رسومٍ بلا معنى).</p>
-                </div>
-                {data.mixedCurrency ? (
-                  <Badge tone="amber" dot>
-                    <AlertTriangle size={12} /> عملات مختلطة — الأرقام بعملة العرض وحدها
-                  </Badge>
-                ) : null}
+          <section className="rounded-[10px] border border-line bg-surface p-4 shadow-1">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h3 className="m-0 text-[15px] font-bold text-ink">منحنى MRR — 12 شهراً</h3>
+                <p className="m-0 mt-0.5 text-[12px] text-muted">الإيراد الشهري المتكرر كما حُسب في العقود (بلا رسومٍ بلا معنى).</p>
               </div>
-              {(series.data?.mrrSeries ?? []).length > 0 ? (
-                <AreaCardChart
-                  data={(series.data?.mrrSeries ?? []).map((p) => ({ month: monthLabel(p.month), mrr: num(p.mrr) }))}
-                  xKey="month"
-                  dataKey="mrr"
-                  name="MRR"
-                  height={300}
-                  color="#7c3aed"
-                  formatter={(v) => `${fmt(v)} ${currency}`}
-                />
-              ) : (
-                <EmptyState icon={<TrendingUp size={24} strokeWidth={1.5} />} title="لا بيانات سلسلة إيراد" />
-              )}
-            </section>
-          </Reveal>
+              {data.mixedCurrency ? (
+                <Badge tone="warn" dot>
+                  <AlertTriangle size={12} /> عملات مختلطة — الأرقام بعملة العرض وحدها
+                </Badge>
+              ) : null}
+            </div>
+            {(series.data?.mrrSeries ?? []).length > 0 ? (
+              <AreaSeries
+                data={(series.data?.mrrSeries ?? []).map((p) => ({ month: monthLabel(p.month), mrr: num(p.mrr) }))}
+                xKey="month"
+                series={[{ key: 'mrr', label: "MRR", color: "var(--color-chart-2)" }]}
+                height={300}
+                format={(v) => `${fmt(v)} ${currency}`}
+              />
+            ) : (
+              <EmptyState icon={<TrendingUp size={24} strokeWidth={1.5} />} title="لا بيانات سلسلة إيراد" />
+            )}
+          </section>
 
           <div className="grid gap-4 xl:grid-cols-3 items-start">
             {/* licence mix */}
-            <Reveal delay={0.15}>
-              <section className="rounded-[10px] border border-slate-200 bg-white p-4 shadow-1">
-                <h3 className="m-0 text-[15px] font-bold text-slate-900 mb-3">التراخيص</h3>
-                <dl className="m-0 grid gap-2.5">
-                  {[
-                    { label: 'فعّالة', value: data.counts.active, cls: 'text-emerald-600' },
-                    { label: 'متأخّرة', value: data.counts.pastDue, cls: 'text-red-600' },
-                    { label: 'تجربة', value: data.counts.trialing, cls: 'text-sky-600' },
-                    { label: 'موقوفة مؤقتاً', value: data.counts.paused, cls: 'text-amber-600' },
-                    { label: 'ملغاة', value: data.counts.canceled, cls: 'text-slate-400' },
-                  ].map((row) => (
-                    <div key={row.label} className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2">
-                      <dt className="text-[12.5px] font-bold text-slate-500 m-0">{row.label}</dt>
-                      <dd className={`m-0 font-mono text-[15px] font-bold ${row.cls}`} dir="ltr">{row.value}</dd>
-                    </div>
-                  ))}
-                </dl>
-                <p className="m-0 mt-3 text-[11.5px] text-slate-400 leading-relaxed">
-                  MRR يعدّ «فعّالة» و«متأخّرة» فقط: من تأخّر في السداد ما زال متعاقداً، ومن يُجرّب لم يشترِ بعد.
-                </p>
-              </section>
-            </Reveal>
+            <section className="rounded-[10px] border border-line bg-surface p-4 shadow-1">
+              <h3 className="m-0 text-[15px] font-bold text-ink mb-3">التراخيص</h3>
+              <dl className="m-0 grid gap-2.5">
+                {[
+                  { label: 'فعّالة', value: data.counts.active, cls: 'text-ok' },
+                  { label: 'متأخّرة', value: data.counts.pastDue, cls: 'text-danger' },
+                  { label: 'تجربة', value: data.counts.trialing, cls: 'text-info' },
+                  { label: 'موقوفة مؤقتاً', value: data.counts.paused, cls: 'text-warn' },
+                  { label: 'ملغاة', value: data.counts.canceled, cls: 'text-muted' },
+                ].map((row) => (
+                  <div key={row.label} className="flex items-center justify-between rounded-lg border border-line bg-surface-2 px-3 py-2">
+                    <dt className="text-[12.5px] font-bold text-muted m-0">{row.label}</dt>
+                    <dd className={`m-0 font-mono text-[15px] font-bold ${row.cls}`} dir="ltr">{row.value}</dd>
+                  </div>
+                ))}
+              </dl>
+              <p className="m-0 mt-3 text-[11.5px] text-muted leading-relaxed">
+                MRR يعدّ «فعّالة» و«متأخّرة» فقط: من تأخّر في السداد ما زال متعاقداً، ومن يُجرّب لم يشترِ بعد.
+              </p>
+            </section>
 
             {/* upcoming invoices */}
-            <Reveal delay={0.2} className="xl:col-span-2">
-              <section className="rounded-[10px] border border-slate-200 bg-white shadow-1 overflow-hidden">
+            <div className="xl:col-span-2">
+              <section className="rounded-[10px] border border-line bg-surface shadow-1 overflow-hidden">
                 <header className="px-4 pt-4 pb-1 flex items-center gap-2">
-                  <CalendarClock size={15} className="text-slate-400" />
-                  <h3 className="m-0 text-[15px] font-bold text-slate-900">فواتير قائمة ({upcomingRows.length})</h3>
+                  <CalendarClock size={15} className="text-muted" />
+                  <h3 className="m-0 text-[15px] font-bold text-ink">فواتير قائمة ({upcomingRows.length})</h3>
                 </header>
                 {upcomingRows.length === 0 ? (
                   <div className="px-4 pb-5">
@@ -209,24 +201,24 @@ export default function RevenuePage() {
                   </div>
                 ) : (
                   <div className="px-1 pb-1">
-                    <Table
+                    <DataTable
                       rows={upcomingRows}
                       rowKey={(row) => row.invoiceId}
                       dense
                       columns={[
                         { key: 'number', header: 'الفاتورة', ltr: true, cell: (row) => <span className="font-mono text-[12px]">{row.number ?? '—'}</span> },
-                        { key: 'tenant', header: 'العميل', cell: (row) => <span className="font-bold text-slate-700">{row.tenantName}</span> },
-                        { key: 'due', header: 'الاستحقاق', ltr: true, cell: (row) => <span className="font-mono text-[12px] text-slate-500">{gregDate(row.dueDate)}</span> },
+                        { key: 'tenant', header: 'العميل', cell: (row) => <span className="font-bold text-ink-2">{row.tenantName}</span> },
+                        { key: 'due', header: 'الاستحقاق', ltr: true, cell: (row) => <span className="font-mono text-[12px] text-muted">{gregDate(row.dueDate)}</span> },
                         { key: 'total', header: 'الإجمالي', numeric: true, ltr: true, cell: (row) => <span className="font-mono text-[12px] font-bold">{fmt(num(row.total))}</span> },
-                        { key: 'remaining', header: 'المتبقّي', numeric: true, ltr: true, cell: (row) => <span className="font-mono text-[12px] font-bold text-amber-700">{fmt(num(row.remaining))}</span> },
+                        { key: 'remaining', header: 'المتبقّي', numeric: true, ltr: true, cell: (row) => <span className="font-mono text-[12px] font-bold text-warn-ink">{fmt(num(row.remaining))}</span> },
                         {
                           key: 'status',
                           header: 'الحالة',
                           cell: (row) =>
                             row.daysOverdue > 0 ? (
-                              <Badge tone="red" dot>متأخّرة {row.daysOverdue} يوماً</Badge>
+                              <Badge tone="danger" dot>متأخّرة {row.daysOverdue} يوماً</Badge>
                             ) : (
-                              <Badge tone="amber" dot>تنتظر السداد</Badge>
+                              <Badge tone="warn" dot>تنتظر السداد</Badge>
                             ),
                         },
                       ]}
@@ -234,7 +226,7 @@ export default function RevenuePage() {
                   </div>
                 )}
               </section>
-            </Reveal>
+            </div>
           </div>
         </>
       ) : null}

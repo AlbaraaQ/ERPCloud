@@ -16,6 +16,8 @@ type Settings = {
   effectiveModel: string;
   monthlyTokenLimit: number | null;
   monthlyCostLimit: string | null;
+  /** RC-11 — presence booleans. Neither ever carries the key itself. */
+  hasApiKey: boolean;
   hasPlatformKey: boolean;
   usage: { tokens: number; spent: string; tokenLimit: number | null; costLimit: string | null; period: string };
 };
@@ -27,6 +29,10 @@ export default function AiSettingsPage() {
   const [model, setModel] = useState('');
   const [tokenLimit, setTokenLimit] = useState('');
   const [costLimit, setCostLimit] = useState('');
+  // Empty means "leave the stored key alone": the box never re-fills with a secret we
+  // do not have, so an untouched save cannot rotate the key by accident.
+  const [apiKey, setApiKey] = useState('');
+  const [clearApiKey, setClearApiKey] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{ kind: 'ok' | 'danger' | 'info'; text: string }>();
 
@@ -38,6 +44,8 @@ export default function AiSettingsPage() {
     setModel(next.model ?? '');
     setTokenLimit(next.monthlyTokenLimit === null ? '' : String(next.monthlyTokenLimit));
     setCostLimit(next.monthlyCostLimit ?? '');
+    setApiKey('');
+    setClearApiKey(false);
   }
 
   useEffect(() => {
@@ -60,6 +68,8 @@ export default function AiSettingsPage() {
             model: model || null,
             monthlyTokenLimit: tokenLimit === '' ? null : Number(tokenLimit),
             monthlyCostLimit: costLimit || null,
+            ...(apiKey ? { apiKey } : {}),
+            ...(clearApiKey ? { clearApiKey: true } : {}),
           })
             .then(() => reload())
             .then(() => setNotice({ kind: 'ok', text: 'حُفظت إعدادات المساعد.' }))
@@ -97,9 +107,36 @@ export default function AiSettingsPage() {
             <input className="input" dir="ltr" value={costLimit} onChange={(event) => setCostLimit(event.target.value)} />
           </label>
         </div>
+        <label className="field">
+          <span>مفتاح المزوّد (اختياري)</span>
+          <input
+            className="input"
+            dir="ltr"
+            type="password"
+            autoComplete="off"
+            value={apiKey}
+            onChange={(event) => setApiKey(event.target.value)}
+            placeholder={settings?.hasApiKey ? 'محفوظ — اتركه فارغاً للإبقاء عليه' : 'sk-…'}
+          />
+        </label>
+        <label className="field">
+          <span>
+            <input type="checkbox" checked={clearApiKey} onChange={(event) => setClearApiKey(event.target.checked)} /> حذف المفتاح المحفوظ
+          </span>
+        </label>
+        <p className="muted">
+          {settings?.hasApiKey
+            ? 'هذه المنشأة تملك مفتاحها الخاص، وهو المستعمل الآن بدل مفتاح المنصة.'
+            : settings?.hasPlatformKey
+              ? 'المساعد يعمل بمفتاح المنصة. ضع مفتاحاً هنا لتستعمل هذه المنشأة مفتاحها الخاص.'
+              : 'لا مفتاح لهذه المنشأة ولا للمنصة — الأجوبة محلية من مجاميعك حتى يُضبط مفتاح.'}
+        </p>
         <p className="muted">
           الاستهلاك هذا الشهر ({settings?.usage.period ?? '—'}): {settings?.usage.tokens ?? 0} توكن · {settings?.usage.spent ?? '0'} تكلفة.
-          المزود الفعّال: {settings?.effectiveProvider ?? 'local'}. {settings?.hasPlatformKey ? 'مفتاح المنصة محفوظ.' : 'لا مفتاح بعد — الإجابة محلية من مجاميعك.'}
+          المزود الفعّال: {settings?.effectiveProvider ?? 'local'}.{' '}
+          {settings?.hasApiKey || settings?.hasPlatformKey
+            ? 'يوجد مفتاح يعمل به المزوّد.'
+            : 'لا مفتاح بعد — الإجابة محلية من مجاميعك.'}
         </p>
         <button className="btn primary" type="submit" disabled={busy}>
           {busy ? 'جارٍ الحفظ…' : 'حفظ'}

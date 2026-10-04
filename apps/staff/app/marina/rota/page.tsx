@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { ApiError, apiData, apiList, apiPost } from '../../../lib/api';
 import { shortDate, today } from '../../../lib/lookups';
@@ -178,7 +179,7 @@ export default function MarinaRotaPage() {
       <QueryView query={plans} empty="لا توجد خطط دور" emptyDetail="أنشئ خطة لترتيب دور المراكب على فترات اليوم.">
         {(rows) => (
           <>
-            <DataTable
+            <Table
               rows={rows}
               rowKey={(row) => row.id}
               columns={[

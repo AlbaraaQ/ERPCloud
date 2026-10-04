@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { apiData, apiPost } from '../../../lib/api';
 import { dateTime } from '../../../lib/lookups';
@@ -113,7 +114,7 @@ export default function RestorePage() {
       {tables.length > 0 && (
         <section className="card">
           <h3>تفاصيل {result?.mode === 'apply' ? 'التنفيذ' : 'الفحص'}</h3>
-          <DataTable
+          <Table
             columns={[
               { key: 'table', header: 'الجدول', align: 'ltr', cell: (row: (typeof tables)[number]) => row.table },
               { key: 'rows', header: 'في النسخة', align: 'num', cell: (row: (typeof tables)[number]) => String(row.rows) },
@@ -131,7 +132,7 @@ export default function RestorePage() {
         {(rows) => (
           <section className="card">
             <h3>سجل عمليات الإستعادة</h3>
-            <DataTable
+            <Table
               columns={[
                 { key: 'createdAt', header: 'التاريخ', cell: (row: RestoreRun) => dateTime(row.createdAt) },
                 { key: 'mode', header: 'النوع', cell: (row: RestoreRun) => (row.mode === 'apply' ? 'تنفيذ' : 'فحص تجريبي') },

@@ -1,11 +1,13 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { FilterBar, Tabs } from '@erp/ui';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { WarehousePicker } from '../../../components/inventory-filters';
 import { Screen } from '../../../components/screen';
-import { FilterBar, StatTile, StatTiles, Tabs } from '../../../components/ui';
+import { StatTile, StatTiles } from '../../../components/ui';
 import { ApiError } from '../../../lib/api';
 import {
   closeTransfer,
@@ -35,11 +37,11 @@ import { useQuery } from '../../../lib/use-query';
 
 type Bucket = 'all' | 'fresh' | 'late' | 'stuck';
 
-const BUCKETS: Array<{ id: Bucket; label: string }> = [
-  { id: 'all', label: 'الكل' },
-  { id: 'fresh', label: '٠–٢ يوم' },
-  { id: 'late', label: '٣–٧ أيام' },
-  { id: 'stuck', label: 'أكثر من ٧ أيام' },
+const BUCKETS: Array<{ key: Bucket; label: string }> = [
+  { key: 'all', label: 'الكل' },
+  { key: 'fresh', label: '٠–٢ يوم' },
+  { key: 'late', label: '٣–٧ أيام' },
+  { key: 'stuck', label: 'أكثر من ٧ أيام' },
 ];
 
 function bucketOf(row: InTransitRow): Bucket {
@@ -124,7 +126,7 @@ export default function InTransitPage() {
       </StatTiles>
 
       <FilterBar
-        actions={
+        summary={
           <span className="small muted">
             {data.length === 0 ? 'لا بضاعة في الطريق' : `${data.length} سطراً بقيمة ${money(totalValue)}`}
           </span>
@@ -152,7 +154,7 @@ export default function InTransitPage() {
         emptyDetail="كل المناقلات إما استُلمت كاملة أو أُلغيت."
       >
         {() => (
-          <DataTable
+          <Table
             rows={shown}
             rowKey={(row) => `${row.transferId}:${row.lineNo}`}
             expanded={(row) => (

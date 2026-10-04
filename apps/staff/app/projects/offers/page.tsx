@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { ApiError, apiList, apiPost } from '../../../lib/api';
 import { listParties, money, partyLabel, percent, shortDate, statusLabel, today, type Party } from '../../../lib/lookups';
@@ -204,7 +205,7 @@ export default function ProjectOffersPage() {
         <h3>العروض</h3>
         <QueryView query={offers} empty="لا توجد عروض" emptyDetail="أنشئ عرضاً من النموذج أعلاه.">
           {(rows) => (
-            <DataTable
+            <Table
               rows={rows}
               rowKey={(row) => row.id}
               columns={[
@@ -264,7 +265,7 @@ export default function ProjectOffersPage() {
             {openOffer.projectId && <span className="chip on">حُوِّل إلى مشروع</span>}
             {openOffer.rejectionReason && <span className="chip">{`سبب الرفض: ${openOffer.rejectionReason}`}</span>}
           </div>
-          <DataTable
+          <Table
             rows={openOffer.lines}
             rowKey={(row) => String(row.lineNo)}
             columns={[

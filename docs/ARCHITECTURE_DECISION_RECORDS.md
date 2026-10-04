@@ -101,3 +101,106 @@ C: The September 2026 advisory feed reports high/critical findings in `vitest`, 
 Alt: Block release until all upstream toolchain packages publish fixed compatible versions, or force major test/build tool upgrades that break the current TS/Vitest config.
 Why: The production runtime exposure is zero under the release runbook; the risk is managed by CI-only execution, no public dev servers, source maps disabled for public builds unless explicitly approved, and recurring dependency-audit review before each release.
 Cons: Security owners must revisit this waiver before v1.0.1 and remove it once compatible patched build tooling is available.
+
+## ADR-030 Design System v3 lives in `packages/ui`; one token set, one theme mechanism
+D: All three front-end surfaces (`apps/staff`, `apps/platform-admin`, `apps/marketing`)
+share one package — `@erp/ui` — that owns (a) the CSS token set (`@erp/ui/tokens.css`,
+imported by each app's `globals.css`) and (b) the React component kit. Dark mode is one
+mechanism: a single `localStorage` key `erp.theme` (`light|dark|system`), one blocking
+micro-script in `<head>` that toggles `html.dark` before hydration, and one semantic
+variable contract (`--bg --surface --surface-2 --text --muted --line --line-strong
+--brand --brand-soft`, plus `--ok/--warn/--danger/--info` and the `--inverse` plate)
+that every utility resolves through.
+C: v2 already had a token contract per app, but it was *copied* into three
+`globals.css` files, its dark mode was partial (staff only, no switch, no FOUC guard),
+and the React kits in `apps/staff/components/ui` and
+`apps/platform-admin/components/ui` were two near-identical forks that carried raw
+Tailwind palette classes (`bg-white`, `text-slate-900`, …) which cannot flip.
+Alt: (a) per-app design systems — rejected: three forks is how a product looks like
+three products; (b) remap Tailwind's `slate-*` scale to variables so existing JSX keeps
+working — rejected: it leaves ~800 raw palette classes in the source and hides the
+contract instead of naming it; (c) ship the kit as a compiled `dist/` — rejected: it adds
+a build-order dependency between three apps and one package for no gain, since the apps
+already compile TypeScript from workspace sources.
+Why: a reviewer can now answer "is this colour a token?" with a `grep`; a visitor gets
+one theme answer across all three surfaces; and a component fixed once is fixed in all
+three. The build-order risk of (c) is removed by `transpilePackages: ['@erp/ui']`.
+Cons: `packages/ui` must not import from `apps/*` (enforced by the repo's
+`boundaries/element-types` rule); its JS is marked `sideEffects: ['*.css']` so a barrel
+import cannot drag `recharts` into a surface that only wanted the toggle; and the root
+`eslint.config.mjs` gained two globs (`packages/ui/**`, `src/**`) plus a
+`boundaries/elements` entry for `packages/ui/**/*.tsx` — additive only, no existing rule
+changed.
+
+## ADR-031 The shared kit is consumed as TypeScript source (`transpilePackages`)
+D: `@erp/ui` is published to the workspace with `exports: { ".": "./src/index.ts", … }`
+and each app lists it in `transpilePackages`. No `dist/`, no build step, no lockfile
+coupling between the kit and its three consumers.
+C: ADR-030 chose one kit for three apps. The repo's existing convention
+(`docs/change-log/CHANGE-REQUESTS.md` → "Decisions recorded without a change request")
+is that workspace packages emit `dist/` and are consumed compiled — because NestJS needs
+`design:paramtypes`. The three Next.js apps have no such constraint.
+Alt: compiled `dist/` (would make `pnpm --filter @erp/staff build` depend on
+`packages/ui` having been built first — a silent order requirement); a git submodule or
+copy-paste (rejected: forks again).
+Why: `next build` and `next dev` both compile the package with the app's own
+toolchain, so a change in the kit is visible immediately and no artifact can go stale.
+Cons: the kit's TypeScript must satisfy every app's `tsc`; it is therefore type-checked
+in CI through the three app builds plus `@erp/ui`'s own `typecheck` script. Because it
+is a browser-only package (DOM lib, JSX, bundler resolution) it is **excluded** from
+the root `tsconfig.base.json` NodeNext server sweep, exactly as the apps' `.tsx` code
+already is — the sweep would otherwise report `window`/`document` as unknown and demand
+`.js` extensions a bundler must not carry. The exclusion is recorded as CR-007 and
+verified: the sweep's error count returns to its base-commit value.
+
+## ADR-032 Password reset stores only a hash, and the reset link carries the token alone
+D: `password_reset_tokens.token_hash` holds SHA-256 of a 256-bit random token; the
+mailed link is `${AUTH_PASSWORD_RESET_URL_BASE}?reset=<token>` with no tenant code.
+`POST /auth/forgot-password` `{tenantCode,email}` → always 204;
+`POST /auth/reset-password` `{tenantCode,token,new}` → 204, and the token is
+single-use. Rate limit 3/min on the route.
+C: A locked-out user has no other path back in, and the previous code had none —
+no route existed. The reset token is a bearer credential for the whole tenant
+plane, so its storage and its transport are both security boundaries, not details.
+Alt: (a) store the token in plaintext and index on it — rejected, a database read
+becomes an account takeover; (b) put `&tenant=<code>` in the link — rejected, one
+person can hold memberships in several tenants and a link that silently picked one
+would log them into the wrong one, and it also writes a tenant identifier into
+browser history; (c) scope the `password.reset` e-mail event to `platform` — rejected,
+it is a tenant-scoped event and the tenant's own rate limit is what contains the
+quota risk.
+Why: hashing makes a leaked table useless without breaking the lookup (the hash is
+the index); single-use with an explicit `consumed_at` makes replay a 400 rather than
+a silent second reset; and omitting the tenant from the URL keeps the link valid for
+a user who cannot remember which tenant they are in.
+Cons: an incorrect-token lookup costs a hash computation, and the reset e-mail can
+only be delivered to an address already on file — there is deliberately no
+"which tenants do I belong to" disclosure on this route, so a user with several
+memberships must remember the e-mail they registered.
+
+## ADR-033 `rlsProtectedTables` is a curated RLS subset; the rest of the schema is isolated by `withTenantTx`
+D: `rlsProtectedTables` in `packages/database/src/rls.ts` names the tables that
+carry a database-level tenant policy. It is consumed by the isolation test
+harness only — it does not generate migrations and nothing enforces it at
+runtime. Tables not in the list are isolated at the application layer by
+`withTenantTx`, which binds the transaction-local GUC and scopes every query.
+C: The schema is deliberately hybrid. Roughly 82 tables carry RLS; over 170
+others have a `tenant_id` column and rely on app-layer scoping. Making the two
+sets equal would mean writing and maintaining policies for 170 more tables, each
+of which would then need its own migration, its own grant, and its own rollback
+path — for protection the application already provides.
+Alt: (a) generate the RLS migrations from the list — rejected, it would silently
+promote the list from documentation to infrastructure and every addition would
+become a migration-coupled change; (b) assert in tests that every table with a
+`tenant_id` is in the list — rejected, it would demand the 170-table expansion
+above and read as a security finding when it is a design choice.
+Why: The hybrid split is already load-bearing and reviewed; what was missing was
+a test that states it. CR-015 replaces a stale hardcoded copy of the list in
+`apps/api/test/isolation.spec.ts` with a live-database invariant (every declared
+table exists, has RLS enabled, and has a policy) plus a test that pins the
+subset's intent — it must never claim `users`/`tenants`/`permissions`, and it
+holds no duplicates. An audit at the time confirmed all 82 declared tables are
+genuinely protected.
+Cons: a future reader must not "fix" the 170 by adding RLS to them; that is an
+architectural change requiring its own ADR, and the second test's comment says so
+where they will be looking.

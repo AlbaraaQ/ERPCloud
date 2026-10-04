@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 
-import { DataTable, Notice } from '../../../components/data-view';
+import { Notice } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { apiData, apiPost } from '../../../lib/api';
 import { dateTime } from '../../../lib/lookups';
@@ -121,7 +122,7 @@ export default function NewCompanyFilePage() {
         {(files.data ?? []).length === 0 ? (
           <p className="muted">لم يُنشأ أي ملف بعد.</p>
         ) : (
-          <DataTable
+          <Table
             columns={[
               { key: 'code', header: 'الرمز', align: 'ltr', cell: (row: CompanyFile) => row.code },
               { key: 'name', header: 'الاسم', cell: (row: CompanyFile) => row.name },

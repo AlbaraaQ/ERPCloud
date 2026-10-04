@@ -66,6 +66,12 @@ function positiveInt(name: string): number | undefined {
 
 async function main(): Promise<void> {
   const connectionString = env.DATABASE_MIGRATOR_URL ?? env.DATABASE_URL;
+  // `seedDemoData` يشترط `string` ويمرّرها مباشرةً إلى `new Client({ connectionString })`،
+  // فلو غاب المتغيّران معًا لظهر الخطأ من pg كرسالة عن سلسلة اتصال ناقصة لا كمتغيّر
+  // بيئة مفقود — وهو ما يجعل تشخيصه أصعب مما يستحقّ. يُفحص هنا حيث يمكن تسمية السبب.
+  if (!connectionString) {
+    throw new Error('DATABASE_MIGRATOR_URL أو DATABASE_URL مطلوب لتشغيل البذر.');
+  }
 
   const tenantCode = process.env.DEMO_TENANT_CODE ?? 'demo';
   const ownerEmail = process.env.DEMO_OWNER_EMAIL ?? 'owner@demo.test';
@@ -139,7 +145,8 @@ async function main(): Promise<void> {
   console.log(
     `seed  demo — ${demo.accounts} accounts, ${demo.costCenters} cost centers, ${demo.periods} periods, ` +
       `subscription ${demo.subscription}` +
-      (demo.openingEntryNumber ? `, opening entry ${demo.openingEntryNumber}` : ''),
+      (demo.openingEntryNumber ? `, opening entry ${demo.openingEntryNumber}` : '') +
+      `, ${demo.notifications.inserted} notification(s) across ${demo.notifications.memberships} inbox(es)`,
   );
 
   printCredentials({

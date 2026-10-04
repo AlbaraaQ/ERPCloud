@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { apiData, apiList } from '../../../lib/api';
 import { money, percent, shortDate, statusLabel } from '../../../lib/lookups';
@@ -118,7 +119,7 @@ export default function ProjectFollowupPage() {
             {project.stages.length === 0 ? (
               <p className="muted">لا توجد مراحل معرَّفة لهذا المشروع.</p>
             ) : (
-              <DataTable
+              <Table
                 rows={[...project.stages].sort((a, b) => a.stageOrder - b.stageOrder)}
                 rowKey={(row) => row.id}
                 columns={[
@@ -137,7 +138,7 @@ export default function ProjectFollowupPage() {
             {project.boq.length === 0 ? (
               <p className="muted">لا توجد بنود.</p>
             ) : (
-              <DataTable
+              <Table
                 rows={project.boq}
                 rowKey={(row) => row.id}
                 columns={[
@@ -156,7 +157,7 @@ export default function ProjectFollowupPage() {
             <h3>المستخلصات</h3>
             <QueryView query={bills} empty="لا توجد مستخلصات" emptyDetail="أنشئ مستخلصاً من شاشة المشروع.">
               {(rows) => (
-                <DataTable
+                <Table
                   rows={rows}
                   rowKey={(row) => row.id}
                   columns={[
@@ -177,7 +178,7 @@ export default function ProjectFollowupPage() {
             {project.requirements.length === 0 ? (
               <p className="muted">لا توجد متطلبات مسجلة.</p>
             ) : (
-              <DataTable
+              <Table
                 rows={project.requirements}
                 rowKey={(row) => row.id}
                 columns={[

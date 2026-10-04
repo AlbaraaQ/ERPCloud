@@ -118,6 +118,12 @@ const METHODS: Array<{ id: Method; label: string; hint: string }> = [
 const QUICK_CASH = ['20', '50', '100', '200', '500'];
 
 /**
+ * RC-3 — رمز «العميل العام» في `parties`. الرمز لا الاسم: الاسم يُترجم، والرمز ثابت.
+ * يُطابق ما تكتبه بذرة `seedGeneralParties` في `packages/database/src/seed-demo.ts`.
+ */
+const GENERAL_CUSTOMER_CODE = 'CUST-GENERAL';
+
+/**
  * Point of sale — one screen, one hand on the keyboard.
  *
  * The whole sale now leaves the browser as a single `POST /pos/checkout`: the API
@@ -135,6 +141,12 @@ export default function PosPage() {
   const taxGroups = useQuery<TaxGroup[]>(() => listTaxGroups(), []);
   const cashLocations = useQuery<CashLocation[]>(() => listCashLocations(), []);
   const customers = useQuery<Party[]>(() => listParties('customer'), []);
+  // RC-3 — «عميل عام» هو الطرف الافتراضي لكل عملية نقدية. يُعرَف بالرمز لا بالاسم:
+  // الاسم يُترجم والرمز لا. ويُحسب هنا لا في القالب حتى يبقى المصدر واحدًا.
+  const generalCustomerId = useMemo(
+    () => customers.data?.find((party) => party.code === GENERAL_CUSTOMER_CODE)?.id,
+    [customers.data],
+  );
 
   const branchRow = defaultOf(branches.data ?? []);
   const branchId = branchRow?.id ?? '';
@@ -363,8 +375,15 @@ export default function PosPage() {
         invoiceDiscount: invoiceDiscount || undefined,
         orderType: 'pos',
         shiftId: shift.data?.id,
-        partyId: customerMode === 'account' ? partyId || undefined : undefined,
-        cashCustomerName: customerMode === 'walkin' ? customerName.trim() || 'عميل نقدي' : undefined,
+        // Design v3 / RC-3 — «عميل نقدي» ليس نصًّا حرًّا: هو طرف «عميل عام» في الدفتر.
+        // الربط بالطرف يعني أن الفاتورة تقع على حساب ذمم حقيقي، وأن قاعدة ZATCA في
+        // `einvoicing.service.ts` (`buyer?.vatNo ? 'standard' : 'simplified'`) تُطبَّق
+        // على مشترٍ موجود — والعامّ بلا رقمٍ ضريبيّ ⇒ فاتورة **مبوّبة** تلقائياً.
+        partyId:
+          customerMode === 'account'
+            ? partyId || undefined
+            : (generalCustomerId || undefined),
+        cashCustomerName: customerMode === 'walkin' ? customerName.trim() || undefined : undefined,
         cashCustomerMobile: customerMode === 'walkin' ? customerMobile.trim() || undefined : undefined,
         lines: ticket.map((entry) => ({
           itemId: entry.item.id,
@@ -1003,7 +1022,7 @@ export default function PosPage() {
               className="chip on"
               type="button"
               key={hold.id}
-              style={{ background: 'var(--success, #2f9e44)', color: '#fff' }}
+              style={{ background: 'var(--ok)', color: 'var(--on-accent)' }}
               title={`${hold.label ?? 'معلّقة'} · ${money(hold.total)} · ${hold.linesCount} صنف`}
               onClick={() => recallHold(hold)}
               onContextMenu={(event) => {

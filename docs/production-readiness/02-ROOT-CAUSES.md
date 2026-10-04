@@ -1,0 +1,265 @@
+# 02 — Root Causes
+
+الأسباب الجذرية، كلٌّ منها بكيفية إعادة إنتاجه. **كل استدلالٍ هنا قابل للتحقق**:
+شغّل PostgreSQL المحلي، وطبّق الترحيلات، وابذر، وشغّل الـ API، ثم نفّذ الأوامر.
+
+## إعداد بيئة الإنتاج (مرة واحدة)
+
+```bash
+pnpm env:setup # يكتب .env بمفاتيح RS256 و AES-256-GCM وكلمات البذرة
+pnpm db:local # PostgreSQL 16 مضمّن بلا Docker — يبقى يعمل في المقدّمة
+pnpm db:roles # ينشئ erp_api / erp_migrator
+pnpm db:migrate # 112 ترحيلًا
+pnpm db:seed # ينشئ المستأجر demo والمستخدمين
+pnpm --dir apps/api run start # الـ API على :3000
+```
+
+> `pnpm db:local` هو الطريق الصحيح في بيئة بلا Docker. الـ API يتطلّب Redis أيضًا
+> في بعض المسارات؛ ما دامت الاختبارات الأساسية تعمل بـ curl فغيابه غير مانع.
+
+## RC-1 — المستأجر `demo` بلا اشتراك نشط، فكل رايات الوحدات مطفأة
+
+**الأثر:** هذا **السبب الجذري الأول**. كل شاشة محميّةٌ براية وحدة تُعيد 404، فيظنّ
+المستخدم أن الشاشة مفقودة. وهذا يفسّر مجتمعًا: فشل POS، والشاشات التي "لا تفتح".
+
+**الدليل:**
+
+```
+GET /api/v1/billing/subscription → 200 {"data":null}
+GET /api/v1/settings → 200 ... "feature.pos": false
+ "feature.projects": false
+ "feature.hrm": false
+ "feature.niche": false
+GET /api/v1/pos/settings → 404 "POS pack is disabled for this tenant"
+```
+
+**السبب التقني:** `packages/database/src/seed-demo.ts:219` يضع `feature.pos: true`
+ضمن **حقوق الخطة الاحترافية**، لكن ذلك لا يُطبَّق على جدول `tenant_settings` أبدًا.
+تفعيل الاشتراك (`reviewActivation`) يُدخل صفًّا في `tenant_subscriptions` ولا يكتب
+حقوقه في `tenant_settings`. فالمستأجر بلا اشتراك ⇒ كل الرايات `false`.
+
+**الإصلاح:** عند تفعيل الاشتراك (يدويًّا أو عبر webhook) يجب **مزامنة الحقوق** مع
+`tenant_settings`. وهذا تغيير في `apps/api` + `packages/database`.
+
+## RC-2 — `throw new Error` في خدمة الفوترة يُنتج 500 بدل 403
+
+**الأثر:** شاشة الترخيص معطّلة تمامًا لأي مستأجر عادي.
+
+**الدليل (من سجل الـ API):**
+
+```json
+{"level":50,"context":"AllExceptionsFilter","code":"INTERNAL",
+ "err":{"message":"Platform administrator access required",
+ "stack":"Error: Platform administrator access required\n at BillingService.listActivationRequests (.../billing.service.ts:47:15)"},
+ "statusCode":500}
+```
+
+**السبب:** `apps/api/src/modules/platform/billing/billing.service.ts:47` يرمي
+`Error` عاديًّا. الـ `AllExceptionsFilter` لا يعرف كيف يصنّفه، فيُعيد 500.
+الموضعان المتأثران: `listActivationRequests` و`reviewActivation`.
+
+**الإصلاح:** `DomainError('FORBIDDEN', …, 403)` — نفس النمط المستخدم في بقيّة
+المشروع. تصحيح صغير، لكنه يحوّل "شاشة لا تعمل" إلى "شاشة ترفض بأدب".
+
+## RC-3 — لا طرف «عميل عام» ولا «مورد عام» في البذرة
+
+**الأثر:** دفتر الطرفين فارغ؛ POS بلا عميل افتراضي؛ ولا يمكن اختبار قاعدة
+الفاتورة المبوّسة/القياسية لأن لا مشتري له رقم ضريبي أو يفتقده.
+
+**الدليل:** `GET /api/v1/parties?limit=3 → 200 []`
+
+**الإصلاح:** بذرةٌ تُنشئ طرفين نظاميَّين لكل مستأجر (أو لكل فرع): «عميل عام»
+بلا رقم ضريبي، و«مورد عام». وواجهةٌ في POS تربط وضع "عميل نقدي" بهما عبر `partyId`
+لا عبر `cashCustomerName` النصّي.
+
+## RC-4 — منطق الفاتورة المبوّسة/القياسية سليم؛ الناقص هو الطرف
+
+**الأثر:** البند 6 من قائمة المOwner منجزٌ في الخادم؛ ما يبدو ناقصًا هو أثر RC-3.
+
+**الدليل:** `apps/api/src/modules/einvoicing/einvoicing.service.ts:492`
+
+```ts
+const profile: 'standard' | 'simplified' = buyer?.vatNo ? 'standard' : 'simplified';
+```
+
+**الخلاصة:** لا تغيير هنا. بعد RC-3 يصبح السلوك صحيحًا تلقائيًّا.
+
+## RC-5 — لا endpoint لاستعادة كلمة السر
+
+**الأثر:** لا يمكن لعميل نسى كلمته أن يستعيدها. **مانع نشر** لنظام متعدد المستأجرين.
+
+**الدليل:** مسارات المصادحة المتاحة فقط:
+`POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`,
+`POST /auth/change-password`، و MFA: `enroll`, `enable`, `disable`.
+
+**الإصلاح:** `POST /auth/forgot-password` + `POST /auth/reset-password` + جدول رموز
+منتهية الصلاحية + قالب بريد. عمل خادم كامل، يحتاج CR لأنه endpoint جديد.
+
+## RC-6 — `feature.*` مكتوبة في `tenant_settings` بلا آلية تمكين من الخطة
+
+**الأثر:** لو فُعِّل اشتراك يدويًّا الآن، ستظل الشاشات تُعيد 404. هذا RC-1 من زاوية
+الآلية: البذرة تكتب الرايات، لكن **لا شيء يُزامنها**.
+
+**الإصلاح:** دالة `applyEntitlements(tenantId, planId)` تُستدعى من
+`reviewActivation` ومن `handleStripeWebhook`، تكتب `tenant_settings` من `plan_entitlements`.
+
+## RC-7 — صفحات «عن البرنامج» و«تحديث البرنامج» (مفهوم مكتبي)
+
+**الأثر:** انطباع بأن المنتج برنامج يُثبَّت. يضرّ بمصداقية نظام سحابي.
+
+**الدليل:** `apps/staff/app/support/about/page.tsx` — قسم «تحديث البرنامج» يقول حرفيًّا
+«أعد تحميل الصفحة للحصول على آخر إصدار».
+
+**الإصلاح:** حذف القسمين من الشاشة، أو حذف الشاشة كلها ونقل «حالة التنفيذ» إلى لوحة
+التحكم. **يحتاج قرار المالك** (حذف شاشة = CR).
+
+## RC-8 — الإشعارات فارغة لأن البذرة لا تكتب إشعارات
+
+**الأثر:** مركز الإشعارات يفتح وفاضٍ. إن كان المالك يرى انهيارًا فسببه في المتصفح
+ويحتاج فحصًا حيًّا.
+
+**الدليل:** `GET /api/v1/notifications?limit=5 → 200 {"data":[]}`
+
+**السبب الحقيقي:** `packages/database/src/seed-demo.ts` لم يكن يكتب **أي** إشعار —
+لا بتمريرة، ولا بسطر. الوحدة نفسها (`apps/api/src/modules/platform-services/notifications/`)
+سليمة وتكتب الصفوف عبر `createInTx`؛ الصندوق كان فارغًا لأن لا شيء يبذره. فالعيب في
+**البذرة** لا في المشترك.
+
+**الإصلاح:** `seedNotifications(client, tenantId)` في `seed-demo.ts`، تُستدعى بعد
+`seedUsers` (الصندوق يتبع عضوية، ولا عضوية قبل وجود المستخدمين). القيود التي فرضها
+المنتج على الشكل المزروع:
+
+- **`type: 'announcement'` حصرًا.** `notification-bell.tsx` لا يرسم عنوانًا وجسمًا إلا
+  لهذا النوع (ولـ`comment.mention`)؛ وأي نوع آخر يُعرَض فيه **اسم النوع كعنوان** وبلا
+  جسم. الأنواع الحقيقية الأخرى في الشجرة (`settings.updated`، `payment.received`) كانت
+  ستُنتج صفوفًا قبيحة لا إشعارات.
+- **الحمولة تحاكي `announcements.service.ts` بالضبط:** `titleAr`/`titleEn`/`bodyAr`/
+  `bodyEn` + `href`.
+- **إشعاران لا واحد:** أحدهما غير مقروء (فتظهر الشارة رقمًا) والآخر مقروء (فيكون وسم
+  المقروء مرئيًّا).
+- **التكرار محميّ بعلامة `payload->>'seed'`** (`rc-8-welcome` / `rc-8-inbox`) — الجدول
+  بلا قيد وحيد، فإعادة `db:seed` كانت ستُضاعِف الصناديق.
+- **الهدف هو العضويات النشطة** لا المستخدمين (`notifications` محصورةٌ بالعضوية).
+
+**مُتحقَّق:** `db:seed` → `6 new across 3 membership(s)` (لكل عضوية 1 غير مقروء + 1
+مقروء)؛ وإعادة التشغيل → `0 new`.
+
+**يبقى مفتوحًا:** إذا كان المالك يرى انهيارًا متصفحيًّا على `/notifications` فيُفحص بـ
+DevTools (4.2) — وهذه البيئة بلا متصفح.
+
+## RC-9 — «طلب المساعدة» صفحة ثابتة بلا endpoint
+
+**الدليل:** `apps/staff/app/support/help/page.tsx` (56 سطرًا) — لا نداء واحد لأي مسار.
+
+**الإصلاح:** إما ربطها بنموذج تواصل حقيقي (`POST /leads` موجود في الـ API)، أو
+تحويلها إلى مركز مساعدة ثابت صريح. **يحتاج قرار المالك.**
+
+## RC-10 — `resend` غير مدعوم كمزوّد بريد
+
+**الدليل:** `GET /api/v1/email/settings → "provider":"console"` — والمزوّد المدعوم
+الوحيد المُعاد هو `console`.
+
+**الإصلاح:** إضافة `resend` إلى `apps/api/src/modules/email/` (مزوّد + إعدادات +
+اختبار إرسال)، وإلى واجهتي الإعدادات في staff و platform-admin.
+
+## RC-11 — المساعد AI مُفعَّل بلا مزوّد
+
+**الدليل:** `GET /api/v1/ai/settings → {"enabled":true,"provider":null}` مع أن
+`PUT /ai/settings` مسجَّل ويعمل.
+
+**الإصلاح:** حقل مفتاح المزوّد في النموذج، مشفَّرًا عبر `secret-box.ts` الموجود،
+وربط الحالة بـ `provider` حتى لا يظهر «مُفعَّل» بلا مزوّد.
+
+---
+
+# الموجة 1 — أسباب جديدة ظهرت أثناء التنفيذ
+
+ثلاثة أسباب إضافية لم تكن في الفحص الأول، كلها اكتُشفت بالتشغيل لا بالقراءة.
+
+## RC-12 — `TenantGuard` لا يربط `app.tenant_id` على اتصال قاعدة البيانات
+
+**الأثر:** أي خدمة تنفّذ `db.execute(...)` خارج معاملة تقرأ من جدول محميّ بـRLS
+فترى **صفر صفوف** — بلا خطأ وبلا تحذير. وهذا ما جعل شاشة الترخيص تُظهر «لا ترخيص»
+لمستأجر يملك اشتراكًا نشطًا.
+
+**الدليل:** الاشتراك موجود فعلًا (تحقّقتُ مباشرةً بـ`SELECT ... WHERE tenant_id=…`
+مع ربط GUC فرجع صفًّا واحدًا `active / pro-monthly`)، لكن
+`GET /billing/subscription` كان يُعيد `{"data":null}` قبل الإصلاح ويُعيد الاشتراك
+كامله بعده.
+
+**السبب التقني:** `TenantGuard` ينشر سياق الطلب (`setTenantContextValue`) لكنه لا
+ينفّذ `set_config('app.tenant_id', …)`. و`setTenantContext` في
+`packages/database/src/rls.ts` يمرّر `is_local = true` عمدًا (حتى لا يتسرّب مستأجرٌ
+إلى الطلب التالي عبر التجمّع)، فالمعيار لا يُورَّث. فخدمةٌ تقرأ خارج `withTenantTx`
+تقارن `tenant_id` بـ`NULL`.
+
+**الإصلاح:** `mySubscription` و`requestManualActivation` و`createStripeCheckout`
+تُغلَّف الآن في `withTenantTx`، و`listActivationRequests` و`reviewActivation` في
+`withPlatformAdminTx` (هذان مسارا مشغّل منصة، والجدولان محميّان بسياسة المنصة).
+
+**تحذير للمراجعة:** هذا النمط قد يكون موجودًا في خدمات أخرى تستخدم `db.execute`
+مباشرةً على جداول مستأجرة. لم أفحص المستودع كله؛ هذا بند في `04-BACKLOG.md`.
+
+## RC-13 — جدول `items` فارغ في البذرة
+
+**الأثر:** نقطة البيع تبني تذكرة من أصناف. لا أصناف ⇒ لا تذكرة ⇒ لا فاتورة.
+
+**الدليل:** `SELECT count(*) FROM items WHERE tenant_id=…` → **0**، بينما
+`item_categories` → 2، `units_of_measure` → 4، `tax_groups` → 2. فالبذرة كانت
+تُهيّئ كل ما يحتاجه الصنف ما عدا الصنف نفسه.
+
+**الإصلاح:** `seedCatalogItems` في `packages/database/src/seed-demo.ts` تُبذر عشرة
+أصناف (ثمانية بضاعة + خدمتان)، بالأسعار كنصٍّ عشري لا كأرقام (قاعدة المال §3)،
+ومُعرَّفة بالـ`sku` لا بالاسم.
+
+## RC-14 — `stock_balances` فارغة، فكل بيعٍ يُرفض
+
+**الأثر:** بعد RC-13 صار الصنف موجودًا، لكن `POST /pos/checkout` كان يُرجع
+`422 STOCK_INSUFFICIENT`. السبب رصيدٌ افتتاحيٌّ معدوم.
+
+**الدليل:** التحقّق التشغيلي — أول محاولة حفظ بعد إضافة الأصناف:
+```json
+{"status":422,"code":"STOCK_INSUFFICIENT","detail":"Stock is insufficient for this movement"}
+```
+
+**الإصلاح:** `seedOpeningStock` تُبذر 50 وحدة لكل صنف بضاعة في المستودع الرئيسي،
+بقيمة = الكمية × سعر الشراء. الخدمات لا رصيد لها (`kind = 'service'`).
+
+## التحقّق النهائي للموجة 1
+
+بعد الإصلاحات الأربعة (RC-1/RC-6، RC-2، RC-3، RC-12، RC-13، RC-14)، محاولة حفظ
+حقيقية واحدة:
+
+```
+POST /api/v1/pos/checkout → 201
+{
+ "number": "SI-000001",
+ "subtotal": "130.0000",
+ "taxTotal": "19.5000",
+ "total": "149.5000",
+ "paidTotal": "149.5000",
+ "paymentStatus": "paid",
+ "method": "cash",
+ "change": "50.5000",
+ "tendered": "200.0000"
+}
+```
+
+٢ × 65.00 = 130.00، + 15% = 19.50، الإجمالي 149.50، المدفوع 200، الباقي 50.50.
+الحساب صحيحٌ إلى الخَرزة.
+
+## البند 6 — قاعدة الفاتورة المبوّبة/القياسية
+
+`apps/api/src/modules/einvoicing/einvoicing.service.ts:492`:
+
+```ts
+const profile: 'standard' | 'simplified' = buyer?.vatNo ? 'standard' : 'simplified';
+```
+
+**لم يُمسّ هذا السطر.** المنطق كان صحيحًا من البداية؛ ما كان ينقصه مشترٍ موجود.
+والآن، بعد RC-3، «عميل عام» بلا رقم ضريبيّ ⇒ الفاتورة تسقط تلقائيًّا في «مبوّبة»
+(0200000)، وعميلٌ له رقم ضريبيّ ⇒ «قياسية» (0100000). لا قرار من المستخدم ولا علم
+في الواجهة — القاعدة تعمل لأن البيانات صحيحة.
+
+**ملاحظة للتوثيق:** `einvoice_submissions` لا يحمل عمود `profile`؛ البروفايل
+مُستخرَجٌ لحظة الإرسال من المشتري، لا مخزَّن. فهذا ليس بيانًا ناقصًا بل تصميم.

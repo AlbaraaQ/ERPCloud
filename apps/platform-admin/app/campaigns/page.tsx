@@ -37,9 +37,9 @@ import {
   type CampaignStatus,
   type CampaignView,
 } from '@erp/contracts';
+import { Tabs } from '@erp/ui';
 
 import { Empty, ErrorBox, Forbidden, Loading, Screen } from '../../components/screen';
-import { Tabs } from '../../components/ui';
 import { ApiError, apiData, apiPatch, apiPost } from '../../lib/api';
 import { useSession } from '../../lib/session';
 import { useQuery } from '../../lib/use-query';
@@ -71,8 +71,8 @@ export default function CampaignsPage() {
     >
       <Tabs
         items={[
-          { id: 'campaigns', label: 'الحملات' },
-          { id: 'segments', label: 'الشرائح' },
+          { key: 'campaigns', label: 'الحملات' },
+          { key: 'segments', label: 'الشرائح' },
         ]}
         value={tab}
         onChange={setTab}

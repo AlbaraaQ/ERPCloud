@@ -365,7 +365,7 @@ export default function OfflinePosPage() {
       actions={
         <>
           <span
-            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-bold ${online ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-bold ${online ? 'bg-ok-soft text-ok-ink' : 'bg-danger-soft text-danger-ink'}`}
           >
             {online ? '🟢 متصل' : '🔴 أوفلاين'}
           </span>

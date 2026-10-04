@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { DocField, DocHead, StatTile, StatTiles, StatusTrack, Totals } from '../../../components/ui';
 import { listItemComponents, type ItemComponent } from '../../../lib/lookups';
@@ -374,7 +375,7 @@ export default function ProductionOrdersPage() {
         </div>
         <QueryView query={orders} empty="لا توجد أوامر إنتاج" emptyDetail="أنشئ أمراً من النموذج أعلاه.">
           {(rows) => (
-            <DataTable
+            <Table
               rows={rows}
               rowKey={(row) => row.id}
               columns={[
@@ -441,7 +442,7 @@ export default function ProductionOrdersPage() {
             <DocField label="البيان">{open.notes ?? '—'}</DocField>
           </DocHead>
 
-          <DataTable
+          <Table
             rows={open.components}
             rowKey={(row) => String(row.lineNo)}
             footer={[

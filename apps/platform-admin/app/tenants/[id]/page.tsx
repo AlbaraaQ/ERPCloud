@@ -28,11 +28,11 @@ import {
   type TenantNotesResponse,
   type TenantSettingsResponse,
 } from '@erp/contracts';
+import { Badge } from '@erp/ui';
+import { Button } from '@erp/ui';
+import { Tabs as TabsBar } from '@erp/ui';
 
 import { Empty, ErrorBox, Loading, Screen } from '../../../components/screen';
-import { Badge } from '../../../components/ui/badge';
-import { Button } from '../../../components/ui/button';
-import { Tabs as TabsBar } from '../../../components/ui/tabs';
 import { MeterBar, SourceTag } from '../../../components/ui';
 import { ApiError, apiData, apiDelete, apiPatch, apiPost, apiPut } from '../../../lib/api';
 import { useSession } from '../../../lib/session';
@@ -61,17 +61,17 @@ import { useQuery } from '../../../lib/use-query';
 
 /** The eight tabs, verbatim from the plan (`PLATFORM_CONSOLE_PLAN.md` §4/‏P-C2) — now with icons. */
 const TABS = [
-  { id: 'overview', label: 'نظرة عامة', icon: <Building2 size={15} /> },
-  { id: 'subscription', label: 'الاشتراك', icon: <CreditCard size={15} /> },
-  { id: 'users', label: 'المستخدمون', icon: <UserRound size={15} /> },
-  { id: 'usage', label: 'الاستخدام', icon: <Gauge size={15} /> },
-  { id: 'flags', label: 'الرايات', icon: <ListChecks size={15} /> },
-  { id: 'health', label: 'الصحة', icon: <ShieldCheck size={15} /> },
-  { id: 'audit', label: 'التدقيق', icon: <History size={15} /> },
-  { id: 'notes', label: 'الملاحظات', icon: <ScrollText size={15} /> },
+  { key: 'overview', label: 'نظرة عامة', icon: <Building2 size={15} /> },
+  { key: 'subscription', label: 'الاشتراك', icon: <CreditCard size={15} /> },
+  { key: 'users', label: 'المستخدمون', icon: <UserRound size={15} /> },
+  { key: 'usage', label: 'الاستخدام', icon: <Gauge size={15} /> },
+  { key: 'flags', label: 'الرايات', icon: <ListChecks size={15} /> },
+  { key: 'health', label: 'الصحة', icon: <ShieldCheck size={15} /> },
+  { key: 'audit', label: 'التدقيق', icon: <History size={15} /> },
+  { key: 'notes', label: 'الملاحظات', icon: <ScrollText size={15} /> },
 ] as const;
 
-type TabId = (typeof TABS)[number]['id'];
+type TabId = (typeof TABS)[number]['key'];
 
 /** The status words the customers list already uses (`app/tenants/page.tsx`), verbatim. */
 const STATUS_LABEL: Record<string, string> = { active: 'نشط', suspended: 'موقوف', archived: 'مؤرشف' };
@@ -159,28 +159,28 @@ export default function TenantCardPage() {
       {card.status === 'success' && tenant && (
         <>
           {/* identity strip */}
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-3 rounded-[10px] border border-slate-200 bg-white px-4 py-3 shadow-1">
-            <span className="grid size-11 flex-none place-items-center rounded-xl bg-slate-900 font-mono text-[14px] font-bold text-white" dir="ltr">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-3 rounded-[10px] border border-line bg-surface px-4 py-3 shadow-1">
+            <span className="grid size-11 flex-none place-items-center rounded-xl bg-inverse font-mono text-[14px] font-bold text-on-accent" dir="ltr">
               {tenant.code.slice(0, 2).toUpperCase()}
             </span>
             <span className="min-w-0">
-              <span className="block truncate text-[16px] font-extrabold text-slate-900">{tenant.name}</span>
-              <span className="block font-mono text-[11.5px] text-slate-400" dir="ltr">
+              <span className="block truncate text-[16px] font-extrabold text-ink">{tenant.name}</span>
+              <span className="block font-mono text-[11.5px] text-muted" dir="ltr">
                 {tenant.code} · {tenant.baseCurrency ?? ''} {tenant.timezone ? `· ${tenant.timezone}` : ''}
               </span>
             </span>
             <span className="ms-auto flex flex-wrap items-center gap-2">
-              <Badge tone={tenant.status === 'active' ? 'green' : tenant.status === 'suspended' ? 'red' : 'neutral'} dot>
+              <Badge tone={tenant.status === 'active' ? 'ok' : tenant.status === 'suspended' ? 'danger' : 'neutral'} dot>
                 {STATUS_LABEL[tenant.status] ?? tenant.status}
               </Badge>
-              <span className="text-[12px] font-semibold text-slate-400">
+              <span className="text-[12px] font-semibold text-muted">
                 أُنشئ {when(tenant.createdAt)} · آخر نشاط {when(tenant.lastActivityAt)} · آخر دخول {when(tenant.lastLoginAt)}
               </span>
             </span>
           </div>
 
           <TabsBar
-            items={TABS.map((entry) => ({ key: entry.id, label: <span className="inline-flex items-center gap-1.5">{entry.icon}{entry.label}</span> }))}
+            items={TABS.map((entry) => ({ key: entry.key, label: <span className="inline-flex items-center gap-1.5">{entry.icon}{entry.label}</span> }))}
             value={tab}
             onChange={(key) => setTab(key as TabId)}
           />
@@ -188,7 +188,7 @@ export default function TenantCardPage() {
           {notice ? (
             <div
               className={`flex items-center gap-2 rounded-[10px] border px-4 py-2.5 text-[13px] font-semibold ${
-                notice.kind === 'ok' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-700'
+                notice.kind === 'ok' ? 'border-ok-line bg-ok-soft text-ok-ink' : 'border-danger-line bg-danger-soft text-danger-ink'
               }`}
             >
               {notice.text}

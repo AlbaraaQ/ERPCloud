@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 
-import { DataTable, Notice, QueryView } from '../../../../components/data-view';
+import { Notice, QueryView } from '../../../../components/data-view';
+import { Table } from '../../../../components/table';
 import { Screen } from '../../../../components/screen';
 import { ApiError, apiData, apiFetch, apiPost } from '../../../../lib/api';
 import { dateTime, money } from '../../../../lib/lookups';
@@ -157,7 +158,7 @@ export default function SallaProductsPage() {
       <QueryView query={products} empty="لا توجد أصناف" emptyDetail="أضف أصنافاً من دليل المواد أولاً.">
         {(rows) => (
           <div className="card">
-            <DataTable
+            <Table
               columns={[
                 { key: 'sku', header: 'الرمز', align: 'ltr', cell: (row: Product) => row.sku },
                 { key: 'name', header: 'الصنف', cell: (row: Product) => row.nameAr },
@@ -248,7 +249,7 @@ export default function SallaProductsPage() {
       >
         {(rows) => (
           <div className="card">
-            <DataTable
+            <Table
               columns={[
                 { key: 'remote', header: 'الرقم', align: 'ltr', cell: (row: StoreProduct) => row.remoteId },
                 { key: 'sku', header: 'الرمز', align: 'ltr', cell: (row: StoreProduct) => row.sku || '—' },
@@ -269,7 +270,7 @@ export default function SallaProductsPage() {
         <h3>سجل التصدير</h3>
         <QueryView query={logs} empty="لا توجد عمليات تصدير بعد">
           {(rows) => (
-            <DataTable
+            <Table
               columns={[
                 { key: 'created', header: 'الوقت', cell: (row: ExportLog) => dateTime(row.createdAt) },
                 { key: 'action', header: 'العملية', cell: (row: ExportLog) => row.action },

@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { apiData } from '../../../lib/api';
 import { useQuery } from '../../../lib/use-query';
@@ -43,7 +44,7 @@ export default function HrmCompliancePage() {
         {(payload) => (
           <>
             <Notice notice={{ kind: payload.count ? 'warn' : 'ok', text: `${payload.count} تنبيه حتى ${payload.today}` }} />
-            <DataTable
+            <Table
               rows={payload.data}
               rowKey={(row) => `${row.employeeId}-${row.kind}`}
               columns={[

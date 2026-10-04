@@ -2,7 +2,8 @@
 
 import { useRef, useState } from 'react';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { StatTile, StatTiles } from '../../../components/ui';
 import { ApiError, apiDelete, apiData, apiFetch, apiPost } from '../../../lib/api';
@@ -352,7 +353,7 @@ export default function FilesPage() {
         >
           {(data) => (
             <>
-              <DataTable
+              <Table
                 columns={[
                   { key: 'no', header: 'م', align: 'num', cell: (_row, index) => String(offset + index + 1) },
                   { key: 'name', header: '📄 اسم الملف', cell: (row) => row.name },

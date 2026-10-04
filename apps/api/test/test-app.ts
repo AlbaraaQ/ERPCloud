@@ -56,7 +56,11 @@ export async function createTestApp(
 
   // `TEST_LOGS=1` يُظهر سجلّ التطبيق — يُستعمل عند تشخيص فشلٍ لا يقول الجسم سببه
   // (المعالج العام يحوّل 500 إلى نصٍّ عام). والافتراضي صامت كما كان.
-  const app = moduleRef.createNestApplication({ logger: process.env.TEST_LOGS === '1' });
+  // `logger: false` يُسكِته صراحةً؛ و`undefined` يُعيد الافتراضيّ. و`boolean` المجرّد
+  // ليس من النوع الذي يقبله `NestApplicationOptions`، فالثلاثي هو ما يُعبّر عنه فعلًا.
+  const app = moduleRef.createNestApplication({
+    logger: process.env.TEST_LOGS === '1' ? undefined : false,
+  });
   app.use(RequestIdMiddleware);
   applyHttpConfiguration(app);
   await app.init();

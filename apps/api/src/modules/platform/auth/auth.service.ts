@@ -6,13 +6,16 @@ import {
   errorCodes,
   newId,
   type ChangePasswordRequest,
+  type ForgotPasswordRequest,
   type LoginRequest,
   type LoginResponse,
   type MembershipDto,
+  type ResetPasswordRequest,
   type RefreshRequest,
 } from '@erp/contracts';
 import {
   memberships,
+  passwordResetTokens,
   refreshTokens,
   tenants,
   users,
@@ -24,8 +27,10 @@ import {
 import type { AuthContextValue } from '../../../request-context/request-context.js';
 import { DATABASE_HANDLE } from '../../../database/database.module.js';
 import { toMembershipDto, toUserDto, type MembershipRow, type UserRow } from '../mappers.js';
+import { EmailService } from '../../email/email.service.js';
 
 import { MfaService } from './mfa.service.js';
+import { generateResetToken, hashResetToken } from './reset-token.js';
 import { PasswordService } from './password.service.js';
 import { resolvePlatformAccess } from './platform-access.js';
 import { TokenService } from './token.service.js';
@@ -81,6 +86,10 @@ export class AuthService {
     private readonly tokens: TokenService,
     private readonly passwords: PasswordService,
     private readonly mfa: MfaService,
+    // Injected for the recovery flow only. Deliberately *not* used anywhere else in this
+    // service: login and MFA must stay independent of the mail plane, so a mail outage
+    // can never take authentication down with it.
+    private readonly email: EmailService,
   ) {}
 
   async login(input: LoginRequest, meta: RequestMeta = {}): Promise<LoginResponse> {
@@ -270,6 +279,225 @@ export class AuthService {
         .set({ revokedAt: new Date() })
         .where(and(eq(refreshTokens.userId, auth.userId), isNull(refreshTokens.revokedAt)));
     });
+  }
+
+  // --- password recovery --------------------------------------------------------
+  //
+  // The two halves of recovery are asymmetric on purpose.
+  //
+  // `forgotPassword` **always answers 204** and never says whether the address exists.
+  // A recovery endpoint that distinguishes "sent" from "no such user" is an account
+  // enumeration oracle, and it is the one thing that makes recovery features dangerous
+  // rather than useful. Everything else — the rate limit, the token TTL, the single-use
+  // guard — exists to contain the blast radius of the fact that an unauthenticated
+  // caller can make the system send mail on someone else's behalf.
+  //
+  // `resetPassword` is the half that must be loud: an unknown, expired or already-used
+  // token is a hard `400`, because at that point the caller has proven they hold a
+  // secret and a silent no-op would leave them thinking it worked.
+
+  async forgotPassword(input: ForgotPasswordRequest, meta: RequestMeta = {}): Promise<void> {
+    const tenant = await withTx(this.database.db, async (tx) => {
+      const rows = await tx
+        .select({ id: tenants.id, code: tenants.code, name: tenants.name, status: tenants.status })
+        .from(tenants)
+        .where(sql`lower(${tenants.code}) = lower(${input.tenantCode})`)
+        .limit(1);
+      return rows[0];
+    });
+
+    // Same shape as `login`: an unknown tenant is not an error here, it is simply a
+    // request that has nobody to mail. Falling through keeps the response uniform.
+    if (!tenant || tenant.status !== 'active') return;
+
+    const user = await withTx(this.database.db, async (tx) => {
+      const rows = await tx
+        .select({ id: users.id, email: users.email, fullName: users.fullName, status: users.status })
+        .from(users)
+        .where(eq(users.email, input.email))
+        .limit(1);
+      return rows[0];
+    });
+    if (!user || user.status !== 'active') return;
+
+    // The membership check is the same one `login` performs: holding a user row is not
+    // enough, the person must actually belong to the tenant they named. Without it a
+    // valid user of tenant A could be mailed a reset link that is scoped to tenant B.
+    const membership = await this.findActiveMembership(tenant.id, user.id);
+    if (!membership) return;
+
+    // 32 random bytes, base64url — the same shape as the refresh-token secret. Only its
+    // digest is persisted, so what the user receives is the only copy in existence.
+    const token = generateResetToken();
+    const tokenHash = hashResetToken(token);
+    const expiresAt = new Date(Date.now() + env.AUTH_PASSWORD_RESET_TTL_MINUTES * 60_000);
+
+    await withTenantTx(this.database.db, tenant.id, async (tx) => {
+      // Retire any outstanding link first. The partial unique index of 0113 allows only
+      // one live token per user, and more importantly a user who clicks "forgot" twice
+      // should not be left with several valid links sitting in their mailbox history.
+      await tx
+        .update(passwordResetTokens)
+        .set({ usedAt: new Date() })
+        .where(
+          and(eq(passwordResetTokens.userId, user.id), isNull(passwordResetTokens.usedAt)),
+        );
+
+      await tx.insert(passwordResetTokens).values({
+        id: newId(),
+        tenantId: tenant.id,
+        userId: user.id,
+        tokenHash,
+        expiresAt,
+        ...(meta.ip ? { requestedIp: meta.ip } : {}),
+        ...(meta.userAgent ? { requestedUserAgent: meta.userAgent } : {}),
+      });
+    });
+
+    await this.sendResetEmail({
+      tenantId: tenant.id,
+      user: { email: user.email, fullName: user.fullName },
+      token,
+      expiresAt,
+    });
+  }
+
+  async resetPassword(input: ResetPasswordRequest): Promise<void> {
+    const tenant = await withTx(this.database.db, async (tx) => {
+      const rows = await tx
+        .select({ id: tenants.id, code: tenants.code, status: tenants.status })
+        .from(tenants)
+        .where(sql`lower(${tenants.code}) = lower(${input.tenantCode})`)
+        .limit(1);
+      return rows[0];
+    });
+    if (!tenant) {
+      throw new DomainError(errorCodes.VALIDATION_FAILED, 'Reset link is invalid or has expired', 400);
+    }
+
+    const tokenHash = hashResetToken(input.token);
+
+    // Read first, consume later. The claim itself stays a guarded UPDATE (below) so the
+    // atomicity guarantee is unchanged — but nothing is marked used until every other
+    // reason to reject the request has already been ruled out. Consuming the token
+    // *before* checking the password policy would burn the link on a weak password and
+    // send the user back through a fresh e-mail round-trip to try again.
+    const live = await withTenantTx(this.database.db, tenant.id, async (tx) => {
+      const rows = await tx
+        .select({
+          id: passwordResetTokens.id,
+          userId: passwordResetTokens.userId,
+          email: users.email,
+          fullName: users.fullName,
+        })
+        .from(passwordResetTokens)
+        .innerJoin(users, eq(users.id, passwordResetTokens.userId))
+        .where(
+          and(
+            eq(passwordResetTokens.tokenHash, tokenHash),
+            isNull(passwordResetTokens.usedAt),
+            sql`${passwordResetTokens.expiresAt} > now()`,
+          ),
+        )
+        .limit(1);
+      return rows[0];
+    });
+    if (!live) {
+      throw new DomainError(errorCodes.VALIDATION_FAILED, 'Reset link is invalid or has expired', 400);
+    }
+
+    // Checked against the same policy as `changePassword`, and before the claim, so a
+    // password that fails it costs the user a retry rather than a new reset e-mail.
+    this.passwords.assertPolicy(input.new, { email: live.email, fullName: live.fullName });
+
+    const claimed = await withTenantTx(this.database.db, tenant.id, async (tx) => {
+      // Still guarded on `used_at IS NULL AND expires_at > now()` rather than
+      // read-then-write, so two simultaneous submissions of the same link cannot both
+      // succeed — whichever UPDATE matches zero rows loses, and that is the answer.
+      const result = await tx
+        .update(passwordResetTokens)
+        .set({ usedAt: new Date() })
+        .where(
+          and(
+            eq(passwordResetTokens.tokenHash, tokenHash),
+            isNull(passwordResetTokens.usedAt),
+            sql`${passwordResetTokens.expiresAt} > now()`,
+          ),
+        )
+        .returning({ id: passwordResetTokens.id, userId: passwordResetTokens.userId });
+      return result[0];
+    });
+    if (!claimed) {
+      throw new DomainError(errorCodes.VALIDATION_FAILED, 'Reset link is invalid or has expired', 400);
+    }
+
+    const passwordHash = await this.passwords.hash(input.new);
+
+    await withTenantTx(this.database.db, tenant.id, async (tx) => {
+      await tx
+        .update(users)
+        .set({
+          passwordHash,
+          mustChangePassword: false,
+          passwordChangedAt: new Date(),
+          failedLoginAttempts: 0,
+          lockedUntil: null,
+          updatedAt: new Date(),
+          updatedBy: claimed.userId,
+          version: sql`${users.version} + 1`,
+        })
+        .where(eq(users.id, claimed.userId));
+      // A recovery is, by definition, a session the legitimate owner no longer controls.
+      // Every existing refresh token dies with the old password (SECURITY_ARCHITECTURE §2),
+      // so a takeover cannot ride in on a token issued before the reset.
+      await tx
+        .update(refreshTokens)
+        .set({ revokedAt: new Date() })
+        .where(and(eq(refreshTokens.userId, claimed.userId), isNull(refreshTokens.revokedAt)));
+    });
+  }
+
+  /**
+   * Mails the link. Kept out of `forgotPassword` so the two failure modes stay separate:
+   * a mail failure must never make the endpoint answer differently, or the response
+   * shape would leak whether the account exists after all.
+   */
+  private async sendResetEmail(input: {
+    tenantId: string;
+    user: { email: string; fullName: string };
+    token: string;
+    expiresAt: Date;
+  }): Promise<void> {
+    const appUrl = (env.AUTH_PASSWORD_RESET_URL_BASE ?? '').replace(/\/+$/, '');
+    if (!appUrl) return; // Not configured: the link cannot be built, so nothing is mailed.
+
+    // Only the token travels in the link. The tenant code is **not** included: the reset
+    // screen asks for it, because the same person can hold memberships in more than one
+    // tenant and a link that silently picked one would be a link that logs them into the
+    // wrong one. It is also one less secret in a URL that ends up in a browser history.
+    const link = `${appUrl}?reset=${encodeURIComponent(input.token)}`;
+    const expires = input.expiresAt.toISOString().slice(0, 16).replace('T', ' ');
+
+    try {
+      await this.email.send({
+        event: 'password.reset',
+        tenantId: input.tenantId,
+        to: input.user.email,
+        toName: input.user.fullName,
+        locale: 'ar',
+        // Only the three variables the `password.reset` event declares. The catalogue check
+        // in `email-templates.service` rejects any `{{var}}` outside the event's list, so
+        // passing the tenant name here would fail the send rather than render it.
+        variables: {
+          name: input.user.fullName,
+          link,
+          expires,
+        },
+      });
+    } catch {
+      // Swallowed on purpose. The caller has already been told 204, and a mail outage is
+      // not something an unauthenticated request should be able to observe.
+    }
   }
 
   async changePassword(auth: AuthContextValue, input: ChangePasswordRequest): Promise<void> {

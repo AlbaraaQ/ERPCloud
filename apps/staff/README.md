@@ -355,3 +355,26 @@ asks for both by their names, and the lot grid shows `📅 تاريخ الإنت
 The posted document shows what it was told: `📁 رقم الدفعة` with its production and expiry
 dates on the line card, read off the line itself — not re-derived from the lot.
 
+## Design System v3
+
+The staff surface is built on the shared kit in `packages/ui` (see its README for the
+full contract). Local notes for this app:
+
+- **Tokens.** `app/globals.css` imports `@erp/ui/tokens.css` and nothing else declares
+  the contract. Dark mode is complete here — the theme key is `erp.theme`
+  (`light|dark|system`), the top bar carries `ThemeToggle`, and the blocking
+  `ThemeScript` in `app/layout.tsx` prevents a flash of the wrong theme.
+- **Bilingual shell.** The top bar also carries the AR/EN switch. It drives
+  `lib/i18n.tsx`, which sets `<html lang>` and `<html dir>`; keys are additive only.
+- **`/design`** renders `DesignGallery` — every component once, in both themes. It is
+  `notFound()` in production; it exists for review, not for users. Note that it sits
+  behind the app's own `AuthGate` like every other route — the gate was **not** relaxed
+  to open a colour palette to anonymous visitors. Sign in first, then open `/design`.
+- **Screen honesty.** The sidebar carries a `تغطية الشاشات` card counting how many
+  registered screens are `ready` versus `api` versus `planned` (`lib/navigation.ts` is
+  the registry). A screen whose status is not `ready` renders an honest
+  `EmptyState` naming its endpoint or its missing permission — it is never hidden and
+  never faked.
+- **POS is dark-first.** The POS screens assume the dark palette and are the model the
+  dark theme is tuned against.
+- **Layout.** 288 px sticky sidebar, 56 px top bar, 1400 px content measure.

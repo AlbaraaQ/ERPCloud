@@ -155,7 +155,7 @@ export function NotificationInbox({ locale }: { locale: 'ar' | 'en' }) {
   );
 }
 
-type Notification = {
+export type Notification = {
   id: string;
   type: string;
   payload: Record<string, unknown>;
@@ -168,7 +168,7 @@ function text(value: unknown, fallback = ''): string {
 }
 
 /** نصّ الإشعار بلغة القارئ. غير المعروف يُعرض بمعرّفه — لا نخترع نصّاً لحدثٍ لا نعرفه. */
-function notificationText(item: Notification, locale: 'ar' | 'en'): { title: string; body: string } {
+export function notificationText(item: Notification, locale: 'ar' | 'en'): { title: string; body: string } {
   const payload = item.payload ?? {};
   if (item.type === 'announcement') {
     return {

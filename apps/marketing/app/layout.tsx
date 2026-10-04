@@ -1,14 +1,10 @@
-import '@fontsource/tajawal/400.css';
-import '@fontsource/tajawal/500.css';
-import '@fontsource/tajawal/700.css';
-import '@fontsource-variable/inter';
-
 import './globals.css';
 
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { headers } from 'next/headers';
 import { Suspense } from 'react';
+import { ThemeProvider, ThemeScript } from '@erp/ui/theme';
 
 import { ConsentBanner } from '../components/site/consent-banner';
 import { SiteEvents } from '../components/site/site-events';
@@ -66,8 +62,14 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   };
 
   return (
-    <html lang={locale} dir={dir(locale)}>
+    <html lang={locale} dir={dir(locale)} suppressHydrationWarning>
+      <head>
+        {/* Design v3 §2.1 — the site follows the OS by default and offers the
+            switch in the navbar. One script, one `erp.theme` key. */}
+        <ThemeScript defaultChoice="system" />
+      </head>
       <body>
+        <ThemeProvider defaultChoice="system">
         <a className="skip-link" href="#main">
           {locale === 'ar' ? 'تخطَّ إلى المحتوى' : 'Skip to content'}
         </a>
@@ -83,6 +85,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <SiteEvents />
         <ConsentBanner locale={locale} />
         <p className="sr-only">{t(locale, 'meta.localeName')}</p>
+        </ThemeProvider>
       </body>
     </html>
   );

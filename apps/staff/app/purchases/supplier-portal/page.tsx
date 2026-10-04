@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { ApiError, apiList, apiPost } from '../../../lib/api';
 import { listParties, money, partyLabel, shortDate, type Party } from '../../../lib/lookups';
@@ -117,7 +118,7 @@ export default function SupplierPortalAdminPage() {
       <QueryView query={users} empty="لا توجد دعوات">
         {(rows) => (
           <div className="card">
-            <DataTable
+            <Table
               columns={[
                 { key: 'party', header: 'المورد', cell: (row: PortalUser) => partyOf(row.partyId) },
                 { key: 'email', header: 'البريد', cell: (row: PortalUser) => row.email },
@@ -153,7 +154,7 @@ export default function SupplierPortalAdminPage() {
       <QueryView query={rfqs} empty="لا توجد طلبات">
         {(rows) => (
           <div className="card">
-            <DataTable
+            <Table
               columns={[
                 { key: 'number', header: 'الرقم', cell: (row: Rfq) => row.number },
                 { key: 'party', header: 'المورد', cell: (row: Rfq) => partyOf(row.partyId) },
@@ -173,7 +174,7 @@ export default function SupplierPortalAdminPage() {
       <QueryView query={uploads} empty="لا توجد فواتير مرفوعة">
         {(rows) => (
           <div className="card">
-            <DataTable
+            <Table
               columns={[
                 { key: 'party', header: 'المورد', cell: (row: Upload) => partyOf(row.partyId) },
                 { key: 'ref', header: 'الرقم', cell: (row: Upload) => row.referenceNo },

@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { FilterBar } from '@erp/ui';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
-import { FilterBar, StatTile, StatTiles } from '../../../components/ui';
+import { StatTile, StatTiles } from '../../../components/ui';
 import { ApiError, apiList, apiPost } from '../../../lib/api';
 import {
   arabicName,
@@ -125,7 +127,7 @@ export default function BelowMinimumPage() {
       </StatTiles>
 
       <FilterBar
-        actions={<span className="small muted">{data.length === 0 ? 'لا عجز' : `${data.length} صنفاً بحاجة تغطية`}</span>}
+        summary={<span className="small muted">{data.length === 0 ? 'لا عجز' : `${data.length} صنفاً بحاجة تغطية`}</span>}
       >
         <label className="field">
           <span>المستودع</span>
@@ -164,7 +166,7 @@ export default function BelowMinimumPage() {
         emptyDetail="كل الأصناف أعلى من حد الطلب، أو أن بطاقات الأصناف لم يُحدَّد لها حد بعد."
       >
         {(data) => (
-          <DataTable
+          <Table
             rows={data}
             rowKey={(row) => `${row.itemId}:${row.warehouseId}`}
             columns={[

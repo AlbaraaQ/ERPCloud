@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import { Badge, StatusDot, type StatusTone } from '@erp/ui';
+import { ThemeToggle } from '@erp/ui/theme';
 
 import { apiData } from '../lib/api';
 import { useLang, type Lang } from '../lib/i18n';
@@ -15,6 +17,21 @@ import { NotificationBell } from './notification-bell';
 
 const label = (lang: Lang, item: { labelAr: string; labelEn: string }): string =>
   lang === 'ar' ? item.labelAr : item.labelEn;
+
+/**
+ * The nav's three states, resolved onto the v3 tone vocabulary.
+ *
+ * This map is the whole point: the sidebar used to carry `.dot.ready` /
+ * `.dot.api` / `.dot.planned` — its own private colour names, which no other
+ * surface could answer and `statusTone()` did not know. `ready` is the one
+ * code the v3 map already spells (`→ ok`); the other two are named by tone
+ * because the API never sends `api` or `planned` as a status at all.
+ */
+function navTone(status: string): StatusTone {
+  if (status === 'ready') return 'ok';
+  if (status === 'api') return 'warn';
+  return 'neutral';
+}
 
 function statusDot(status: string, lang: Lang) {
   const title =
@@ -29,7 +46,7 @@ function statusDot(status: string, lang: Lang) {
         : lang === 'ar'
           ? 'قيد التطوير'
           : 'Planned';
-  return <span className={`dot ${status}`} title={title} aria-label={title} />;
+  return <StatusDot tone={navTone(status)} title={title} />;
 }
 
 function ModuleBlock({
@@ -118,7 +135,7 @@ type BrandMark = { logoUrl: string; primaryColor: string; nameAr: string };
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { me, isPlatformAdmin, signOut } = useSession();
-  const { lang, t } = useLang();
+  const { lang, t, setLang } = useLang();
   const pathname = usePathname() ?? '/';
   const [filter, setFilter] = useState('');
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -172,7 +189,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <aside className={`side ${mobileOpen ? 'open' : ''}`}>
         <div className="brand">
           {brand?.logoUrl ? (
-            <img className="logo" src={brand.logoUrl} alt="شعار المنشأة" style={{ background: '#fff', objectFit: 'contain', padding: 2 }} />
+            <img className="logo" src={brand.logoUrl} alt="شعار المنشأة" style={{ background: 'var(--surface)', objectFit: 'contain', padding: 2 }} />
           ) : (
             <span className="logo">ERP</span>
           )}
@@ -200,16 +217,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           ))}
         </nav>
 
+        {/* Design v3 §6.1 — بطاقة «تغطية الشاشات»: الشجرة تقول بنفسها كم شاشة
+            جاهزة وكم منها ما زالت واجهةً برمجية أو خطة، فلا يدّعي أحد أن كل شيء يعمل. */}
+        <CoverageCard tree={tree} />
+        {/* Design v3 §6.1 — the legend is the same `Badge` the tree draws with,
+            so a state carries one colour here and one colour there, and the
+            `API` chip stops being the only English string in the sidebar. */}
         <div className="nav-legend">
-          <span>
-            <span className="dot ready" /> {t('nav.status.ready')}
-          </span>
-          <span>
-            <span className="dot api" /> API
-          </span>
-          <span>
-            <span className="dot planned" /> {t('nav.status.planned')}
-          </span>
+          <Badge tone="ok" dot>
+            {t('nav.status.ready')}
+          </Badge>
+          <Badge tone="warn" dot>
+            {t('nav.status.api')}
+          </Badge>
+          <Badge tone="neutral" dot>
+            {t('nav.status.planned')}
+          </Badge>
         </div>
       </aside>
 
@@ -240,6 +263,30 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
           <div className="row" style={{ alignItems: 'center' }}>
+            <div className="row" style={{ alignItems: 'center', gap: 6 }}>
+              {/* Design v3 §2.1 — one switch, one key, both modes complete. */}
+              <ThemeToggle compact />
+              {/* Design v3 §6.1 — مفتاح AR/EN: القشرة ثنائية اللغة بالكامل،
+                  ويقلب `<html dir>` فتنعكس كل الخصائص المنطقية. */}
+              <div className="lang-switch" role="group" aria-label={t('nav.lang')}>
+                <button
+                  type="button"
+                  className={lang === 'ar' ? 'on' : ''}
+                  aria-pressed={lang === 'ar'}
+                  onClick={() => setLang('ar')}
+                >
+                  ع
+                </button>
+                <button
+                  type="button"
+                  className={lang === 'en' ? 'on' : ''}
+                  aria-pressed={lang === 'en'}
+                  onClick={() => setLang('en')}
+                >
+                  EN
+                </button>
+              </div>
+            </div>
             <span className="muted">{me?.user.fullName}</span>
             {/* P-C7: جرسٌ يقود إلى مركز الإشعارات — الرقم إشعاراتٌ غير مقروءة للعضويّة الحالية. */}
             <NotificationBell label={lang === 'ar' ? 'الإشعارات' : 'Notifications'} />
@@ -261,6 +308,60 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {children}
       </main>
       <AssistantLauncher />
+    </div>
+  );
+}
+
+/**
+ * بطاقة «تغطية الشاشات» — عدّاد صريح لحالة كل شاشة في الشجرة المرئية.
+ *
+ * ليست زخرفة: هي ما يمنع لوحةَ تحكّمٍ من الإيحاء بأن كل شيء يعمل. الشاشة التي
+ * حالتها `api` أو `planned` تُعرض في الشجرة بشارتها، وهذه البطاقة تجمع العدد
+ * حتى يرى المالك أين يقف المنتج فعلاً (Design v3 §6.1).
+ */
+function CoverageCard({ tree }: { tree: ModuleNode[] }) {
+  const { t } = useLang();
+  // `count`/`screenTotal`, not `total`: the money guard in the root eslint
+  // config matches the identifier `total` (PROJECT_CONTRACT §3), and these are
+  // screen counts, not riyals.
+  const counts = { ready: 0, api: 0, planned: 0 };
+  for (const module of tree) {
+    for (const group of module.groups) {
+      for (const item of group.items) {
+        if (item.status === 'ready') counts.ready += 1;
+        else if (item.status === 'api') counts.api += 1;
+        else counts.planned += 1;
+      }
+    }
+  }
+  const screenTotal = counts.ready + counts.api + counts.planned;
+  if (screenTotal === 0) return null;
+  const pct = Math.round((counts.ready / screenTotal) * 100);
+  return (
+    <div className="coverage-card" aria-label={t('nav.coverage')}>
+      <div className="coverage-head">
+        <strong>{t('nav.coverage')}</strong>
+        <span className="num" dir="ltr">
+          {counts.ready}/{screenTotal}
+        </span>
+      </div>
+      <div className="coverage-bar" role="img" aria-label={`${pct}%`}>
+        <span className="ready" style={{ width: `${pct}%` }} />
+      </div>
+      <p className="coverage-hint">{t('nav.coverage.hint')}</p>
+      <ul className="coverage-legend">
+        <li>
+          <StatusDot tone="ok" /> {t('nav.coverage.ready')}{' '}
+          <b className="num">{counts.ready}</b>
+        </li>
+        <li>
+          <StatusDot tone="warn" /> {t('nav.coverage.api')} <b className="num">{counts.api}</b>
+        </li>
+        <li>
+          <StatusDot tone="neutral" /> {t('nav.coverage.planned')}{' '}
+          <b className="num">{counts.planned}</b>
+        </li>
+      </ul>
     </div>
   );
 }

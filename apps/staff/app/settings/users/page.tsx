@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Forbidden, Screen } from '../../../components/screen';
 import { apiDelete, apiList, apiPatch, apiPost } from '../../../lib/api';
 import {
@@ -281,7 +282,7 @@ export default function TenantUsersPage() {
           query={memberships}
           empty="لا يوجد مستخدمون"
           children={(list) => (
-            <DataTable
+            <Table
               rows={list}
               rowKey={(row) => row.id}
               columns={[

@@ -12,9 +12,9 @@ import {
   type TicketPriority,
   type TicketStatus,
 } from '@erp/contracts';
+import { Tabs } from '@erp/ui';
 
 import { Empty, ErrorBox, Forbidden, Loading, Screen } from '../../components/screen';
-import { Tabs } from '../../components/ui';
 import { ApiError, apiData, apiPost } from '../../lib/api';
 import { useQuery } from '../../lib/use-query';
 
@@ -92,8 +92,8 @@ export default function TicketsPage() {
         value={tab}
         onChange={setTab}
         items={[
-          { id: 'inbox', label: 'الصندوق الوارد' },
-          { id: 'new', label: 'تذكرة جديدة' },
+          { key: 'inbox', label: 'الصندوق الوارد' },
+          { key: 'new', label: 'تذكرة جديدة' },
         ]}
       />
       {tab === 'inbox' && <InboxTab />}

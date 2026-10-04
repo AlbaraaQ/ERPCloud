@@ -3,11 +3,12 @@
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
+import { Badge } from '@erp/ui';
 
 import { CommentsPanel } from '../../../../components/comments-panel';
-import { DataTable, Notice } from '../../../../components/data-view';
+import { Notice } from '../../../../components/data-view';
+import { Table } from '../../../../components/table';
 import { ErrorBox, Loading, Screen } from '../../../../components/screen';
-import { Badge } from '../../../../components/ui/badge';
 import { ApiError, apiData, apiPost } from '../../../../lib/api';
 import { accountLabel, listAccounts, postableOf, typeOf, type Account } from '../../../../lib/accounts';
 import { type ApprovalRequest } from '../../../../lib/approvals';
@@ -172,8 +173,8 @@ export default function PurchaseInvoiceDetailPage() {
       <div className="grid cols-2">
         <div className="card">
           <h2>بيانات الفاتورة</h2>
-          {approval.data?.status === 'pending' ? <Badge tone="purple" dot>بانتظار موافقة</Badge> : null}
-          {approval.data?.status === 'rejected' ? <Badge tone="red" dot>رُفضت — ما زالت مسودة</Badge> : null}
+          {approval.data?.status === 'pending' ? <Badge tone="brand" dot>بانتظار موافقة</Badge> : null}
+          {approval.data?.status === 'rejected' ? <Badge tone="danger" dot>رُفضت — ما زالت مسودة</Badge> : null}
           <dl className="kv">
             <dt>📋 الحالة</dt>
             <dd>{statusLabel(doc.status)}</dd>
@@ -363,7 +364,7 @@ export default function PurchaseInvoiceDetailPage() {
       <div className="card">
         {/* «📋 بنود الفاتورة» — `frmInvPurch.xaml` L665. */}
         <h2>📋 بنود الفاتورة</h2>
-        <DataTable
+        <Table
           rows={doc.lines}
           rowKey={(row) => row.id}
           columns={[
@@ -411,7 +412,7 @@ export default function PurchaseInvoiceDetailPage() {
             ولا تُقرأ — أُضيفت قراءتها في R3 (`GET /purchase-invoices/:id`).
           */}
           <h2>💵 الدفعات المسدّدة</h2>
-          <DataTable
+          <Table
             rows={doc.payments}
             rowKey={(row) => row.id}
             columns={[
@@ -426,7 +427,7 @@ export default function PurchaseInvoiceDetailPage() {
       {doc.costs.length > 0 && (
         <div className="card">
           <h2>المصاريف الإضافية</h2>
-          <DataTable
+          <Table
             rows={doc.costs}
             rowKey={(row) => row.id}
             columns={[

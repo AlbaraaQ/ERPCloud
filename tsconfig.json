@@ -1,3 +1,32 @@
 {
-  "extends": "./tsconfig.base.json"
+  "//": "تدقيق أنواع على مستوى المستودع — ليس إعداد بناء. كل مشروع يُبنى بإعداده الخاص (tsconfig.base.json أساس مشترك؛ apps/staff وapps/api وغيرهما يتجاوزان ما يلزم). هذا الملف للفحص الشامل فقط، ولهذا يجاوز ثلاثة أشياء: (1) module/moduleResolution: الأساس NodeNext لأنه يُبنى منه apps/api، لكن خمسة مشاريع من ستّة واجهات Next.js تُترجم بدلالات الحزمة، وتطبيق NodeNext عليها يُنتج TS2835 لكل استيراد نسبيّ بلا امتداد؛ (2) lib: الأساس ES2022 وحده لأنه يُبنى منه apps/api، لكن أربعة مشاريع كود متصفّح تستعمل document/window/localStorage فيفشل كل استخدام منها بـTS2584؛ (3) exclude: apps/api يستثني spec.ts من بناءه ويشغّلها بـvitest بلا فحص أنواع، وإعادة إدراجها هنا بإعداد مختلف تُنتج 217 خطأ noUncheckedIndexedAccess في ملفات لا يشملها بناء ذلك المشروع.",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "lib": ["dom", "dom.iterable", "es2022"],
+    "jsx": "preserve",
+    "noEmit": true,
+    "allowJs": true,
+    "incremental": false
+  },
+  "include": [
+    "apps/**/*.ts",
+    "apps/**/*.tsx",
+    "apps/**/*.js",
+    "apps/**/*.mjs",
+    "packages/**/*.ts",
+    "packages/**/*.tsx",
+    "packages/**/*.js",
+    "packages/**/*.mjs",
+    "scripts/**/*.mjs"
+  ],
+  "exclude": [
+    "packages/ui",
+    "**/node_modules",
+    "**/dist",
+    "**/.next",
+    "**/.next-build",
+    "apps/api/**/*.spec.ts"
+  ]
 }

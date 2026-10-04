@@ -85,7 +85,7 @@ export default function ProjectGanttPage() {
             if (!fromTask || !toTask) return null;
             const x1 = (dayIndex(origin, fromTask.dueDate ?? fromTask.startDate ?? origin) + 1) * DAY;
             const x2 = dayIndex(origin, toTask.startDate ?? origin) * DAY;
-            return <line key={edge.id} x1={x1} y1={from * 36 + 18} x2={x2} y2={to * 36 + 18} stroke="#64748b" />;
+            return <line key={edge.id} x1={x1} y1={from * 36 + 18} x2={x2} y2={to * 36 + 18} stroke="var(--muted)" />;
           })}
         </svg>
         <div style={{ marginTop: -Math.max(48, tasks.length * 36) }}>
@@ -105,8 +105,8 @@ export default function ProjectGanttPage() {
                     width,
                     height: 24,
                     top: 6,
-                    background: marked ? '#b45309' : '#0f766e',
-                    color: 'white',
+                    background: marked ? 'var(--warn)' : 'var(--ok)',
+                    color: 'var(--on-accent)',
                     border: 0,
                     borderRadius: 4,
                     cursor: 'ew-resize',

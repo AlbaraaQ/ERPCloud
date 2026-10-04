@@ -723,6 +723,30 @@ describe('platform e-mail service (P-C6)', () => {
     expect((settings.body.data as EmailSettings).provider).toBe('console');
   });
 
+  it('resend مزوّدٌ مقبول على مستوى المنصة، ومرفوضٌ على سطح العميل (RC-10)', async () => {
+    // المزوّد الجديد يجب أن يُقبل من طائرة المنصة — حيث تُدار اعتمادات الإرسال — ويُرفض من
+    // سطح العميل كما يُرفض smtp: العميل لا يختار كيف تُرسَل رسائل المنشأة.
+    const switched = await platformPut('/platform/email/settings', {
+      provider: 'resend',
+      reason: 'تفعيل مزوّد resend',
+    });
+    expect(switched.status).toBe(200);
+    expect((switched.body.data as EmailSettings).provider).toBe('resend');
+
+    const attempt = await api(ctx.server, 'put', `${base}/email/settings`, {
+      token: customerA.token,
+      body: { provider: 'resend', reason: 'محاولة تبديل المزوّد' },
+    });
+    expect(attempt.status).toBe(422);
+
+    // والشاشة تحتاج علمًا صادقًا: هل المفتاح مضبوط؟ لا المفتاح نفسه — فهو سرٌّ.
+    const settings = await platformGet('/platform/email/settings');
+    expect(settings.status).toBe(200);
+    const data = settings.body.data as EmailSettings;
+    expect(typeof data.resendConfigured).toBe('boolean');
+    expect(JSON.stringify(data)).not.toContain('RESEND_API_KEY');
+  });
+
   it('كل إرسال يكتب مهمّة `email.send` في الطابور بنفس معاملة الرسالة، بلا أسرار', async () => {
     const queued = await email.send({
       tenantId: customerB.tenantId,

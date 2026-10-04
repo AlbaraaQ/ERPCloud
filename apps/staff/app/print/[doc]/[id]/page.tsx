@@ -116,7 +116,7 @@ export default function PrintPage({ params }: { params: Promise<{ doc: string; i
       {!html && !error && <Loading />}
       {html && (
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-          <iframe ref={frame} title={spec.title} srcDoc={html} sandbox="allow-same-origin allow-modals" style={{ width: '100%', height: '80vh', border: 0, background: '#fff' }} />
+          <iframe ref={frame} title={spec.title} srcDoc={html} sandbox="allow-same-origin allow-modals" style={{ width: '100%', height: '80vh', border: 0, background: 'var(--surface)' }} />
         </div>
       )}
     </Screen>
