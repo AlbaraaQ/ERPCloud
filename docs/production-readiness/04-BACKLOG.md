@@ -187,3 +187,41 @@ PostgreSQL المدمج كلّيًًا) — فالعيب حصرٌ في نصّ ا
 | `GET /parties?kind=customer` | `CUST-GENERAL` — «عميل عام»، بلا رقم ضريبيّ |
 | `GET /organization/catalog/items` | 10 أصناف |
 | مسح نمط RC-12 في `apps/api` | `billing.service.ts` كان الاستثناء الوحيد؛ بقيّة الوحدات تستخدم `withTenantTx` / `withPlatformAdminTx` باستمرار |
+
+## هجرة تفرّعات `components/ui` في `apps/staff` إلى `@erp/ui` (ADR-030)
+
+ADR-030 ينص على أن المكوّن الموجود في `@erp/ui` موجود **مرة واحدة**، وأن الشاشة التي
+تحتاج نسخة ثانية منه هي عيب وليس تفضيلًا. كان في `apps/staff/components/ui/` سبعة عشر
+مكوّنًا، كلها تفرّعات انحرفت عن نظام التصميم. اكتملت الهجرة كاملة، والمجلّف نفسه أُزيل بالكامل.
+
+| الموجة | ما أُنجز | الحالة |
+|---|---|---|
+| 1 | حذف 6 مكوّنات ميّتة (`avatar`, `card`, `select-search`, `tabs`, `toast`, `tooltip`) — 520 سطرًا، لا مستهلِك لها | ✅ `f0d9a55` |
+| 2 | هجرة `badge`, `skeleton`, `empty-state`, `kpi-card`, `button` — مع توحيد مفردات النغمات | ✅ `e02357c` |
+| 3أ | هجرة `Table` → `DataTable` و`Modal`؛ حذف `CellBadge` الميّت | ✅ `de542ed` |
+| 3ب | إضافة `Toggle` و`Labeled` إلى `@erp/ui`؛ حذف `Textarea` الميّت؛ هجرة `Input`/`Select` | ✅ `b2c9a98` |
+| 3ج | حذف `Reveal`/`CountUp` — أوّلاً لأنهما مخصّصان للموقع التسويقيّ (Design v3 §5) وثانيًا لأن نسخة staff كانت تتجاهل `prefers-reduced-motion` | ✅ `43c1874` |
+| 3د | هجرة الرسوم البيانية؛ إضافة `AreaSeries` إلى `@erp/ui`؛ `Donut` تكسب علم `legend` | ✅ `85c8a07` |
+
+### ما تبقّى — يحتاج قرارًا قبل التنفيذ
+
+**`apps/staff/components/ui.tsx` ملف مسطّح** (ليس مجلّدًا) يستهلكه **36 شاشة**. من أصل عشرة
+مكوّنات يصدّرها، اثنان فقط تفرّعات حقيقيّة على `@erp/ui`:
+
+| المكوّن | في `@erp/ui`؟ | العقبة |
+|---|---|---|
+| `Tabs` | ✅ `tabs.tsx` | `items` يستخدم `id` محليًا و`key` في v3 — تغيير ميكانيكيّ لأن المواقع تمرّر ثابت `BUCKETS` مشتركًا |
+| `FilterBar` | ✅ `filter-bar.tsx` | **`actions` لا مقابل له في v3** — v3 يوفّر `summary` و`onClear` فقط. 15 شاشة تمرّر `actions`، فالقرار تصميميّ لا ميكانيكيّ |
+
+الثمانية الباقية (`StatTile`, `StatTiles`, `StatusTrack`, `ActionBar`, `DocHead`, `DocField`,
+`StateBox`, `Totals`) أنماط خاصّة بشاشات المستندات ولا مقابل لها في نظام التصميم، فليست تفرّعات.
+
+**قراران مطلوبان:** (أ) ما يصير `FilterBar` `actions` في v3 — إمّا إضافة prop `actions` إلى
+`@erp/ui` وإمّا تحويله إلى `summary` شاشةً شاشةً. (ب) `Tabs` يفقد في v3 التصنيف العامّ
+`<T extends string>`، فيلزم إمّا قبول فقدان أمان الأنواع أو تعميم `Tabs` في `@erp/ui`.
+
+### تفرّعات في تطبيق آخر — خارج نطاق هذه الهجرة
+
+`apps/platform-admin/components/ui/` فيه **20 مكوّنًا** من نفس النمط (`badge`, `button`,
+`input`, `modal`, `table`, `chart`, `toggle`, `count-up`…) — بينها `input.tsx` بنفس
+`Textarea` الميّت. لم يُمسّ؛ الهجرة هناك موجة مستقلّة تحتاج CR خاصًا.
