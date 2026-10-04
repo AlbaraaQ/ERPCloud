@@ -19,3 +19,6 @@ coverage/
 !deploy/.env.example
 logs/
 deploy/jwt-*.pem
+
+# سكربتات هجرة لمرّة واحدة — تُكتب هنا ولا تُودَع
+.arena-tmp-*
