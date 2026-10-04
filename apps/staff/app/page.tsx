@@ -13,14 +13,14 @@ import {
   Wallet,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { EmptyState } from '@erp/ui';
+import { Kpi } from '@erp/ui';
+import { SkeletonCard } from '@erp/ui';
+import { Badge } from '@erp/ui';
 
-import { UserDashboard } from '../components/dashboard/user-dashboard';
-import { AreaCardChart, DonutCardChart } from '../components/ui/chart';
 import { CountUp, Reveal } from '../components/ui/count-up';
-import { EmptyState } from '../components/ui/empty-state';
-import { KpiCard } from '../components/ui/kpi-card';
-import { SkeletonCard } from '../components/ui/skeleton';
-import { Badge } from '../components/ui/badge';
+import { AreaCardChart, DonutCardChart } from '../components/ui/chart';
+import { UserDashboard } from '../components/dashboard/user-dashboard';
 import { useSession } from '../lib/session';
 import { money, shortDate } from '../lib/lookups';
 import { computeStats, fetchDashboardData, partyName, type DashboardData } from '../lib/dashboard';
@@ -87,7 +87,7 @@ export default function DashboardPage() {
   if (data.status === 'error') {
     return (
       <EmptyState
-        tone="red"
+        tone="danger"
         icon={<TrendingDown size={30} strokeWidth={1.5} />}
         title="تعذر تحميل بيانات لوحة المتابعة"
         description={data.error}
@@ -174,39 +174,39 @@ export default function DashboardPage() {
         </div>
       ) : stats ? (
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
-          <KpiCard
+          <Kpi
             title="مبيعات اليوم"
             value={<CountUp value={stats.todaySales} format={SAR} />}
             icon={<Wallet size={21} />}
-            tone="blue"
+            tone="brand"
             delta={todayDelta}
             deltaLabel="مقارنةً بالأمس"
             spark={stats.weekSpark}
             delay={0}
           />
-          <KpiCard
+          <Kpi
             title={`مبيعات ${new Intl.DateTimeFormat('ar', { month: 'long' }).format(new Date())}`}
             value={<CountUp value={stats.monthSales} format={SAR} />}
             icon={<ShoppingCart size={21} />}
-            tone="green"
+            tone="ok"
             delta={monthDelta}
             deltaLabel="عن الشهر السابق"
             spark={[stats.lastMonthSales, stats.monthSales]}
             delay={0.1}
           />
-          <KpiCard
+          <Kpi
             title="ذمم مدينة (فواتير غير مسددة)"
             value={<CountUp value={stats.receivable} format={SAR} />}
             icon={<TrendingUp size={21} />}
-            tone="amber"
+            tone="warn"
             hint={`${stats.overdueInvoices} فاتورة لدى ${stats.overdueCustomers} عميل`}
             delay={0.2}
           />
-          <KpiCard
+          <Kpi
             title="أصناف تحت الحد الأدنى"
             value={<CountUp value={stats.lowStockCount} />}
             icon={<PackageSearch size={21} />}
-            tone={stats.lowStockCount > 0 ? 'red' : 'slate'}
+            tone={stats.lowStockCount > 0 ? 'danger' : 'neutral'}
             hint={`${stats.nearExpiryCount} صنف قريب من الانتهاء`}
             delay={0.3}
           />
@@ -222,7 +222,7 @@ export default function DashboardPage() {
                 <h3 className="m-0 text-[15px] font-bold text-ink">مبيعات آخر 7 أيام</h3>
                 <p className="m-0 mt-0.5 text-xs text-muted">إجمالي الفواتير المرحّلة (بالريال السعودي)</p>
               </div>
-              <Badge tone="blue" dot>
+              <Badge tone="info" dot>
                 {stats ? `${stats.week.reduce((sum, day) => sum + day.count, 0)} فاتورة` : '…'}
               </Badge>
             </header>
@@ -254,7 +254,7 @@ export default function DashboardPage() {
               />
             ) : (
               <EmptyState
-                tone="slate"
+                tone="neutral"
                 icon={<ReceiptText size={28} strokeWidth={1.5} />}
                 title="لا توجد مبيعات مرحّلة بعد"
                 description="عندما تُرحَّل أول فاتورة سيظهر توزيعها على الفروع هنا."
@@ -300,7 +300,7 @@ export default function DashboardPage() {
                       <span className="text-[13px] font-bold text-ink" style={{ fontVariantNumeric: 'tabular-nums' }}>
                         {money(invoice.total)}
                       </span>
-                      <Badge tone={invoice.paymentStatus === 'paid' ? 'green' : 'amber'} status={invoice.paymentStatus}>
+                      <Badge tone={invoice.paymentStatus === 'paid' ? 'ok' : 'warn'} status={invoice.paymentStatus}>
                         {invoice.paymentStatus === 'paid' ? 'مسدّدة' : 'غير مسدّدة'}
                       </Badge>
                     </Link>
@@ -310,7 +310,7 @@ export default function DashboardPage() {
             ) : (
               <div className="p-4">
                 <EmptyState
-                  tone="slate"
+                  tone="neutral"
                   icon={<ReceiptText size={28} strokeWidth={1.5} />}
                   title="لا توجد فواتير بعد"
                   description="ابدأ بإصدار أول فاتورة مبيعات."
@@ -348,7 +348,7 @@ export default function DashboardPage() {
                     <span className="text-[12px] text-muted font-semibold">
                       المتاح <b className="text-danger">{row.quantity}</b> / الحد {row.minQty}
                     </span>
-                    <Badge tone="red" dot>
+                    <Badge tone="danger" dot>
                       ناقص {row.shortage}
                     </Badge>
                   </li>
@@ -357,7 +357,7 @@ export default function DashboardPage() {
             ) : (
               <div className="p-4">
                 <EmptyState
-                  tone="green"
+                  tone="ok"
                   icon={<PackageSearch size={28} strokeWidth={1.5} />}
                   title="المخزون ضمن الحدود"
                   description="لا توجد أصناف تحت الحد الأدنى حالياً."

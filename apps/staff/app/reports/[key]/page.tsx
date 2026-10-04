@@ -14,15 +14,15 @@ import {
   Search,
   Timer,
 } from 'lucide-react';
+import { Badge } from '@erp/ui';
+import { Button } from '@erp/ui';
+import { EmptyState } from '@erp/ui';
+import { Kpi } from '@erp/ui';
+import { SkeletonCard } from '@erp/ui';
 
-import { Badge } from '../../../components/ui/badge';
-import { Button } from '../../../components/ui/button';
 import { BarCardChart, LineCardChart } from '../../../components/ui/chart';
 import { Reveal } from '../../../components/ui/count-up';
-import { EmptyState } from '../../../components/ui/empty-state';
 import { Labeled } from '../../../components/ui/input';
-import { KpiCard } from '../../../components/ui/kpi-card';
-import { SkeletonCard } from '../../../components/ui/skeleton';
 import { Table, type SortState } from '../../../components/ui/table';
 import {
   arabicName,
@@ -125,7 +125,7 @@ export default function ReportRunnerPage({ params }: { params: Promise<{ key: st
   if (catalog.status === 'success' && !entry) {
     return (
       <EmptyState
-        tone="red"
+        tone="danger"
         icon={<FileText size={30} strokeWidth={1.5} />}
         title="تقرير غير معروف"
         description={`لا يوجد تقرير بالمفتاح «${reportKey}». راجع مركز التقارير.`}
@@ -172,7 +172,7 @@ export default function ReportRunnerPage({ params }: { params: Promise<{ key: st
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <h1 className="m-0 text-[22px] font-bold text-ink tracking-tight leading-tight truncate">{entry?.titleAr ?? 'تقرير'}</h1>
-                <Badge tone="blue" dot>
+                <Badge tone="info" dot>
                   {REPORT_GROUP_LABELS[entry?.group ?? ''] ?? 'تقارير'}
                 </Badge>
               </div>
@@ -277,7 +277,7 @@ export default function ReportRunnerPage({ params }: { params: Promise<{ key: st
         </div>
       ) : report.status === 'error' ? (
         <EmptyState
-          tone="red"
+          tone="danger"
           icon={<FileText size={30} strokeWidth={1.5} />}
           title="تعذّر تشغيل التقرير"
           description={report.error ?? 'خطأ غير معروف'}
@@ -293,31 +293,31 @@ export default function ReportRunnerPage({ params }: { params: Promise<{ key: st
         <>
           {/* summary cards */}
           <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-            <KpiCard
+            <Kpi
               title="عدد السطور"
               value={result.rowCount.toLocaleString('ar-EG')}
               icon={<Hash size={20} />}
-              tone="blue"
+              tone="brand"
               hint={`وقت الاستخراج: ${result.generatedAt.slice(0, 16).replace('T', ' ')}`}
             />
             {result.grandTotal.slice(0, 3).map((card, index) => (
-              <KpiCard
+              <Kpi
                 key={card.key}
                 title={card.labelAr}
                 value={formatCell(card.amount, 'money')}
                 icon={<Banknote size={20} />}
-                tone={index % 2 === 0 ? 'green' : 'amber'}
+                tone={index % 2 === 0 ? 'ok' : 'warn'}
                 delay={0.06 * (index + 1)}
               />
             ))}
             {result.grandTotal.length === 0
               ? Object.entries(result.totals).slice(0, 3).map(([key, value], index) => (
-                  <KpiCard
+                  <Kpi
                     key={key}
                     title={result.columns.find((column) => column.key === key)?.labelAr ?? key}
                     value={formatCell(value, result.columns.find((column) => column.key === key)?.type ?? 'money')}
                     icon={<Timer size={20} />}
-                    tone={index % 2 === 0 ? 'amber' : 'green'}
+                    tone={index % 2 === 0 ? 'warn' : 'ok'}
                     delay={0.06 * (index + 1)}
                   />
                 ))
@@ -381,7 +381,7 @@ function ReportChart({ entry, result }: { entry: ReportEntry; result: ReportResu
         <h3 className="m-0 text-[15px] font-bold text-ink">
           📈 {valueCol} — {entry.titleAr}
         </h3>
-        <Badge tone="blue" dot>
+        <Badge tone="info" dot>
           {entry.chart === 'bar' ? 'أعمدة' : 'خط'}
         </Badge>
       </div>

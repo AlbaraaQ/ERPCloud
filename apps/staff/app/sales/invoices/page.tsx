@@ -3,10 +3,10 @@
 import Link from 'next/link';
 import { FilePlus2, Printer, ReceiptText, Search, X } from 'lucide-react';
 import { Suspense, useMemo, useState } from 'react';
+import { Badge } from '@erp/ui';
+import { Button } from '@erp/ui';
+import { EmptyState } from '@erp/ui';
 
-import { Badge } from '../../../components/ui/badge';
-import { Button } from '../../../components/ui/button';
-import { EmptyState } from '../../../components/ui/empty-state';
 import { Labeled, Select } from '../../../components/ui/input';
 import { Table, type SortState } from '../../../components/ui/table';
 import { apiList } from '../../../lib/api';
@@ -275,7 +275,7 @@ function InvoicesInner() {
       {/* ------------------------------------------------ table */}
       {invoices.status === 'error' ? (
         <EmptyState
-          tone="red"
+          tone="danger"
           icon={<ReceiptText size={30} strokeWidth={1.5} />}
           title="تعذر تحميل الفواتير"
           description={invoices.error}
@@ -327,7 +327,7 @@ function InvoicesInner() {
               key: 'kind',
               header: 'النوع',
               cell: (row) => (
-                <Badge tone={row.kind === 'quotation' ? 'purple' : 'blue'}>
+                <Badge tone={row.kind === 'quotation' ? 'brand' : 'info'}>
                   {KIND_LABELS[row.kind] ?? row.kind}
                 </Badge>
               ),
@@ -361,11 +361,11 @@ function InvoicesInner() {
               header: 'الحالة',
               cell: (row) => (
                 <span className="inline-flex gap-1.5">
-                  <Badge tone={row.status === 'posted' ? 'green' : 'amber'} dot>
+                  <Badge tone={row.status === 'posted' ? 'ok' : 'warn'} dot>
                     {row.status === 'posted' ? 'مرحّلة' : 'مسودة'}
                   </Badge>
                   {row.status === 'posted' ? (
-                    <Badge tone={row.paymentStatus === 'paid' ? 'blue' : 'amber'}>
+                    <Badge tone={row.paymentStatus === 'paid' ? 'info' : 'warn'}>
                       {row.paymentStatus === 'paid' ? 'مسدّدة' : 'غير مسدّدة'}
                     </Badge>
                   ) : null}

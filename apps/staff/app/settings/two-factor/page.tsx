@@ -10,10 +10,10 @@ import {
   ShieldOff,
   Smartphone,
 } from 'lucide-react';
+import { Badge } from '@erp/ui';
+import { Button } from '@erp/ui';
 
 import { Screen } from '../../../components/screen';
-import { Badge } from '../../../components/ui/badge';
-import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { ApiError, apiData, apiFetch } from '../../../lib/api';
 import { useQuery } from '../../../lib/use-query';
@@ -134,7 +134,7 @@ export default function TwoFactorPage() {
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="m-0 text-[16px] font-bold text-ink">حالة الحماية</h3>
-                  <Badge tone={enabled ? 'green' : 'amber'} dot>
+                  <Badge tone={enabled ? 'ok' : 'warn'} dot>
                     {enabled ? 'مفعَّل — الدخول يتطلب رمز التطبيق' : 'غير مفعَّل'}
                   </Badge>
                 </div>

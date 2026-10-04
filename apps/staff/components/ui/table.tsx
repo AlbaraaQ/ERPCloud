@@ -2,9 +2,7 @@
 
 import { ChevronDown, ChevronUp, ChevronsUpDown, Inbox } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-
-import { Badge, type BadgeTone } from './badge';
-import { Skeleton } from './skeleton';
+import { Badge, Skeleton, type StatusTone } from '@erp/ui';
 
 /**
  * جدول النظام — ترويسة لاصقة، زبرا، فرز اختياري، تحديد بالـ checkbox، وأقواس 3 نقاط
@@ -349,7 +347,7 @@ function RowActions({
 }
 
 /** شارة صغيرة للاستخدام داخل الخلايا. */
-export function CellBadge({ tone = 'neutral', dot, children }: { tone?: BadgeTone; dot?: boolean; children: ReactNode }) {
+export function CellBadge({ tone = 'neutral', dot, children }: { tone?: StatusTone; dot?: boolean; children: ReactNode }) {
   return (
     <Badge tone={tone} dot={dot}>
       {children}

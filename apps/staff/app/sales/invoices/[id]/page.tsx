@@ -15,16 +15,16 @@ import {
   Wallet,
 } from 'lucide-react';
 import { useState } from 'react';
+import { Badge } from '@erp/ui';
+import { Button } from '@erp/ui';
+import { EmptyState } from '@erp/ui';
+import { SkeletonCard } from '@erp/ui';
 
 import { CommentsPanel } from '../../../../components/comments-panel';
-import { Badge } from '../../../../components/ui/badge';
-import { Button } from '../../../../components/ui/button';
 import { DonutCardChart } from '../../../../components/ui/chart';
 import { Reveal } from '../../../../components/ui/count-up';
-import { EmptyState } from '../../../../components/ui/empty-state';
 import { Input, Labeled } from '../../../../components/ui/input';
 import { Modal } from '../../../../components/ui/modal';
-import { SkeletonCard } from '../../../../components/ui/skeleton';
 import { Table } from '../../../../components/ui/table';
 import { ApiError, apiData, apiList, apiPatch, apiPost } from '../../../../lib/api';
 import {
@@ -208,7 +208,7 @@ export default function SalesInvoiceDetailPage() {
   if (invoice.status !== 'success' || !invoice.data) {
     return (
       <EmptyState
-        tone="red"
+        tone="danger"
         icon={<Package size={30} strokeWidth={1.5} />}
         title="تعذر تحميل الفاتورة"
         description={invoice.error ?? 'خطأ غير معروف'}
@@ -316,19 +316,19 @@ export default function SalesInvoiceDetailPage() {
                   <h1 className="m-0 text-[30px] font-bold text-ink tracking-tight leading-none" dir="ltr">
                     {doc.number ?? 'مسودة'}
                   </h1>
-                  <Badge tone={doc.kind === 'quotation' ? 'purple' : 'blue'} dot>
+                  <Badge tone={doc.kind === 'quotation' ? 'brand' : 'info'} dot>
                     {doc.kind === 'quotation' ? 'عرض أسعار' : 'فاتورة مبيعات'}
                   </Badge>
-                  <Badge tone={doc.status === 'posted' ? 'green' : doc.status === 'voided' ? 'red' : 'amber'} dot>
+                  <Badge tone={doc.status === 'posted' ? 'ok' : doc.status === 'voided' ? 'danger' : 'warn'} dot>
                     {doc.status === 'posted' ? 'مرحّلة' : doc.status === 'voided' ? 'ملغاة' : 'مسودة'}
                   </Badge>
                   {doc.status === 'posted' ? (
-                    <Badge tone={doc.paymentStatus === 'paid' ? 'blue' : 'amber'}>
+                    <Badge tone={doc.paymentStatus === 'paid' ? 'info' : 'warn'}>
                       {doc.paymentStatus === 'paid' ? 'مسدّدة' : 'غير مسدّدة'}
                     </Badge>
                   ) : null}
-                  {approval.data?.status === 'pending' ? <Badge tone="purple" dot>بانتظار موافقة</Badge> : null}
-                  {approval.data?.status === 'rejected' ? <Badge tone="red" dot>رُفضت — ما زالت مسودة</Badge> : null}
+                  {approval.data?.status === 'pending' ? <Badge tone="brand" dot>بانتظار موافقة</Badge> : null}
+                  {approval.data?.status === 'rejected' ? <Badge tone="danger" dot>رُفضت — ما زالت مسودة</Badge> : null}
                 </div>
                 <p className="m-0 mt-2 text-[13px] text-muted">
                   {partyName} · {shortDate(doc.createdAt)}

@@ -3,10 +3,10 @@
 import Link from 'next/link';
 import { LayoutDashboard } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { SkeletonCard } from '@erp/ui';
 
 import { dashboardData, listDashboards, type WidgetFigure } from '../../lib/bi-dashboards';
 import { useSession } from '../../lib/session';
-import { SkeletonCard } from '../ui/skeleton';
 
 import { WidgetCard } from './widget-card';
 

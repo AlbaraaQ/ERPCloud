@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { Save } from 'lucide-react';
+import { Button } from '@erp/ui';
 
 import { Screen } from '../../../components/screen';
-import { Button } from '../../../components/ui/button';
 import { Labeled } from '../../../components/ui/input';
 import { Table } from '../../../components/ui/table';
 import { Toggle } from '../../../components/ui/toggle';
