@@ -13,14 +13,12 @@ import {
   Zap,
 } from 'lucide-react';
 import { useState } from 'react';
-import { Badge } from '@erp/ui';
+import { AreaSeries, Badge, BarSeries } from '@erp/ui';
 import { Button } from '@erp/ui';
 import { EmptyState } from '@erp/ui';
 import { SkeletonCard } from '@erp/ui';
 
 import { Screen } from '../components/screen';
-import { AreaCardChart, BarCardChart } from '../components/ui/chart';
-import { Reveal } from '../components/ui/count-up';
 import { MetricCard } from '../components/ui/metric-card';
 import { apiData } from '../lib/api';
 import { useQuery } from '../lib/use-query';
@@ -185,66 +183,58 @@ export default function PlatformOverviewPage() {
 
       {/* charts */}
       <div className="grid gap-4 xl:grid-cols-2">
-        <Reveal delay={0.1}>
-          <section className="rounded-[10px] border border-line bg-surface p-4 shadow-1">
-            <div className="mb-2 flex items-center justify-between">
-              <div>
-                <h3 className="m-0 text-[15px] font-bold text-ink">منحنى MRR</h3>
-                <p className="m-0 mt-0.5 text-[12px] text-muted">الإيراد الشهري المتكرر — آخر {a?.mrrSeries.length ?? 6} أشهر</p>
-              </div>
-              {a ? (
-                <span className="rounded-md bg-brand-soft px-2.5 py-1 font-mono text-[12px] font-bold text-brand" dir="ltr">
-                  {money(Number(a.mrr) || 0, a.currency)}
-                </span>
-              ) : null}
+        <section className="rounded-[10px] border border-line bg-surface p-4 shadow-1">
+          <div className="mb-2 flex items-center justify-between">
+            <div>
+              <h3 className="m-0 text-[15px] font-bold text-ink">منحنى MRR</h3>
+              <p className="m-0 mt-0.5 text-[12px] text-muted">الإيراد الشهري المتكرر — آخر {a?.mrrSeries.length ?? 6} أشهر</p>
             </div>
-            {a && a.mrrSeries.length > 0 ? (
-              <AreaCardChart
-                data={a.mrrSeries.map((p) => ({ month: monthLabel(p.month), mrr: Number(p.mrr) || 0 }))}
-                xKey="month"
-                dataKey="mrr"
-                name="MRR"
-                height={264}
-                color="var(--color-chart-2)"
-                formatter={(v) => money(v)}
-              />
-            ) : (
-              <EmptyState icon={<Activity size={24} strokeWidth={1.5} />} title="لا بيانات إيراد بعد" />
-            )}
-          </section>
-        </Reveal>
+            {a ? (
+              <span className="rounded-md bg-brand-soft px-2.5 py-1 font-mono text-[12px] font-bold text-brand" dir="ltr">
+                {money(Number(a.mrr) || 0, a.currency)}
+              </span>
+            ) : null}
+          </div>
+          {a && a.mrrSeries.length > 0 ? (
+            <AreaSeries
+              data={a.mrrSeries.map((p) => ({ month: monthLabel(p.month), mrr: Number(p.mrr) || 0 }))}
+              xKey="month"
+              series={[{ key: 'mrr', label: "MRR", color: "var(--color-chart-2)" }]}
+              height={264}
+              format={(v) => money(v)}
+            />
+          ) : (
+            <EmptyState icon={<Activity size={24} strokeWidth={1.5} />} title="لا بيانات إيراد بعد" />
+          )}
+        </section>
 
-        <Reveal delay={0.16}>
-          <section className="rounded-[10px] border border-line bg-surface p-4 shadow-1">
-            <div className="mb-2 flex items-center justify-between">
-              <div>
-                <h3 className="m-0 text-[15px] font-bold text-ink">التسرّب الشهري</h3>
-                <p className="m-0 mt-0.5 text-[12px] text-muted">قيمة التراخيص المفقودة كل شهر (SAR)</p>
-              </div>
-              {a ? (
-                <Badge tone="neutral" dot>{a.churn.windowMonths} شهراً</Badge>
-              ) : null}
+        <section className="rounded-[10px] border border-line bg-surface p-4 shadow-1">
+          <div className="mb-2 flex items-center justify-between">
+            <div>
+              <h3 className="m-0 text-[15px] font-bold text-ink">التسرّب الشهري</h3>
+              <p className="m-0 mt-0.5 text-[12px] text-muted">قيمة التراخيص المفقودة كل شهر (SAR)</p>
             </div>
-            {a && a.churn.points.length > 0 ? (
-              <BarCardChart
-                data={a.churn.points.map((p) => ({ month: monthLabel(p.month), churned: Number(p.churnedValue) || 0 }))}
-                xKey="month"
-                dataKey="churned"
-                name="Churn"
-                height={264}
-                color="var(--color-chart-4)"
-                formatter={(v) => money(v)}
-              />
-            ) : (
-              <EmptyState icon={<Activity size={24} strokeWidth={1.5} />} title="لا بيانات تسرّب" description="لم يقع أي تسرّب ضمن هذه النافذة." />
-            )}
-          </section>
-        </Reveal>
+            {a ? (
+              <Badge tone="neutral" dot>{a.churn.windowMonths} شهراً</Badge>
+            ) : null}
+          </div>
+          {a && a.churn.points.length > 0 ? (
+            <BarSeries
+              data={a.churn.points.map((p) => ({ month: monthLabel(p.month), churned: Number(p.churnedValue) || 0 }))}
+              xKey="month"
+              series={[{ key: 'churned', label: "Churn", color: "var(--color-chart-4)" }]}
+              height={264}
+              format={(v) => money(v)}
+            />
+          ) : (
+            <EmptyState icon={<Activity size={24} strokeWidth={1.5} />} title="لا بيانات تسرّب" description="لم يقع أي تسرّب ضمن هذه النافذة." />
+          )}
+        </section>
       </div>
 
       {/* customers + alerts */}
       <div className="grid gap-4 xl:grid-cols-5">
-        <Reveal delay={0.2} className="xl:col-span-3">
+        <div className="xl:col-span-3">
           <section className="rounded-[10px] border border-line bg-surface shadow-1 overflow-hidden">
             <header className="flex items-center justify-between px-4 pt-4 pb-2">
               <div>
@@ -294,9 +284,9 @@ export default function PlatformOverviewPage() {
               )}
             </div>
           </section>
-        </Reveal>
+        </div>
 
-        <Reveal delay={0.26} className="xl:col-span-2">
+        <div className="xl:col-span-2">
           <section className="rounded-[10px] border border-line bg-surface shadow-1 overflow-hidden h-full">
             <header className="flex items-center justify-between px-4 pt-4 pb-2">
               <div>
@@ -356,39 +346,37 @@ export default function PlatformOverviewPage() {
               </ul>
             )}
           </section>
-        </Reveal>
+        </div>
       </div>
 
       {/* definitions */}
       {a ? (
-        <Reveal delay={0.3}>
-          <details className="group rounded-[10px] border border-line bg-surface shadow-1">
-            <summary className="cursor-pointer list-none px-4 py-3 text-[12.5px] font-bold text-muted transition-colors duration-150 hover:text-ink">
-              <span className="inline-flex items-center gap-2">
-                <span className="transition-transform duration-200 group-open:rotate-90">›</span>
-                كيف حُسبت هذه الأرقام (التعريفات)
-              </span>
-            </summary>
-            <dl className="m-0 grid gap-2 border-t border-line px-4 py-3 text-[12.5px] md:grid-cols-2">
-              <div>
-                <dt className="font-mono font-bold text-brand">MRR</dt>
-                <dd className="m-0 text-ink-2">{a.definitions.mrr}</dd>
-              </div>
-              <div>
-                <dt className="font-mono font-bold text-brand">Churn</dt>
-                <dd className="m-0 text-ink-2">{a.definitions.churn}</dd>
-              </div>
-              <div>
-                <dt className="font-mono font-bold text-brand">Trial</dt>
-                <dd className="m-0 text-ink-2">{a.definitions.trial}</dd>
-              </div>
-              <div>
-                <dt className="font-mono font-bold text-brand">Activity</dt>
-                <dd className="m-0 text-ink-2">{a.definitions.activity}</dd>
-              </div>
-            </dl>
-          </details>
-        </Reveal>
+        <details className="group rounded-[10px] border border-line bg-surface shadow-1">
+          <summary className="cursor-pointer list-none px-4 py-3 text-[12.5px] font-bold text-muted transition-colors duration-150 hover:text-ink">
+            <span className="inline-flex items-center gap-2">
+              <span className="transition-transform duration-200 group-open:rotate-90">›</span>
+              كيف حُسبت هذه الأرقام (التعريفات)
+            </span>
+          </summary>
+          <dl className="m-0 grid gap-2 border-t border-line px-4 py-3 text-[12.5px] md:grid-cols-2">
+            <div>
+              <dt className="font-mono font-bold text-brand">MRR</dt>
+              <dd className="m-0 text-ink-2">{a.definitions.mrr}</dd>
+            </div>
+            <div>
+              <dt className="font-mono font-bold text-brand">Churn</dt>
+              <dd className="m-0 text-ink-2">{a.definitions.churn}</dd>
+            </div>
+            <div>
+              <dt className="font-mono font-bold text-brand">Trial</dt>
+              <dd className="m-0 text-ink-2">{a.definitions.trial}</dd>
+            </div>
+            <div>
+              <dt className="font-mono font-bold text-brand">Activity</dt>
+              <dd className="m-0 text-ink-2">{a.definitions.activity}</dd>
+            </div>
+          </dl>
+        </details>
       ) : null}
 
       {analytics.status === 'error' && overview.status !== 'loading' ? (

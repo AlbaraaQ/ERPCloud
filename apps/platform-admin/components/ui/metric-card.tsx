@@ -3,7 +3,6 @@
 import { motion } from 'framer-motion';
 import type { ReactNode } from 'react';
 
-import { CountUp } from './count-up';
 
 export type MetricTone = 'violet' | 'green' | 'amber' | 'red' | 'sky' | 'slate';
 
@@ -79,7 +78,7 @@ export function MetricCard({
             style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}
             dir="ltr"
           >
-            <CountUp value={value} />
+            {Number(value).toLocaleString('en-US')}
             {suffix ? <span className="text-[15px] font-semibold text-muted"> {suffix}</span> : null}
           </p>
         </div>

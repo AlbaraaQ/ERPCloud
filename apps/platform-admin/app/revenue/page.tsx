@@ -10,14 +10,12 @@ import {
   TrendingUp,
   Wallet,
 } from 'lucide-react';
-import { Badge } from '@erp/ui';
+import { AreaSeries, Badge } from '@erp/ui';
 import { Button } from '@erp/ui';
 import { EmptyState } from '@erp/ui';
 import { SkeletonRows } from '@erp/ui';
 import { DataTable } from '@erp/ui';
 
-import { AreaCardChart } from '../../components/ui/chart';
-import { Reveal } from '../../components/ui/count-up';
 import { MetricCard } from '../../components/ui/metric-card';
 import { Screen } from '../../components/screen';
 import { apiData } from '../../lib/api';
@@ -142,62 +140,56 @@ export default function RevenuePage() {
           </div>
 
           {/* big MRR chart */}
-          <Reveal delay={0.1}>
-            <section className="rounded-[10px] border border-line bg-surface p-4 shadow-1">
-              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <h3 className="m-0 text-[15px] font-bold text-ink">منحنى MRR — 12 شهراً</h3>
-                  <p className="m-0 mt-0.5 text-[12px] text-muted">الإيراد الشهري المتكرر كما حُسب في العقود (بلا رسومٍ بلا معنى).</p>
-                </div>
-                {data.mixedCurrency ? (
-                  <Badge tone="warn" dot>
-                    <AlertTriangle size={12} /> عملات مختلطة — الأرقام بعملة العرض وحدها
-                  </Badge>
-                ) : null}
+          <section className="rounded-[10px] border border-line bg-surface p-4 shadow-1">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h3 className="m-0 text-[15px] font-bold text-ink">منحنى MRR — 12 شهراً</h3>
+                <p className="m-0 mt-0.5 text-[12px] text-muted">الإيراد الشهري المتكرر كما حُسب في العقود (بلا رسومٍ بلا معنى).</p>
               </div>
-              {(series.data?.mrrSeries ?? []).length > 0 ? (
-                <AreaCardChart
-                  data={(series.data?.mrrSeries ?? []).map((p) => ({ month: monthLabel(p.month), mrr: num(p.mrr) }))}
-                  xKey="month"
-                  dataKey="mrr"
-                  name="MRR"
-                  height={300}
-                  color="var(--color-chart-2)"
-                  formatter={(v) => `${fmt(v)} ${currency}`}
-                />
-              ) : (
-                <EmptyState icon={<TrendingUp size={24} strokeWidth={1.5} />} title="لا بيانات سلسلة إيراد" />
-              )}
-            </section>
-          </Reveal>
+              {data.mixedCurrency ? (
+                <Badge tone="warn" dot>
+                  <AlertTriangle size={12} /> عملات مختلطة — الأرقام بعملة العرض وحدها
+                </Badge>
+              ) : null}
+            </div>
+            {(series.data?.mrrSeries ?? []).length > 0 ? (
+              <AreaSeries
+                data={(series.data?.mrrSeries ?? []).map((p) => ({ month: monthLabel(p.month), mrr: num(p.mrr) }))}
+                xKey="month"
+                series={[{ key: 'mrr', label: "MRR", color: "var(--color-chart-2)" }]}
+                height={300}
+                format={(v) => `${fmt(v)} ${currency}`}
+              />
+            ) : (
+              <EmptyState icon={<TrendingUp size={24} strokeWidth={1.5} />} title="لا بيانات سلسلة إيراد" />
+            )}
+          </section>
 
           <div className="grid gap-4 xl:grid-cols-3 items-start">
             {/* licence mix */}
-            <Reveal delay={0.15}>
-              <section className="rounded-[10px] border border-line bg-surface p-4 shadow-1">
-                <h3 className="m-0 text-[15px] font-bold text-ink mb-3">التراخيص</h3>
-                <dl className="m-0 grid gap-2.5">
-                  {[
-                    { label: 'فعّالة', value: data.counts.active, cls: 'text-ok' },
-                    { label: 'متأخّرة', value: data.counts.pastDue, cls: 'text-danger' },
-                    { label: 'تجربة', value: data.counts.trialing, cls: 'text-info' },
-                    { label: 'موقوفة مؤقتاً', value: data.counts.paused, cls: 'text-warn' },
-                    { label: 'ملغاة', value: data.counts.canceled, cls: 'text-muted' },
-                  ].map((row) => (
-                    <div key={row.label} className="flex items-center justify-between rounded-lg border border-line bg-surface-2 px-3 py-2">
-                      <dt className="text-[12.5px] font-bold text-muted m-0">{row.label}</dt>
-                      <dd className={`m-0 font-mono text-[15px] font-bold ${row.cls}`} dir="ltr">{row.value}</dd>
-                    </div>
-                  ))}
-                </dl>
-                <p className="m-0 mt-3 text-[11.5px] text-muted leading-relaxed">
-                  MRR يعدّ «فعّالة» و«متأخّرة» فقط: من تأخّر في السداد ما زال متعاقداً، ومن يُجرّب لم يشترِ بعد.
-                </p>
-              </section>
-            </Reveal>
+            <section className="rounded-[10px] border border-line bg-surface p-4 shadow-1">
+              <h3 className="m-0 text-[15px] font-bold text-ink mb-3">التراخيص</h3>
+              <dl className="m-0 grid gap-2.5">
+                {[
+                  { label: 'فعّالة', value: data.counts.active, cls: 'text-ok' },
+                  { label: 'متأخّرة', value: data.counts.pastDue, cls: 'text-danger' },
+                  { label: 'تجربة', value: data.counts.trialing, cls: 'text-info' },
+                  { label: 'موقوفة مؤقتاً', value: data.counts.paused, cls: 'text-warn' },
+                  { label: 'ملغاة', value: data.counts.canceled, cls: 'text-muted' },
+                ].map((row) => (
+                  <div key={row.label} className="flex items-center justify-between rounded-lg border border-line bg-surface-2 px-3 py-2">
+                    <dt className="text-[12.5px] font-bold text-muted m-0">{row.label}</dt>
+                    <dd className={`m-0 font-mono text-[15px] font-bold ${row.cls}`} dir="ltr">{row.value}</dd>
+                  </div>
+                ))}
+              </dl>
+              <p className="m-0 mt-3 text-[11.5px] text-muted leading-relaxed">
+                MRR يعدّ «فعّالة» و«متأخّرة» فقط: من تأخّر في السداد ما زال متعاقداً، ومن يُجرّب لم يشترِ بعد.
+              </p>
+            </section>
 
             {/* upcoming invoices */}
-            <Reveal delay={0.2} className="xl:col-span-2">
+            <div className="xl:col-span-2">
               <section className="rounded-[10px] border border-line bg-surface shadow-1 overflow-hidden">
                 <header className="px-4 pt-4 pb-1 flex items-center gap-2">
                   <CalendarClock size={15} className="text-muted" />
@@ -234,7 +226,7 @@ export default function RevenuePage() {
                   </div>
                 )}
               </section>
-            </Reveal>
+            </div>
           </div>
         </>
       ) : null}

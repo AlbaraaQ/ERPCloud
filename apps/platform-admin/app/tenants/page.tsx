@@ -19,7 +19,6 @@ import { SkeletonRows } from '@erp/ui';
 import { DataTable } from '@erp/ui';
 
 import { Input, Labeled, Select } from '../../components/ui/input';
-import { CountUp } from '../../components/ui/count-up';
 import { Screen } from '../../components/screen';
 import { ApiError, apiData, apiPost } from '../../lib/api';
 import { useQuery } from '../../lib/use-query';
@@ -138,16 +137,16 @@ export default function TenantsPage() {
           </Button>
           <div className="ms-auto flex flex-wrap gap-2">
             <Badge tone="neutral" dot>
-              <CountUp value={counts.total} /> إجمالي
+              {Number(counts.total).toLocaleString('en-US')} إجمالي
             </Badge>
             <Badge tone="ok" dot>
-              <CountUp value={counts.active} /> نشط
+              {Number(counts.active).toLocaleString('en-US')} نشط
             </Badge>
             <Badge tone="warn" dot>
-              <CountUp value={counts.suspended} /> موقوف
+              {Number(counts.suspended).toLocaleString('en-US')} موقوف
             </Badge>
             <Badge tone="info" dot>
-              <CountUp value={counts.licensed} /> مرخّص
+              {Number(counts.licensed).toLocaleString('en-US')} مرخّص
             </Badge>
           </div>
         </div>

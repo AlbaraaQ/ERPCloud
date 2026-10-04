@@ -19,13 +19,11 @@ import {
   type WeeklyReportPreview,
   type WeeklyReportRunResult,
 } from '@erp/contracts';
-import { Button } from '@erp/ui';
+import { AreaSeries, Button } from '@erp/ui';
 import { SkeletonRows } from '@erp/ui';
 import { DataTable } from '@erp/ui';
 
 import { Empty, ErrorBox, Loading, Screen } from '../../components/screen';
-import { AreaCardChart } from '../../components/ui/chart';
-import { Reveal } from '../../components/ui/count-up';
 import { Select } from '../../components/ui/input';
 import { MetricCard } from '../../components/ui/metric-card';
 import { ApiError, apiData, apiPost, downloadFile } from '../../lib/api';
@@ -220,25 +218,21 @@ export default function AnalyticsPage() {
           </div>
 
           {/* MRR curve */}
-          <Reveal delay={0.1}>
-            <section className="rounded-[10px] border border-line bg-surface p-4 shadow-1">
-              <h3 className="m-0 text-[15px] font-bold text-ink">منحنى الإيراد — MRR شهرياً</h3>
-              <p className="m-0 mt-0.5 mb-3 text-[12px] text-muted">{data.definitions.mrr}</p>
-              {data.mrrSeries.length > 0 ? (
-                <AreaCardChart
-                  data={data.mrrSeries.map((point) => ({ month: monthText(point.month), mrr: Number(point.mrr) || 0 }))}
-                  xKey="month"
-                  dataKey="mrr"
-                  name="MRR"
-                  height={280}
-                  color="var(--color-chart-2)"
-                  formatter={(v) => `${v.toLocaleString('en-US', { maximumFractionDigits: 0 })} ${data.currency}`}
-                />
-              ) : (
-                <Empty title="لا بيانات" />
-              )}
-            </section>
-          </Reveal>
+          <section className="rounded-[10px] border border-line bg-surface p-4 shadow-1">
+            <h3 className="m-0 text-[15px] font-bold text-ink">منحنى الإيراد — MRR شهرياً</h3>
+            <p className="m-0 mt-0.5 mb-3 text-[12px] text-muted">{data.definitions.mrr}</p>
+            {data.mrrSeries.length > 0 ? (
+              <AreaSeries
+                data={data.mrrSeries.map((point) => ({ month: monthText(point.month), mrr: Number(point.mrr) || 0 }))}
+                xKey="month"
+                series={[{ key: 'mrr', label: "MRR", color: "var(--color-chart-2)" }]}
+                height={280}
+                format={(v) => `${v.toLocaleString('en-US', { maximumFractionDigits: 0 })} ${data.currency}`}
+              />
+            ) : (
+              <Empty title="لا بيانات" />
+            )}
+          </section>
 
           {/* growth + collection + trials */}
           <div className="mt-3 grid gap-3 xl:grid-cols-3">
@@ -266,54 +260,50 @@ export default function AnalyticsPage() {
           </div>
 
           {/* alerts */}
-          <Reveal delay={0.1}>
-            <section className="mt-3 rounded-[10px] border border-line bg-surface p-4 shadow-1">
-              <h3 className="m-0 mb-3 text-[15px] font-bold text-ink">التنبيهات ({data.alerts.length})</h3>
-              {data.alerts.length === 0 ? (
-                <Empty title="لا تنبيهات" detail="لا شيء يستحقّ التصرّف الآن: تجاربٌ قريبة، أو متأخّرات، أو حدودٌ مقتربة، أو عناوين تفشل." />
-              ) : (
-                <div className="grid gap-2">
-                  {data.alerts.map((alert) => (
-                    <div key={alert.kind} className="flex flex-wrap items-center gap-3 rounded-[10px] border border-line bg-surface-2 px-4 py-3">
-                      <span className={`relative flex size-2.5 flex-none ${SEVERITY_DOT[alert.severity]}`}>
-                        {alert.severity === 'critical' && (
-                          <span className="absolute inline-flex size-full animate-ping rounded-full bg-danger opacity-70" />
-                        )}
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-[13.5px] font-bold text-ink">{alert.title}</span>
-                        <span className="block text-[11.5px] text-muted" dir="ltr">{alert.kind}</span>
-                      </span>
-                      <ul className="m-0 p-0 list-none flex flex-wrap gap-x-4 gap-y-1 max-w-[46%]">
-                        {alert.examples.slice(0, 3).map((example) => (
-                          <li key={`${example.label}-${example.detail}`} className="text-[11.5px] text-muted">
-                            <strong className="text-ink-2">{example.label}</strong> — {example.detail}
-                          </li>
-                        ))}
-                      </ul>
-                      <span className="font-mono text-[18px] font-bold text-ink" dir="ltr">{alert.count}</span>
-                      <a href={alert.href}>
-                        <Button variant="secondary" size="sm">تصرّف</Button>
-                      </a>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
-          </Reveal>
+          <section className="mt-3 rounded-[10px] border border-line bg-surface p-4 shadow-1">
+            <h3 className="m-0 mb-3 text-[15px] font-bold text-ink">التنبيهات ({data.alerts.length})</h3>
+            {data.alerts.length === 0 ? (
+              <Empty title="لا تنبيهات" detail="لا شيء يستحقّ التصرّف الآن: تجاربٌ قريبة، أو متأخّرات، أو حدودٌ مقتربة، أو عناوين تفشل." />
+            ) : (
+              <div className="grid gap-2">
+                {data.alerts.map((alert) => (
+                  <div key={alert.kind} className="flex flex-wrap items-center gap-3 rounded-[10px] border border-line bg-surface-2 px-4 py-3">
+                    <span className={`relative flex size-2.5 flex-none ${SEVERITY_DOT[alert.severity]}`}>
+                      {alert.severity === 'critical' && (
+                        <span className="absolute inline-flex size-full animate-ping rounded-full bg-danger opacity-70" />
+                      )}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[13.5px] font-bold text-ink">{alert.title}</span>
+                      <span className="block text-[11.5px] text-muted" dir="ltr">{alert.kind}</span>
+                    </span>
+                    <ul className="m-0 p-0 list-none flex flex-wrap gap-x-4 gap-y-1 max-w-[46%]">
+                      {alert.examples.slice(0, 3).map((example) => (
+                        <li key={`${example.label}-${example.detail}`} className="text-[11.5px] text-muted">
+                          <strong className="text-ink-2">{example.label}</strong> — {example.detail}
+                        </li>
+                      ))}
+                    </ul>
+                    <span className="font-mono text-[18px] font-bold text-ink" dir="ltr">{alert.count}</span>
+                    <a href={alert.href}>
+                      <Button variant="secondary" size="sm">تصرّف</Button>
+                    </a>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
 
           {/* funnel */}
-          <Reveal delay={0.15}>
-            <FunnelSection
-              status={funnel.status}
-              error={funnel.error}
-              onRetry={funnel.reload}
-              rows={funnel.data?.rows ?? []}
-              windowDays={funnelDays}
-              onDaysChange={setFunnelDays}
-              definition={data.definitions.activity}
-            />
-          </Reveal>
+          <FunnelSection
+            status={funnel.status}
+            error={funnel.error}
+            onRetry={funnel.reload}
+            rows={funnel.data?.rows ?? []}
+            windowDays={funnelDays}
+            onDaysChange={setFunnelDays}
+            definition={data.definitions.activity}
+          />
 
           {/* churn + usage by plan */}
           <div className="mt-3 grid gap-3 xl:grid-cols-2 items-start">
@@ -373,66 +363,64 @@ export default function AnalyticsPage() {
           </div>
 
           {/* cohorts */}
-          <Reveal delay={0.15}>
-            <section className="mt-3 rounded-[10px] border border-line bg-surface p-4 shadow-1">
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <h3 className="m-0 text-[15px] font-bold text-ink">أفواج الاحتفاظ</h3>
-                  <p className="m-0 mt-0.5 text-[11.5px] text-muted">
-                    الخليّة تحمل رقمين: من بقي <strong>متعاقداً</strong> (ترخيصٌ حَيّ في الشهر)، ومن <strong>استعمل</strong> فعلاً.
-                  </p>
+          <section className="mt-3 rounded-[10px] border border-line bg-surface p-4 shadow-1">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 className="m-0 text-[15px] font-bold text-ink">أفواج الاحتفاظ</h3>
+                <p className="m-0 mt-0.5 text-[11.5px] text-muted">
+                  الخليّة تحمل رقمين: من بقي <strong>متعاقداً</strong> (ترخيصٌ حَيّ في الشهر)، ومن <strong>استعمل</strong> فعلاً.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <div style={{ width: 150 }}>
+                  <Select label="الأساس" value={basis} onChange={(event) => setBasis(event.target.value === 'activation' ? 'activation' : 'signup')}>
+                    <option value="signup">فوج التسجيل</option>
+                    <option value="activation">فوج التفعيل</option>
+                  </Select>
                 </div>
-                <div className="flex gap-2">
-                  <div style={{ width: 150 }}>
-                    <Select label="الأساس" value={basis} onChange={(event) => setBasis(event.target.value === 'activation' ? 'activation' : 'signup')}>
-                      <option value="signup">فوج التسجيل</option>
-                      <option value="activation">فوج التفعيل</option>
-                    </Select>
-                  </div>
-                  <div style={{ width: 120 }}>
-                    <Select label="الأفواج" value={cohortMonths} onChange={(event) => setCohortMonths(event.target.value)}>
-                      <option value="3">٣</option>
-                      <option value="6">٦</option>
-                      <option value="12">١٢</option>
-                    </Select>
-                  </div>
+                <div style={{ width: 120 }}>
+                  <Select label="الأفواج" value={cohortMonths} onChange={(event) => setCohortMonths(event.target.value)}>
+                    <option value="3">٣</option>
+                    <option value="6">٦</option>
+                    <option value="12">١٢</option>
+                  </Select>
                 </div>
               </div>
-              {cohorts.status === 'loading' && <SkeletonRows rows={5} />}
-              {cohorts.status === 'error' && <ErrorBox message={cohorts.error} onRetry={cohorts.reload} />}
-              {cohorts.status === 'success' && cohorts.data && (
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse text-[12px]">
-                    <thead>
-                      <tr>
-                        <th className="border-b border-line px-2 py-2 text-start font-bold text-muted">الفوج</th>
-                        <th className="border-b border-line px-2 py-2 text-end font-bold text-muted">الحجم</th>
-                        {cohorts.data.rows.at(-1)?.cells.map((cell) => (
-                          <th key={cell.month} className="border-b border-line px-2 py-2 text-end font-bold text-muted">
-                            {monthText(cell.month)}
-                          </th>
+            </div>
+            {cohorts.status === 'loading' && <SkeletonRows rows={5} />}
+            {cohorts.status === 'error' && <ErrorBox message={cohorts.error} onRetry={cohorts.reload} />}
+            {cohorts.status === 'success' && cohorts.data && (
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse text-[12px]">
+                  <thead>
+                    <tr>
+                      <th className="border-b border-line px-2 py-2 text-start font-bold text-muted">الفوج</th>
+                      <th className="border-b border-line px-2 py-2 text-end font-bold text-muted">الحجم</th>
+                      {cohorts.data.rows.at(-1)?.cells.map((cell) => (
+                        <th key={cell.month} className="border-b border-line px-2 py-2 text-end font-bold text-muted">
+                          {monthText(cell.month)}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {cohorts.data.rows.map((row) => (
+                      <tr key={row.cohort}>
+                        <td className="border-b border-line px-2 py-2 font-semibold text-ink-2">{monthText(row.cohort)}</td>
+                        <td className="border-b border-line px-2 py-2 text-end font-mono font-bold text-ink-2" dir="ltr">{row.size}</td>
+                        {row.cells.map((cell) => (
+                          <td key={cell.month} className="border-b border-line px-2 py-1.5 text-end" style={{ background: heatColor(cell.contractedRate) }}>
+                            <span className="block font-mono text-[12px] font-bold" dir="ltr">{cell.contracted}/{row.size}</span>
+                            <span className="block font-mono text-[10.5px] text-muted" dir="ltr">{cell.active}/{row.size} · {percent(cell.contractedRate)}</span>
+                          </td>
                         ))}
                       </tr>
-                    </thead>
-                    <tbody>
-                      {cohorts.data.rows.map((row) => (
-                        <tr key={row.cohort}>
-                          <td className="border-b border-line px-2 py-2 font-semibold text-ink-2">{monthText(row.cohort)}</td>
-                          <td className="border-b border-line px-2 py-2 text-end font-mono font-bold text-ink-2" dir="ltr">{row.size}</td>
-                          {row.cells.map((cell) => (
-                            <td key={cell.month} className="border-b border-line px-2 py-1.5 text-end" style={{ background: heatColor(cell.contractedRate) }}>
-                              <span className="block font-mono text-[12px] font-bold" dir="ltr">{cell.contracted}/{row.size}</span>
-                              <span className="block font-mono text-[10.5px] text-muted" dir="ltr">{cell.active}/{row.size} · {percent(cell.contractedRate)}</span>
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </section>
-          </Reveal>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
 
           {/* weekly report */}
           <section className="mt-3 rounded-[10px] border border-line bg-surface p-4 shadow-1">
