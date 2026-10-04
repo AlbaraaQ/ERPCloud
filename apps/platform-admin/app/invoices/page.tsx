@@ -6,8 +6,8 @@ import { useState } from 'react';
 import { Badge } from '@erp/ui';
 import { Button } from '@erp/ui';
 import { DataTable } from '@erp/ui';
+import { Select } from '@erp/ui';
 
-import { Select } from '../../components/ui/input';
 import { Empty, ErrorBox, Loading, Screen } from '../../components/screen';
 import { ApiError, apiData, apiPost } from '../../lib/api';
 import { useQuery } from '../../lib/use-query';
@@ -168,24 +168,26 @@ export default function InvoicesPage() {
       actions={
         <>
           <div style={{ width: 150 }}>
-            <Select label="الحالة" value={status} onChange={(e) => setStatus(e.target.value)}>
-              <option value="">كل الحالات</option>
-              {(Object.keys(STATUS_LABEL) as InvoiceStatus[]).map((key) => (
-                <option key={key} value={key}>
-                  {STATUS_LABEL[key]}
-                </option>
-              ))}
-            </Select>
+            <Select
+            label="الحالة"
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            placeholder="كل الحالات"
+            options={[
+  ...(Object.keys(STATUS_LABEL) as InvoiceStatus[]).map((key) => ({ value: key, label: STATUS_LABEL[key] })),
+]}
+            />
           </div>
           <div style={{ width: 150 }}>
-            <Select label="النوع" value={kind} onChange={(e) => setKind(e.target.value)}>
-              <option value="">النوعان</option>
-              {(Object.keys(KIND_LABEL) as InvoiceKind[]).map((key) => (
-                <option key={key} value={key}>
-                  {KIND_LABEL[key]}
-                </option>
-              ))}
-            </Select>
+            <Select
+            label="النوع"
+            value={kind}
+            onChange={(e) => setKind(e.target.value)}
+            placeholder="النوعان"
+            options={[
+  ...(Object.keys(KIND_LABEL) as InvoiceKind[]).map((key) => ({ value: key, label: KIND_LABEL[key] })),
+]}
+            />
           </div>
           <Button variant="primary" icon={<FilePlus2 size={14} />} onClick={() => setCreating(!creating)}>
             {creating ? 'إغلاق' : 'فاتورة جديدة'}

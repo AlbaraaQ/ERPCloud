@@ -5,8 +5,8 @@ import { useState } from 'react';
 import { Badge } from '@erp/ui';
 import { Button } from '@erp/ui';
 import { DataTable } from '@erp/ui';
+import { Select } from '@erp/ui';
 
-import { Select } from '../../components/ui/input';
 import { Empty, ErrorBox, Loading, Screen } from '../../components/screen';
 import { ApiError, apiData, apiPost } from '../../lib/api';
 import { useQuery } from '../../lib/use-query';
@@ -131,14 +131,15 @@ export default function SubscriptionsPage() {
       actions={
         <>
           <div style={{ width: 180 }}>
-            <Select label="الحالة" value={status} onChange={(e) => setStatus(e.target.value)}>
-              <option value="">كل الحالات</option>
-              {(Object.keys(STATUS_LABEL) as Status[]).map((key) => (
-                <option key={key} value={key}>
-                  {STATUS_LABEL[key]}
-                </option>
-              ))}
-            </Select>
+            <Select
+            label="الحالة"
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            placeholder="كل الحالات"
+            options={[
+  ...(Object.keys(STATUS_LABEL) as Status[]).map((key) => ({ value: key, label: STATUS_LABEL[key] })),
+]}
+            />
           </div>
           <Button variant="primary" icon={<KeyRound size={14} />} onClick={() => setGranting(!granting)}>
             {granting ? 'إغلاق' : 'ترخيص جديد'}

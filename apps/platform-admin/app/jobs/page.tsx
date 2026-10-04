@@ -13,8 +13,8 @@ import { Badge } from '@erp/ui';
 import { Button } from '@erp/ui';
 import { SkeletonRows } from '@erp/ui';
 import { DataTable } from '@erp/ui';
+import { Input, Select } from '@erp/ui';
 
-import { Input, Select } from '../../components/ui/input';
 import { Empty, ErrorBox, Forbidden, Screen } from '../../components/screen';
 import { apiData } from '../../lib/api';
 import { useSession } from '../../lib/session';
@@ -155,12 +155,17 @@ export default function JobsPage() {
       <div className="mt-3 rounded-[10px] border border-line bg-surface p-3 shadow-1 no-print">
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           <div style={{ minWidth: 160 }}>
-            <Select label="الحالة" value={status} onChange={(e) => setStatus(e.target.value)}>
-              <option value="">الكل</option>
-              <option value="pending">بانتظار النشر</option>
-              <option value="published">نُشرت</option>
-              <option value="dead">ميتة</option>
-            </Select>
+            <Select
+            label="الحالة"
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            placeholder="الكل"
+            options={[
+  { value: 'pending', label: 'بانتظار النشر' },
+  { value: 'published', label: 'نُشرت' },
+  { value: 'dead', label: 'ميتة' },
+]}
+            />
           </div>
           <Input label="معرّف العميل (اختياري)" dir="ltr" placeholder="uuid" value={onlyTenant} onChange={(e) => setOnlyTenant(e.target.value)} />
           <Input

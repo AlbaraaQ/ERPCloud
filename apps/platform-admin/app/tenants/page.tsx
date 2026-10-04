@@ -17,8 +17,8 @@ import { EmptyState } from '@erp/ui';
 import { Modal } from '@erp/ui';
 import { SkeletonRows } from '@erp/ui';
 import { DataTable } from '@erp/ui';
+import { Input, Labeled, Select } from '@erp/ui';
 
-import { Input, Labeled, Select } from '../../components/ui/input';
 import { Screen } from '../../components/screen';
 import { ApiError, apiData, apiPost } from '../../lib/api';
 import { useQuery } from '../../lib/use-query';
@@ -125,12 +125,17 @@ export default function TenantsPage() {
             />
           </div>
           <div style={{ minWidth: 160 }}>
-            <Select label="الحالة" value={status} onChange={(e) => setStatus(e.target.value)}>
-                <option value="">كل الحالات</option>
-                <option value="active">نشط</option>
-                <option value="suspended">موقوف</option>
-              <option value="archived">مؤرشف</option>
-            </Select>
+            <Select
+            label="الحالة"
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            placeholder="كل الحالات"
+            options={[
+  { value: 'active', label: 'نشط' },
+  { value: 'suspended', label: 'موقوف' },
+  { value: 'archived', label: 'مؤرشف' },
+]}
+            />
           </div>
           <Button variant="primary" icon={<Search size={15} />} onClick={() => setApplied({ search, status })}>
             بحث

@@ -22,9 +22,9 @@ import {
 import { AreaSeries, Button } from '@erp/ui';
 import { SkeletonRows } from '@erp/ui';
 import { DataTable } from '@erp/ui';
+import { Select } from '@erp/ui';
 
 import { Empty, ErrorBox, Loading, Screen } from '../../components/screen';
-import { Select } from '../../components/ui/input';
 import { MetricCard } from '../../components/ui/metric-card';
 import { ApiError, apiData, apiPost, downloadFile } from '../../lib/api';
 import { useSession } from '../../lib/session';
@@ -183,12 +183,17 @@ export default function AnalyticsPage() {
       actions={
         <>
           <div style={{ width: 140 }}>
-            <Select label="النطاق" value={months} onChange={(event) => setMonths(event.target.value)}>
-              <option value="3">٣ أشهر</option>
-              <option value="6">٦ أشهر</option>
-              <option value="12">١٢ شهراً</option>
-              <option value="24">٢٤ شهراً</option>
-            </Select>
+            <Select
+            label="النطاق"
+            value={months}
+            onChange={(event) => setMonths(event.target.value)}
+            options={[
+  { value: '3', label: '٣ أشهر' },
+  { value: '6', label: '٦ أشهر' },
+  { value: '12', label: '١٢ شهراً' },
+  { value: '24', label: '٢٤ شهراً' },
+]}
+            />
           </div>
           <Button variant="secondary" icon={<RefreshCw size={14} />} onClick={overview.reload}>
             تحديث
@@ -373,17 +378,27 @@ export default function AnalyticsPage() {
               </div>
               <div className="flex gap-2">
                 <div style={{ width: 150 }}>
-                  <Select label="الأساس" value={basis} onChange={(event) => setBasis(event.target.value === 'activation' ? 'activation' : 'signup')}>
-                    <option value="signup">فوج التسجيل</option>
-                    <option value="activation">فوج التفعيل</option>
-                  </Select>
+                  <Select
+                  label="الأساس"
+                  value={basis}
+                  onChange={(event) => setBasis(event.target.value === 'activation' ? 'activation' : 'signup')}
+                  options={[
+  { value: 'signup', label: 'فوج التسجيل' },
+  { value: 'activation', label: 'فوج التفعيل' },
+]}
+                  />
                 </div>
                 <div style={{ width: 120 }}>
-                  <Select label="الأفواج" value={cohortMonths} onChange={(event) => setCohortMonths(event.target.value)}>
-                    <option value="3">٣</option>
-                    <option value="6">٦</option>
-                    <option value="12">١٢</option>
-                  </Select>
+                  <Select
+                  label="الأفواج"
+                  value={cohortMonths}
+                  onChange={(event) => setCohortMonths(event.target.value)}
+                  options={[
+  { value: '3', label: '٣' },
+  { value: '6', label: '٦' },
+  { value: '12', label: '١٢' },
+]}
+                  />
                 </div>
               </div>
             </div>
@@ -574,13 +589,14 @@ function FunnelSection({
           </p>
         </div>
         <div style={{ width: 150 }}>
-          <Select label="نافذة التسجيل" value={windowDays} onChange={(event) => onDaysChange(event.target.value)}>
-            {SIGNUP_WINDOW_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </Select>
+          <Select
+          label="نافذة التسجيل"
+          value={windowDays}
+          onChange={(event) => onDaysChange(event.target.value)}
+          options={[
+  ...SIGNUP_WINDOW_OPTIONS.map((option) => ({ value: option.value, label: option.label })),
+]}
+          />
         </div>
       </div>
 

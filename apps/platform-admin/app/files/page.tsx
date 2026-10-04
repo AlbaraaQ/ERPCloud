@@ -6,8 +6,8 @@ import { Badge } from '@erp/ui';
 import { Button } from '@erp/ui';
 import { SkeletonRows } from '@erp/ui';
 import { DataTable } from '@erp/ui';
+import { Input, Select } from '@erp/ui';
 
-import { Input, Select } from '../../components/ui/input';
 import { Empty, ErrorBox, Forbidden, Screen } from '../../components/screen';
 import { apiData } from '../../lib/api';
 import { useSession } from '../../lib/session';
@@ -154,19 +154,29 @@ export default function FilesPage() {
       <div className="rounded-[10px] border border-line bg-surface p-3 shadow-1 no-print">
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <Input label="بحث في الاسم" placeholder="كشف" value={term} onChange={(e) => setTerm(e.target.value)} />
-          <Select label="حالة الملف" value={status} onChange={(e) => setStatus(e.target.value)}>
-            <option value="">الكل</option>
-            <option value="pending">بانتظار الرفع</option>
-            <option value="ready">جاهز</option>
-            <option value="deleted">محجور</option>
-          </Select>
-          <Select label="حكم الفحص" value={scan} onChange={(e) => setScan(e.target.value)}>
-            <option value="">الكل</option>
-            <option value="clean">نظيف</option>
-            <option value="infected">مُصاب</option>
-            <option value="skipped">لم يُفحص فعلياً</option>
-            <option value="none">لم يُفحص بعد</option>
-          </Select>
+          <Select
+          label="حالة الملف"
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+          placeholder="الكل"
+          options={[
+  { value: 'pending', label: 'بانتظار الرفع' },
+  { value: 'ready', label: 'جاهز' },
+  { value: 'deleted', label: 'محجور' },
+]}
+          />
+          <Select
+          label="حكم الفحص"
+          value={scan}
+          onChange={(e) => setScan(e.target.value)}
+          placeholder="الكل"
+          options={[
+  { value: 'clean', label: 'نظيف' },
+  { value: 'infected', label: 'مُصاب' },
+  { value: 'skipped', label: 'لم يُفحص فعلياً' },
+  { value: 'none', label: 'لم يُفحص بعد' },
+]}
+          />
           <Input
             label="سبب الحجر (5 محارف على الأقل — يُسجَّل في التدقيق)"
             placeholder="مثال: محتوى مشتبه به أبلغ عنه العميل"
