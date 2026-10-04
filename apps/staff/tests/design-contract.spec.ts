@@ -64,19 +64,25 @@ function rule(selector: string): Record<string, string> {
   const out: Record<string, string> = {};
   for (const line of body.split('\n')) {
     const m = /^\s*([a-z-]+)\s*:\s*(.+?);/.exec(line);
-    if (m) out[m[1]] = m[2];
+    // `noUncheckedIndexedAccess`: مجموعة الالتقاط قد تُعيد `undefined` لعنصرٍ لم يطابق،
+    // وكتابة `m[1]` مباشرةً تُسقِط ذلك على نوع `string | undefined`.
+    if (m && m[1] !== undefined && m[2] !== undefined) out[m[1]] = m[2];
   }
   return out;
 }
 
 /** Every custom property the stylesheet reads. */
 function usedTokens(): Set<string> {
-  return new Set([...css.matchAll(/var\((--[a-z0-9-]+)/g)].map((m) => m[1]));
+  return new Set(
+    [...css.matchAll(/var\((--[a-z0-9-]+)/g)].flatMap((m) => (m[1] === undefined ? [] : [m[1]])),
+  );
 }
 
 /** Every custom property any stylesheet declares. */
 function declaredTokens(): Set<string> {
-  return new Set([...tokens.matchAll(/(--[a-z0-9-]+)\s*:/g)].map((m) => m[1]));
+  return new Set(
+    [...tokens.matchAll(/(--[a-z0-9-]+)\s*:/g)].flatMap((m) => (m[1] === undefined ? [] : [m[1]])),
+  );
 }
 
 describe('the shell contract (Design v3 §6.1)', () => {
