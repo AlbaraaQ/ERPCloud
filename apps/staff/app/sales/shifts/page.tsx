@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { ApiError, apiData, apiList, apiPost } from '../../../lib/api';
 import {
@@ -209,7 +210,7 @@ export default function ShiftsPage() {
 
       <QueryView query={shifts} empty="لا توجد إغلاقات" emptyDetail="ستظهر الورديات المغلقة هنا.">
         {(rows) => (
-          <DataTable
+          <Table
             rows={rows}
             rowKey={(row) => row.id}
             columns={[

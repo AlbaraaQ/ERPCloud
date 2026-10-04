@@ -4,7 +4,8 @@ import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { Tabs } from '@erp/ui';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { ActionBar, DocField, DocHead, StatTile, StatTiles, StatusTrack, Totals } from '../../../components/ui';
 import { accountLabel, listAccounts, postableOf, type Account } from '../../../lib/accounts';
@@ -799,7 +800,7 @@ export default function VouchersPage() {
                 <DocField label="أُنشئ">{dateTime(selected.createdAt)}</DocField>
               </DocHead>
 
-              <DataTable
+              <Table
                 rows={selected.lines}
                 rowKey={(line) => String(line.lineNo)}
                 footer={[

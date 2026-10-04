@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 
-import { DataTable, Notice } from '../../../components/data-view';
+import { Notice } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { ApiError, apiList, apiPost } from '../../../lib/api';
 import { itemLabel, listItems, quantity, type Item } from '../../../lib/lookups';
@@ -90,7 +91,7 @@ export default function BomsPage() {
         <button className="btn" type="button" onClick={() => setLines((current) => [...current, emptyLine()])}>مكوّن آخر</button>
         <button className="btn primary" type="submit">حفظ القائمة</button>
       </form>
-      <DataTable
+      <Table
         rows={cards.data ?? []}
         rowKey={(row) => row.id}
         columns={[

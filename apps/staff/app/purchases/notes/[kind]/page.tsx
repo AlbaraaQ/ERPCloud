@@ -2,7 +2,8 @@
 
 import { use, useMemo, useState } from 'react';
 
-import { DataTable, Notice, QueryView } from '../../../../components/data-view';
+import { Notice, QueryView } from '../../../../components/data-view';
+import { Table } from '../../../../components/table';
 import { FormFields, type FormValues } from '../../../../components/directory';
 import { Screen } from '../../../../components/screen';
 import { ApiError, apiList, apiPost } from '../../../../lib/api';
@@ -114,7 +115,7 @@ export default function PurchaseNotePage({ params }: { params: Promise<{ kind: s
       <QueryView query={notes} empty="لا توجد إشعارات من هذا النوع">
         {(rows) => (
           <div className="card">
-            <DataTable
+            <Table
               columns={[
                 { key: 'number', header: 'رقم الإشعار', align: 'ltr', cell: (row: Note) => row.number ?? 'مسودة' },
                 { key: 'invoice', header: 'الفاتورة', align: 'ltr', cell: (row: Note) => row.invoiceNumber ?? '—' },

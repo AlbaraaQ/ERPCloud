@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { ApiError, apiData, apiList, apiPost } from '../../../lib/api';
 import { arabicName, branchOptions, defaultOf, listBranches, money, shortDate, today, type Branch } from '../../../lib/lookups';
@@ -162,7 +163,7 @@ export default function MarinaDayClosePage() {
 
       <QueryView query={closings} empty="لا توجد إغلاقات سابقة" emptyDetail="أغلق أول يومية لتظهر هنا.">
         {(rows) => (
-          <DataTable
+          <Table
             rows={rows}
             rowKey={(row) => row.id}
             columns={[

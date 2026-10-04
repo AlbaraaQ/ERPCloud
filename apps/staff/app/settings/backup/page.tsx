@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { apiData, apiPost } from '../../../lib/api';
 import { dateTime } from '../../../lib/lookups';
@@ -102,7 +103,7 @@ export default function BackupPage() {
         {(rows) => (
           <section className="card">
             <h3>النسخ المحفوظة</h3>
-            <DataTable
+            <Table
               columns={[
                 { key: 'createdAt', header: 'التاريخ', cell: (row: BackupRun) => dateTime(row.createdAt) },
                 { key: 'note', header: 'الملاحظة', cell: (row: BackupRun) => row.note ?? '—' },

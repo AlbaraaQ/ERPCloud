@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { FilterBar } from '@erp/ui';
 
-import { DataTable, QueryView } from '../../../components/data-view';
+import { QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { StatTile, StatTiles } from '../../../components/ui';
 import { apiList } from '../../../lib/api';
@@ -110,7 +111,7 @@ export default function StockLevelsPage() {
 
       <QueryView query={levels} empty="لا توجد أرصدة" emptyDetail="لم تُسجَّل أي حركة مخزنية بعد.">
         {(rows) => (
-          <DataTable
+          <Table
             rows={rows}
             rowKey={(row) => `${row.itemId}:${row.warehouseId}`}
             columns={[

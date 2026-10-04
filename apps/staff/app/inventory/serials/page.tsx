@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { FilterBar, Tabs } from '@erp/ui';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import type { SerialTrace } from '../../../lib/lookups';
 import { StatTile, StatTiles } from '../../../components/ui';
@@ -257,7 +258,7 @@ export default function SerialsPage() {
         }
       >
         {() => (
-          <DataTable
+          <Table
             rows={rows}
             rowKey={(row) => row.id}
             footer={[

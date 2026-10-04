@@ -5,7 +5,8 @@ import { useSearchParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { FilterBar } from '@erp/ui';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { apiList, apiPost } from '../../../lib/api';
 import { useSession } from '../../../lib/session';
@@ -126,7 +127,7 @@ export default function BankStatementsPage() {
 
       <QueryView query={statements} empty="لا توجد كشوف مستوردة" emptyDetail="ارفع CSV من المعالج أعلاه لتظهر حركات البنك هنا.">
         {(rows) => (
-          <DataTable
+          <Table
             rows={rows}
             rowKey={(row) => row.id}
             columns={[

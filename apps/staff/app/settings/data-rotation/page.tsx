@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 
-import { DataTable, Notice } from '../../../components/data-view';
+import { Notice } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { apiData, apiPost } from '../../../lib/api';
 import { dateTime } from '../../../lib/lookups';
@@ -96,7 +97,7 @@ export default function DataRotationPage() {
         <div className="grid cols-2">
           <section className="card">
             <h3>سيُحذف</h3>
-            <DataTable
+            <Table
               columns={[
                 { key: 'label', header: 'النوع', cell: (row: (typeof rotatable)[number]) => row.labelAr },
                 { key: 'rows', header: 'عدد السجلات', align: 'num', cell: (row: (typeof rotatable)[number]) => String(row.rows) },
@@ -112,7 +113,7 @@ export default function DataRotationPage() {
           </section>
           <section className="card">
             <h3>سيبقى كما هو</h3>
-            <DataTable
+            <Table
               columns={[
                 { key: 'label', header: 'النوع', cell: (row: (typeof preserved)[number]) => row.labelAr },
                 { key: 'rows', header: 'قبل التاريخ', align: 'num', cell: (row: (typeof preserved)[number]) => String(row.rows) },
@@ -129,7 +130,7 @@ export default function DataRotationPage() {
         {(runs.data ?? []).length === 0 ? (
           <p className="muted">لا توجد عمليات سابقة.</p>
         ) : (
-          <DataTable
+          <Table
             columns={[
               { key: 'createdAt', header: 'التاريخ', cell: (row: RotationRun) => dateTime(row.createdAt) },
               { key: 'mode', header: 'النوع', cell: (row: RotationRun) => (row.mode === 'apply' ? 'تنفيذ' : 'معاينة') },

@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from 'react';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { StatTile, StatTiles } from '../../../components/ui';
 import { ApiError, apiList, apiPost } from '../../../lib/api';
@@ -260,7 +261,7 @@ export default function StockDeliveriesPage() {
         <h2>فواتير لم تُسلَّم بالكامل</h2>
         <QueryView query={outstanding} empty="لا توجد فواتير معلقة" emptyDetail="كل الفواتير المرحَّلة سُلِّمت بالكامل.">
           {(rows) => (
-            <DataTable
+            <Table
               rows={rows}
               rowKey={(row) => row.id}
               columns={[
@@ -277,7 +278,7 @@ export default function StockDeliveriesPage() {
 
       <QueryView query={deliveries} empty="لا توجد سندات توصيل" emptyDetail="أنشئ سند توصيل مقابل فاتورة مبيعات مرحَّلة.">
         {(rows) => (
-          <DataTable
+          <Table
             rows={rows}
             rowKey={(row) => row.id}
             columns={[

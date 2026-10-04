@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { ApiError, apiData, apiPost } from '../../../lib/api';
 import { dateTime } from '../../../lib/lookups';
@@ -81,7 +82,7 @@ export default function MigrationRunsPage() {
       <QueryView query={runs} empty="لا توجد عمليات ترحيل" emptyDetail="ابدأ بـ«تحليل» لمعرفة جاهزية المصدر قبل أي استيراد.">
         {(rows) => (
           <div className="card">
-            <DataTable
+            <Table
               columns={[
                 { key: 'source', header: 'المصدر', align: 'ltr', cell: (row: Run) => row.source_label },
                 { key: 'mode', header: 'النوع', cell: (row: Run) => MODES.find((entry) => entry.id === row.mode)?.label ?? row.mode },
@@ -110,7 +111,7 @@ export default function MigrationRunsPage() {
           <h3>مشاكل العملية</h3>
           <QueryView query={issues} empty="لا توجد مشاكل مسجّلة لهذه العملية">
             {(rows) => (
-              <DataTable
+              <Table
                 columns={[
                   { key: 'severity', header: 'الدرجة', cell: (row: Issue) => SEVERITY_LABELS[row.severity] ?? row.severity },
                   { key: 'entity', header: 'الكيان', cell: (row: Issue) => row.entity },

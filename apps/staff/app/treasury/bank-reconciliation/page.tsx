@@ -5,7 +5,8 @@ import { useSearchParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { FilterBar } from '@erp/ui';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { DocField, DocHead, StatTile, StatTiles } from '../../../components/ui';
 import { apiData, apiDelete, apiList, apiPost } from '../../../lib/api';
@@ -145,7 +146,7 @@ export default function BankReconciliationPage() {
         <section className="card">
           <div className="flex items-center justify-between gap-3 mb-3"><div><h2 className="m-0 text-[16px] font-bold">حركات كشف البنك</h2><p className="m-0 mt-1 text-[12px] text-muted">راجع السطر ثم طابقه أو تجاهله.</p></div><span className="status draft">{pending.length} معلّق</span></div>
           <QueryView query={lines} empty="لا توجد حركات في هذا الكشف">
-            {(rows) => <DataTable rows={rows.filter((line) => line.status !== 'matched')} rowKey={(row) => row.id} columns={[
+            {(rows) => <Table rows={rows.filter((line) => line.status !== 'matched')} rowKey={(row) => row.id} columns={[
               { key: 'date', header: 'التاريخ', cell: (row) => <span dir="ltr">{row.txnDate}</span> },
               { key: 'description', header: 'البيان', cell: (row) => <span title={row.reference ?? undefined}>{row.description || '—'}</span> },
               { key: 'amount', header: 'المبلغ', align: 'num', cell: (row) => row.amount },
@@ -157,7 +158,7 @@ export default function BankReconciliationPage() {
 
         <section className="card">
           <div className="flex items-center justify-between gap-3 mb-3"><div><h2 className="m-0 text-[16px] font-bold">ما تمت مطابقته في الدفاتر</h2><p className="m-0 mt-1 text-[12px] text-muted">الفواتير والسندات المرتبطة بالحركات البنكية.</p></div><span className="status posted">{matched.length} مطابق</span></div>
-          <DataTable rows={matched} rowKey={(row) => row.id} columns={[
+          <Table rows={matched} rowKey={(row) => row.id} columns={[
             { key: 'date', header: 'التاريخ', cell: (row) => <span dir="ltr">{row.txnDate}</span> },
             { key: 'description', header: 'البيان', cell: (row) => row.description || '—' },
             { key: 'amount', header: 'المبلغ', align: 'num', cell: (row) => row.amount },

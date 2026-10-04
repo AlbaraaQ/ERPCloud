@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { ApiError, apiData, apiList, apiPost } from '../../../lib/api';
 import { listPeriods, money, periodRange, statusLabel, type FiscalPeriod } from '../../../lib/lookups';
@@ -107,7 +108,7 @@ export default function PayrollPage() {
             <p className="muted">لا يوجد موظفون نشطون لاحتساب رواتبهم.</p>
           ) : (
             <>
-              <DataTable
+              <Table
                 rows={preview.lines}
                 rowKey={(row) => row.employeeId}
                 columns={[
@@ -131,7 +132,7 @@ export default function PayrollPage() {
 
       <QueryView query={runs} empty="لا توجد مسيّرات" emptyDetail="أنشئ مسيّر الشهر لاحتساب الرواتب.">
         {(rows) => (
-          <DataTable
+          <Table
             rows={rows}
             rowKey={(row) => row.id}
             columns={[

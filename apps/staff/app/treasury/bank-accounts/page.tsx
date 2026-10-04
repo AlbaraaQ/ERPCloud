@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { apiList, apiPost } from '../../../lib/api';
 import { accountLabel, listAccounts, type Account } from '../../../lib/accounts';
@@ -87,7 +88,7 @@ export default function BankAccountsPage() {
 
       <QueryView query={accounts} empty="لا توجد حسابات بنكية" emptyDetail="أضف الحساب البنكي الأول من النموذج أعلاه.">
         {(rows) => (
-          <DataTable
+          <Table
             rows={rows}
             rowKey={(row) => row.id}
             columns={[

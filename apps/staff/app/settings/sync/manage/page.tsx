@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 
-import { DataTable, QueryView } from '../../../../components/data-view';
+import { QueryView } from '../../../../components/data-view';
+import { Table } from '../../../../components/table';
 import { Screen } from '../../../../components/screen';
 import { dateTime } from '../../../../lib/lookups';
 import { SYNC_DOCUMENT_ENTITIES, SYNC_ENTITY_LABELS, fetchSyncOverview, type SyncOverview } from '../../../../lib/sync';
@@ -49,7 +50,7 @@ export default function SyncManagePage() {
                   لا يوجد جهاز مرتبط بعد — أنشئ واحداً من <Link href="/settings/devices">الأجهزة المرتبطة</Link>.
                 </p>
               ) : (
-                <DataTable
+                <Table
                   columns={[
                     { key: 'name', header: 'الجهاز', cell: (row: SyncOverview['devices'][number]) => row.name },
                     { key: 'branch', header: 'الفرع', cell: (row: SyncOverview['devices'][number]) => row.branchName ?? '—' },

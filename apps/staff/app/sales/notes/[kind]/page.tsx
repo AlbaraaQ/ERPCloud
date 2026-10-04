@@ -3,7 +3,8 @@
 import { use, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-import { DataTable, Notice, QueryView } from '../../../../components/data-view';
+import { Notice, QueryView } from '../../../../components/data-view';
+import { Table } from '../../../../components/table';
 import { FormFields, type FormValues } from '../../../../components/directory';
 import { Screen } from '../../../../components/screen';
 import { ApiError, apiList, apiPost } from '../../../../lib/api';
@@ -115,7 +116,7 @@ export default function SalesNotePage({ params }: { params: Promise<{ kind: stri
       <QueryView query={notes} empty="لا توجد إشعارات من هذا النوع">
         {(rows) => (
           <div className="card">
-            <DataTable
+            <Table
               activeKey={highlightedId ?? undefined}
               columns={[
                 { key: 'number', header: 'رقم الإشعار', align: 'ltr', cell: (row: Note) => row.number ?? 'مسودة' },

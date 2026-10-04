@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { FilterBar, Tabs } from '@erp/ui';
 
-import { DataTable, QueryView } from '../../../components/data-view';
+import { QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { StatTile, StatTiles } from '../../../components/ui';
 import { expiryReport, quantity, shortDate, type ExpiryRow } from '../../../lib/lookups';
@@ -111,7 +112,7 @@ export default function ExpiryPage() {
         emptyDetail="لم تُسجَّل أي دفعة بتاريخ صلاحية داخل هذه المدة. أنشئ الدفعات من شاشة الدفعات عند الاستلام."
       >
         {() => (
-          <DataTable
+          <Table
             rows={shown}
             rowKey={(row) => row.lotId}
             footer={[

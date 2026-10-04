@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { FilterBar } from '@erp/ui';
 
-import { DataTable, QueryView } from '../../../components/data-view';
+import { QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { StatTile, StatTiles } from '../../../components/ui';
 import {
@@ -86,7 +87,7 @@ export default function MovementsPage() {
         emptyDetail="تظهر الحركات بعد ترحيل فاتورة أو مناقلة أو تسوية."
       >
         {(rows) => (
-          <DataTable
+          <Table
             rows={rows}
             rowKey={(row) => row.id}
             columns={[

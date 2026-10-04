@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { FormFields, type FormValues } from '../../../components/directory';
 import { Screen } from '../../../components/screen';
 import { ApiError, apiList, apiPost } from '../../../lib/api';
@@ -111,7 +112,7 @@ export default function PriceListsPage() {
           <h3>القوائم</h3>
           <QueryView query={lists} empty="لا توجد قوائم أسعار" emptyDetail="أنشئ قائمة واحدة على الأقل لتسعير الأصناف.">
             {(data) => (
-              <DataTable
+              <Table
                 columns={[
                   { key: 'name', header: 'القائمة', cell: (row: PriceList) => row.name },
                   { key: 'currency', header: 'العملة', align: 'ltr', cell: (row: PriceList) => row.currencyCode },
@@ -198,7 +199,7 @@ export default function PriceListsPage() {
 
           <QueryView query={rows} empty="لا توجد أسعار في هذه القائمة">
             {(data) => (
-              <DataTable
+              <Table
                 columns={[
                   {
                     key: 'item',

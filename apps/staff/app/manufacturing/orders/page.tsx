@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 
-import { DataTable, Notice } from '../../../components/data-view';
+import { Notice } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { ApiError, apiList, apiPost } from '../../../lib/api';
 import { arabicName, itemLabel, listItems, listWarehouses, money, quantity, type Item, type Warehouse } from '../../../lib/lookups';
@@ -81,7 +82,7 @@ export default function ManufacturingOrdersPage() {
         <span>كمية التنفيذ</span>
         <input className="input" dir="ltr" value={produceQty} onChange={(event) => setProduceQty(event.target.value)} />
       </label>
-      <DataTable
+      <Table
         rows={orders.data ?? []}
         rowKey={(row) => row.id}
         columns={[

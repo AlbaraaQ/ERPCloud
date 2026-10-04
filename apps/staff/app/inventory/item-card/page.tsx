@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { FilterBar } from '@erp/ui';
 
-import { DataTable, QueryView } from '../../../components/data-view';
+import { QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import {
   ItemPicker,
   PeriodPicker,
@@ -125,7 +126,7 @@ export default function ItemCardPage() {
                   />
                 </StatTiles>
 
-                <DataTable
+                <Table
                   rows={data.rows}
                   rowKey={(row) => row.id}
                   expanded={(row: ItemCardRow) => (

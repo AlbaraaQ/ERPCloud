@@ -5,7 +5,8 @@ import { useParams } from 'next/navigation';
 import { useState } from 'react';
 
 import { CommentsPanel } from '../../../components/comments-panel';
-import { DataTable, Notice } from '../../../components/data-view';
+import { Notice } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { ErrorBox, Loading, Screen } from '../../../components/screen';
 import { accountLabel, listAccounts, postableOf, type Account } from '../../../lib/accounts';
 import { ApiError, apiData, apiList, apiPost } from '../../../lib/api';
@@ -111,7 +112,7 @@ export default function ProjectDetailPage() {
           {doc.stages.length === 0 ? (
             <p className="muted">لا توجد مراحل.</p>
           ) : (
-            <DataTable
+            <Table
               rows={doc.stages}
               rowKey={(row) => row.id}
               columns={[
@@ -278,7 +279,7 @@ export default function ProjectDetailPage() {
           </div>
         )}
 
-        <DataTable
+        <Table
           rows={bills.data ?? []}
           rowKey={(row) => row.id}
           columns={[

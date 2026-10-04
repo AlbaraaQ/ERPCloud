@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 
-import { DataTable, Notice, QueryView } from '../../../../components/data-view';
+import { Notice, QueryView } from '../../../../components/data-view';
+import { Table } from '../../../../components/table';
 import { Screen } from '../../../../components/screen';
 import { ApiError, apiFetch, apiPost } from '../../../../lib/api';
 import { dateTime } from '../../../../lib/lookups';
@@ -106,7 +107,7 @@ export default function ZatcaSyncPage() {
       <QueryView query={submissions} empty="لا توجد فواتير مُرسَلة" emptyDetail="رحّل فاتورة ثم أرسلها للهيئة لتظهر هنا.">
         {(rows) => (
           <div className="card">
-            <DataTable
+            <Table
               columns={[
                 { key: 'created', header: 'التاريخ', cell: (row: Submission) => dateTime(row.submittedAt ?? row.createdAt) },
                 { key: 'environment', header: 'البيئة', cell: (row: Submission) => (row.environment === 'production' ? 'إنتاج' : 'تجريبية') },

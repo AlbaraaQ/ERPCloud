@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
 
-import { DataTable, Notice } from '../../../../components/data-view';
+import { Notice } from '../../../../components/data-view';
+import { Table } from '../../../../components/table';
 import { ErrorBox, Loading, Screen } from '../../../../components/screen';
 import { accountLabel, listAccounts, postableOf, type Account } from '../../../../lib/accounts';
 import { ApiError, apiData, apiList, apiPost } from '../../../../lib/api';
@@ -196,7 +197,7 @@ export default function PayrollRunPage() {
 
       <div className="card">
         <h2>تفاصيل المسيّر</h2>
-        <DataTable
+        <Table
           rows={doc.lines}
           rowKey={(row) => `${row.lineNo}`}
           columns={[

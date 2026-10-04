@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DataTable, Notice } from '../../../../components/data-view';
+import { Notice } from '../../../../components/data-view';
+import { Table } from '../../../../components/table';
 import { Empty, Loading, Screen } from '../../../../components/screen';
 import { syncEinvoices, type SyncReport } from '../../../../lib/einvoice';
 import { money } from '../../../../lib/lookups';
@@ -259,7 +260,7 @@ export default function ZatcaSyncStatusPage() {
         ) : rows.length === 0 ? (
           <Empty title="لا توجد عمليات بالجدول" detail="جرّب «📌 كل الفترة» أو «🔵 الكل»." />
         ) : (
-          <DataTable
+          <Table
             rows={rows}
             rowKey={(row) => invoiceId(row)}
             columns={[
@@ -355,7 +356,7 @@ export default function ZatcaSyncStatusPage() {
           <p className="muted">
             {lastSync.message} · البيئة: {lastSync.environment === 'simulation' ? '🧪 محاكاة' : lastSync.environment}
           </p>
-          <DataTable
+          <Table
             rows={lastSync.results}
             rowKey={(row) => row.invoiceId}
             columns={[

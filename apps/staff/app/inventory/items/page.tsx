@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { FilterBar, Tabs } from '@erp/ui';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { DocField, DocHead, StatTile, StatTiles, Totals } from '../../../components/ui';
 import { ApiError, apiDelete, apiList, apiPatch, apiPost } from '../../../lib/api';
@@ -656,7 +657,7 @@ export default function ItemsPage() {
               {tab === 'units' && (
                 <QueryView query={cardUnits} empty="لا وحدات لهذه المادة" emptyDetail="أضف وحداتها من شاشة وحدات الصنف.">
                   {(unitRows) => (
-                    <DataTable
+                    <Table
                       rows={unitRows}
                       rowKey={(row) => `${row.itemId}:${row.unitId}`}
                       footer={[<>{`المجموع (${unitRows.length})`}</>, '', '', '', '']}
@@ -734,7 +735,7 @@ export default function ItemsPage() {
                     }
                   >
                     {() => (
-                      <DataTable
+                      <Table
                         rows={componentRows}
                         rowKey={(row) => row.componentItemId}
                         footer={[

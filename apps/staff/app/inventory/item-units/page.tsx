@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { FilterBar } from '@erp/ui';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { StatTile, StatTiles } from '../../../components/ui';
 import { ApiError } from '../../../lib/api';
@@ -240,7 +241,7 @@ export default function ItemUnitsPage() {
               emptyDetail="الوحدة الأساسية وحدها كافية للعمل، وأي وحدة أخرى اختيارية."
             >
               {(rows) => (
-                <DataTable
+                <Table
                   rows={rows}
                   rowKey={(row) => row.unitId}
                   columns={[
@@ -379,7 +380,7 @@ export default function ItemUnitsPage() {
               emptyDetail="أضف ملصقاً آخر لنفس الصنف — مثلاً باركود الكرتون كاملاً."
             >
               {(rows) => (
-                <DataTable
+                <Table
                   rows={rows}
                   rowKey={(row) => row.barcode}
                   columns={[

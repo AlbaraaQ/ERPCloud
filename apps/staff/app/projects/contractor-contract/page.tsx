@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { ApiError, apiData, apiList, apiPost } from '../../../lib/api';
 import { listParties, money, partyLabel, percent, shortDate, statusLabel, type Party } from '../../../lib/lookups';
@@ -225,7 +226,7 @@ export default function ContractorContractPage() {
         <h3>العقود</h3>
         <QueryView query={contracts} empty="لا توجد عقود مقاولين" emptyDetail="أنشئ عقداً من النموذج أعلاه.">
           {(rows) => (
-            <DataTable
+            <Table
               rows={rows}
               rowKey={(row) => row.id}
               columns={[
@@ -306,7 +307,7 @@ export default function ContractorContractPage() {
           {current.lines.length === 0 ? (
             <p className="muted">لا توجد بنود مسجلة.</p>
           ) : (
-            <DataTable
+            <Table
               rows={current.lines}
               rowKey={(row) => String(row.lineNo)}
               columns={[
@@ -323,7 +324,7 @@ export default function ContractorContractPage() {
           {current.payments.length === 0 ? (
             <p className="muted">لم يصدر أي سند دفع على هذا العقد بعد.</p>
           ) : (
-            <DataTable
+            <Table
               rows={current.payments}
               rowKey={(row) => row.id}
               columns={[

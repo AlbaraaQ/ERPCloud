@@ -4,7 +4,8 @@ import Link from 'next/link';
 import Decimal from 'decimal.js';
 import { useMemo, useState } from 'react';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { StatTile, StatTiles } from '../../../components/ui';
 import { ApiError, apiList, apiPost } from '../../../lib/api';
@@ -153,7 +154,7 @@ export default function ChequesPage() {
 
       <QueryView query={vouchers} isEmpty={() => rows.length === 0} empty="لا توجد شيكات" emptyDetail="الشيكات هي سندات قبض/صرف بطريقة دفع شيك.">
         {() => (
-          <DataTable
+          <Table
             rows={rows}
             rowKey={(r) => r.id}
             footer={[

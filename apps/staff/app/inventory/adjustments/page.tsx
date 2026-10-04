@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { Tabs } from '@erp/ui';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { ActionBar, DocField, DocHead, StatTile, StatTiles, StatusTrack, Totals } from '../../../components/ui';
 import { ApiError, apiData, apiList, apiPost } from '../../../lib/api';
@@ -645,7 +646,7 @@ export default function StockAdjustmentsPage() {
                 <DocField label="القيد">{selected.journalEntryId ? 'له قيد تسوية' : 'لم يُرحَّل'}</DocField>
               </DocHead>
 
-              <DataTable
+              <Table
                 rows={selected.lines}
                 rowKey={(line) => String(line.lineNo)}
                 footer={[

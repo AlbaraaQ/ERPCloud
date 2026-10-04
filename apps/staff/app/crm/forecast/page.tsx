@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 
-import { DataTable, Notice } from '../../../components/data-view';
+import { Notice } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { ApiError } from '../../../lib/api';
 import { forecast, type CrmDeal, type CrmForecast } from '../../../lib/crm';
@@ -29,7 +30,7 @@ export default function CrmForecastPage() {
         <p className="muted">{summary?.openCount ?? summary?.count ?? 0} صفقة مفتوحة</p>
       </div>
       <div className="card">
-        <DataTable
+        <Table
           columns={[
             { key: 'title', header: 'الصفقة', cell: (row: CrmDeal) => row.title },
             { key: 'value', header: 'القيمة', cell: (row: CrmDeal) => row.value },

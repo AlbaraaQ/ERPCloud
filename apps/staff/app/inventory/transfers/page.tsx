@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { FilterBar, Tabs } from '@erp/ui';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { ActionBar, DocField, DocHead, StatTile, StatTiles, StatusTrack, Totals } from '../../../components/ui';
 import { ApiError, apiList, apiPost } from '../../../lib/api';
@@ -644,7 +645,7 @@ export default function TransfersPage() {
                 <DocField label="الأسطر">{selected.lines.length}</DocField>
               </DocHead>
 
-              <DataTable
+              <Table
                 rows={selected.lines}
                 rowKey={(line) => String(line.lineNo)}
                 footer={[

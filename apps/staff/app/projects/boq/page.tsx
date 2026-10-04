@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from 'react';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { apiData, apiDelete, apiList, apiPatch, apiPost } from '../../../lib/api';
 import { money } from '../../../lib/lookups';
@@ -283,7 +284,7 @@ export default function BoqPage() {
                 </div>
                 {terms.length === 0 && <Notice notice={{ kind: 'info', text: 'لا توجد بنود لهذا المشروع بعد — أضف البند الأول من الأعلى.' }} />}
 
-                <DataTable<BoqTerm>
+                <Table<BoqTerm>
                   rows={terms}
                   rowKey={(row) => row.id}
                   onRowClick={(row) => setSelectedId(row.id)}

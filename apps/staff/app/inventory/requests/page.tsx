@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { Tabs } from '@erp/ui';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { StatTile, StatTiles } from '../../../components/ui';
 import { ApiError, apiList, apiPost } from '../../../lib/api';
@@ -375,7 +376,7 @@ export default function GoodsRequestsPage() {
 
       <QueryView query={requests} empty="لا توجد طلبات بضاعة" emptyDetail="أنشئ طلباً ليعتمده المستودع المورِّد ثم يُنفَّذ بمناقلة.">
         {(rows) => (
-          <DataTable
+          <Table
             rows={rows}
             rowKey={(row) => row.id}
             columns={[

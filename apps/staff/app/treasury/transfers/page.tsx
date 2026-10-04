@@ -3,7 +3,8 @@
 import { useMemo, useState } from 'react';
 import { FilterBar, Tabs } from '@erp/ui';
 
-import { DataTable, Notice } from '../../../components/data-view';
+import { Notice } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { StatTile, StatTiles } from '../../../components/ui';
 import { ApiError, apiList, apiPost } from '../../../lib/api';
@@ -447,7 +448,7 @@ export default function CashTransfersPage() {
           <h2>📊 نتائج البحث</h2>
           <span className="muted small">{rows.length} مناقلة</span>
         </div>
-        <DataTable
+        <Table
           rows={rows}
           rowKey={(row) => row.id}
           columns={[

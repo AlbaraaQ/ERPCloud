@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
 
-import { DataTable, Notice } from '../../../../../components/data-view';
+import { Notice } from '../../../../../components/data-view';
+import { Table } from '../../../../../components/table';
 import { Screen } from '../../../../../components/screen';
 import { ApiError, apiData, apiList, apiPost } from '../../../../../lib/api';
 import { money } from '../../../../../lib/lookups';
@@ -116,7 +117,7 @@ export default function PayrollWpsPage() {
         <div className="card">
           <h2>معاينة {preview.yearMonth} — {preview.employeeCount} موظف — {money(preview.totalNet)}</h2>
           {!preview.ready && <p className="alert warn">الملف غير جاهز للتصدير حتى تكتمل الهوية والآيبان.</p>}
-          <DataTable
+          <Table
             rows={preview.rows}
             rowKey={(row) => row.employeeId}
             columns={[
@@ -132,7 +133,7 @@ export default function PayrollWpsPage() {
 
       <div className="card">
         <h2>الملفات المصدّرة</h2>
-        <DataTable
+        <Table
           rows={files.data ?? []}
           rowKey={(row) => row.id}
           columns={[

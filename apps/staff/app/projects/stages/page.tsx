@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from 'react';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { apiData, apiDelete, apiList, apiPatch, apiPost } from '../../../lib/api';
 import { shortDate, statusLabel } from '../../../lib/lookups';
@@ -271,7 +272,7 @@ export default function ProjectStagesPage() {
                 </div>
                 {stages.length === 0 && <Notice notice={{ kind: 'info', text: 'لا توجد مراحل لهذا المشروع بعد — أضف الحالة الأولى أو انسخ «🗂️ المجموعة».' }} />}
 
-                <DataTable<Stage>
+                <Table<Stage>
                   rows={stages}
                   rowKey={(row) => row.id}
                   onRowClick={(row) => setSelectedId(row.id)}

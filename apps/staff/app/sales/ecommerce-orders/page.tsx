@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 
-import { DataTable, Notice } from '../../../components/data-view';
+import { Notice } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { ApiError } from '../../../lib/api';
 import { ecommerceOrders, type EcommerceOrder } from '../../../lib/ecommerce';
@@ -55,7 +56,7 @@ export default function EcommerceOrdersPage() {
             </select>
           </label>
         </div>
-        <DataTable
+        <Table
           columns={[
             {
               key: 'provider',

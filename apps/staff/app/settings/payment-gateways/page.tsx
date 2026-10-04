@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
-import { DataTable, Notice } from '../../../components/data-view';
+import { Notice } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import {
   gatewayTransactions,
@@ -261,7 +262,7 @@ export default function PaymentGatewaysPage() {
         {transactions.length === 0 ? (
           <p className="muted">لا توجد عمليات بعد.</p>
         ) : (
-          <DataTable
+          <Table
             rows={transactions}
             rowKey={(row) => row.id}
             columns={[

@@ -7,7 +7,8 @@ import { Suspense, useMemo, useState } from 'react';
 import { Tabs } from '@erp/ui';
 
 import { BankChooser } from '../../../components/bank-chooser';
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { ActionBar, DocField, DocHead, StatTile, StatTiles, StatusTrack } from '../../../components/ui';
 import { accountLabel, listAccounts, postableOf, type Account } from '../../../lib/accounts';
@@ -601,7 +602,7 @@ function VouchersScreen() {
 
       <QueryView query={vouchers} isEmpty={() => rows.length === 0} empty="لا توجد سندات" emptyDetail="أنشئ سند قبض أو صرف جديداً.">
         {() => (
-          <DataTable
+          <Table
             rows={rows}
             rowKey={(row) => row.id}
             activeKey={highlightedId ?? undefined}

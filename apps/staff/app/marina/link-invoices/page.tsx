@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { ApiError, apiData, apiList, apiPost } from '../../../lib/api';
 import { dateTime, listParties, money, partyLabel, statusLabel, type Party } from '../../../lib/lookups';
@@ -116,7 +117,7 @@ export default function MarinaLinkInvoicesPage() {
         <h2>حجوزات بلا فاتورة تأجير</h2>
         <QueryView query={uninvoiced} empty="كل الحجوزات مفوترة" emptyDetail="لا يوجد حجز بدون فاتورة تأجير.">
           {(rows) => (
-            <DataTable
+            <Table
               rows={rows}
               rowKey={(row) => row.id}
               columns={[
@@ -194,7 +195,7 @@ export default function MarinaLinkInvoicesPage() {
           `Form_WPF/frmInvoiceRentSrch.xaml` («بحث الفواتير»). */}
       <QueryView query={rentals} empty="لا توجد فواتير تأجير" emptyDetail="أصدر فاتورة تأجير من الحجوزات أعلاه.">
         {(rows) => (
-          <DataTable
+          <Table
             rows={rows}
             rowKey={(row) => row.id}
             columns={[

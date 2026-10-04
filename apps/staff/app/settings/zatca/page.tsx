@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 
-import { DataTable, Notice } from '../../../components/data-view';
+import { Notice } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import {
   fillCsrFromCompany,
@@ -249,7 +250,7 @@ export default function ZatcaSettingsPage() {
           {view.onboarding.lastComplianceCheck && (
             <div className="card">
               <h3>🧪 آخر اختبار ربط — {view.onboarding.lastComplianceCheck.passed ? 'تم بنجاح' : 'فشل'}</h3>
-              <DataTable
+              <Table
                 rows={view.onboarding.lastComplianceCheck.checks}
                 rowKey={(row) => row.key}
                 columns={[

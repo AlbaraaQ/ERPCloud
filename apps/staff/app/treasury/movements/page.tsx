@@ -3,7 +3,8 @@
 import Decimal from 'decimal.js';
 import { useMemo, useState } from 'react';
 
-import { DataTable, Notice } from '../../../components/data-view';
+import { Notice } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { StatTile, StatTiles } from '../../../components/ui';
 import { apiData } from '../../../lib/api';
@@ -255,7 +256,7 @@ export default function MovementsPage() {
         ) : rows.length === 0 ? (
           <p className="muted">لا توجد حركات على هذا الصندوق في الفترة المحددة.</p>
         ) : (
-          <DataTable
+          <Table
             rows={rows}
             rowKey={(row) => `${row.seq}-${row.number}-${row.date}`}
             columns={[

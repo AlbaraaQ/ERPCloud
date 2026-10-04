@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 
-import { DataTable, QueryView } from '../../../components/data-view';
+import { QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { dateTime } from '../../../lib/lookups';
 import { SYNC_ENTITY_LABELS, fetchSyncOverview, type SyncOverview } from '../../../lib/sync';
@@ -40,7 +41,7 @@ export default function SyncOverviewPage() {
             <div className="grid cols-2">
               <section className="card">
                 <h3>المستندات الواردة من الأجهزة</h3>
-                <DataTable
+                <Table
                   columns={[
                     { key: 'entity', header: 'النوع', cell: (row: SyncOverview['inbound'][number]) => SYNC_ENTITY_LABELS[row.entity] ?? row.entity },
                     { key: 'received', header: 'العدد', align: 'num', cell: (row: SyncOverview['inbound'][number]) => String(row.received) },
@@ -61,7 +62,7 @@ export default function SyncOverviewPage() {
               </section>
               <section className="card">
                 <h3>البيانات المتاحة للسحب</h3>
-                <DataTable
+                <Table
                   columns={[
                     { key: 'entity', header: 'النوع', cell: (row: SyncOverview['master'][number]) => SYNC_ENTITY_LABELS[row.entity] ?? row.entity },
                     { key: 'available', header: 'العدد', align: 'num', cell: (row: SyncOverview['master'][number]) => String(row.available) },
@@ -79,7 +80,7 @@ export default function SyncOverviewPage() {
                   لا يوجد جهاز مرتبط. أنشئ جهازاً من شاشة <Link href="/settings/devices">الأجهزة المرتبطة</Link> واحفظ مفتاح الـ API الظاهر مرة واحدة فقط.
                 </p>
               ) : (
-                <DataTable
+                <Table
                   columns={[
                     { key: 'name', header: 'الجهاز', cell: (row: SyncOverview['devices'][number]) => row.name },
                     { key: 'branch', header: 'الفرع', cell: (row: SyncOverview['devices'][number]) => row.branchName ?? '—' },

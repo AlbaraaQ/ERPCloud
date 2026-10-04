@@ -3,7 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { InvoiceLines, TotalsPanel, computeTotals, emptyLine, filledLines, toApiLines, type LineDraft } from '../../../components/invoice-editor';
 import { Screen } from '../../../components/screen';
 import { ApiError, apiList, apiPost } from '../../../lib/api';
@@ -212,7 +213,7 @@ export default function QuotationsPage() {
       <QueryView query={quotations} empty="لا توجد عروض أسعار" emptyDetail="أصدر عرضاً مسعّراً للعميل، وحوّله إلى فاتورة عند الموافقة.">
         {(rows) => (
           <div className="card">
-            <DataTable
+            <Table
               columns={[
                 { key: 'number', header: 'رقم العرض', align: 'ltr', cell: (row: Quotation) => row.number ?? '—' },
                 { key: 'party', header: 'العميل', cell: (row: Quotation) => customerOf(row) },

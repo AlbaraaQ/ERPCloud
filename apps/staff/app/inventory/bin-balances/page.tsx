@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 
-import { DataTable, Notice } from '../../../components/data-view';
+import { Notice } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { ApiError, apiList, apiPost } from '../../../lib/api';
 import { itemLabel, listItems, quantity, type Item } from '../../../lib/lookups';
@@ -109,7 +110,7 @@ export default function BinBalancesPage() {
           تسجيل الجرد
         </button>
       </section>
-      <DataTable
+      <Table
         rows={rows.data ?? []}
         rowKey={(row) => row.id}
         columns={[

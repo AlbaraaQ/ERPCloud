@@ -3,7 +3,8 @@
 import { useMemo, useState } from 'react';
 import { FilterBar, Tabs } from '@erp/ui';
 
-import { DataTable, Notice, QueryView } from '../../../components/data-view';
+import { Notice, QueryView } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { WarehousePicker } from '../../../components/inventory-filters';
 import { Screen } from '../../../components/screen';
 import { StatTile, StatTiles } from '../../../components/ui';
@@ -153,7 +154,7 @@ export default function InTransitPage() {
         emptyDetail="كل المناقلات إما استُلمت كاملة أو أُلغيت."
       >
         {() => (
-          <DataTable
+          <Table
             rows={shown}
             rowKey={(row) => `${row.transferId}:${row.lineNo}`}
             expanded={(row) => (

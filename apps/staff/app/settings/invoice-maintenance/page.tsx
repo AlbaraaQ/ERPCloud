@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 
-import { DataTable, Notice } from '../../../components/data-view';
+import { Notice } from '../../../components/data-view';
+import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
 import { apiPost } from '../../../lib/api';
 import { dateTime, money, shortDate } from '../../../lib/lookups';
@@ -119,7 +120,7 @@ export default function InvoiceMaintenancePage() {
             {run.findings.totalsMismatch.length === 0 ? (
               <p className="muted">لا توجد فروقات.</p>
             ) : (
-              <DataTable
+              <Table
                 columns={[
                   { key: 'number', header: 'الفاتورة', align: 'ltr', cell: (row: Mismatch) => row.number ?? row.id.slice(0, 8) },
                   { key: 'status', header: 'الحالة', cell: (row: Mismatch) => (row.status === 'posted' ? 'مرحّلة' : 'مسودة') },
@@ -139,7 +140,7 @@ export default function InvoiceMaintenancePage() {
               {run.findings.postedWithoutJournal.length === 0 ? (
                 <p className="muted">لا توجد.</p>
               ) : (
-                <DataTable
+                <Table
                   columns={[
                     { key: 'number', header: 'الفاتورة', align: 'ltr', cell: (row: Unposted) => row.number ?? row.id.slice(0, 8) },
                     { key: 'total', header: 'الإجمالي', align: 'num', cell: (row: Unposted) => money(row.total) },
@@ -154,7 +155,7 @@ export default function InvoiceMaintenancePage() {
               {run.findings.numberingGaps.length === 0 ? (
                 <p className="muted">التسلسل متصل.</p>
               ) : (
-                <DataTable
+                <Table
                   columns={[
                     { key: 'prefix', header: 'السلسلة', align: 'ltr', cell: (row: Gap) => row.prefix },
                     { key: 'range', header: 'المدى', align: 'ltr', cell: (row: Gap) => `${row.first_seq} → ${row.last_seq}` },
@@ -173,7 +174,7 @@ export default function InvoiceMaintenancePage() {
             {run.findings.staleDrafts.length === 0 ? (
               <p className="muted">لا توجد مسودات قديمة.</p>
             ) : (
-              <DataTable
+              <Table
                 columns={[
                   { key: 'number', header: 'الفاتورة', align: 'ltr', cell: (row: StaleDraft) => row.number ?? row.id.slice(0, 8) },
                   { key: 'created', header: 'أُنشئت', cell: (row: StaleDraft) => shortDate(row.created_at) },
