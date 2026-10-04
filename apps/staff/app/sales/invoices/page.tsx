@@ -6,9 +6,9 @@ import { Suspense, useMemo, useState } from 'react';
 import { Badge } from '@erp/ui';
 import { Button } from '@erp/ui';
 import { EmptyState } from '@erp/ui';
+import { DataTable, type SortState } from '@erp/ui';
 
 import { Labeled, Select } from '../../../components/ui/input';
-import { Table, type SortState } from '../../../components/ui/table';
 import { apiList } from '../../../lib/api';
 import { listBranches, listParties, money, shortDate, type Branch, type Party } from '../../../lib/lookups';
 import { useSession } from '../../../lib/session';
@@ -282,8 +282,8 @@ function InvoicesInner() {
           action={<Button variant="primary" onClick={invoices.reload}>إعادة المحاولة</Button>}
         />
       ) : (
-        <Table
-          loading={invoices.status === 'loading'}
+        <DataTable
+          state={{ kind: 'loading' }}
           rows={filtered}
           rowKey={(row) => row.id}
           activeKey={highlightedId ?? undefined}

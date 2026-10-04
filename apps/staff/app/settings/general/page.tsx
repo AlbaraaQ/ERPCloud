@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react';
 import { Save } from 'lucide-react';
 import { Button } from '@erp/ui';
+import { DataTable } from '@erp/ui';
 
 import { Screen } from '../../../components/screen';
 import { Labeled } from '../../../components/ui/input';
-import { Table } from '../../../components/ui/table';
 import { Toggle } from '../../../components/ui/toggle';
 import { ApiError, apiData, apiPut } from '../../../lib/api';
 import { useQuery } from '../../../lib/use-query';
@@ -145,7 +145,7 @@ export default function GeneralSettingsPage() {
             <p className="m-0 mt-0.5 text-[12.5px] text-muted">كل مفاتيح الإعدادات المخزنة لهذه المنشأة.</p>
           </header>
           <div className="px-1 pb-2">
-            <Table
+            <DataTable
               rows={entries}
               rowKey={(row) => row.key}
               dense

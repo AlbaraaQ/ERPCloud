@@ -19,13 +19,13 @@ import { Badge } from '@erp/ui';
 import { Button } from '@erp/ui';
 import { EmptyState } from '@erp/ui';
 import { SkeletonCard } from '@erp/ui';
+import { Modal } from '@erp/ui';
+import { DataTable } from '@erp/ui';
 
 import { CommentsPanel } from '../../../../components/comments-panel';
 import { DonutCardChart } from '../../../../components/ui/chart';
 import { Reveal } from '../../../../components/ui/count-up';
 import { Input, Labeled } from '../../../../components/ui/input';
-import { Modal } from '../../../../components/ui/modal';
-import { Table } from '../../../../components/ui/table';
 import { ApiError, apiData, apiList, apiPatch, apiPost } from '../../../../lib/api';
 import {
   arabicName,
@@ -381,7 +381,7 @@ export default function SalesInvoiceDetailPage() {
                 <span className="text-[11.5px] text-muted font-semibold">± تعديل الكمية (مسودة)</span>
               ) : null}
             </header>
-            <Table
+            <DataTable
               rows={doc.lines}
               rowKey={(row) => row.id}
               dense
@@ -676,7 +676,7 @@ export default function SalesInvoiceDetailPage() {
             {(paymentLinks.data ?? []).length === 0 ? (
               <p className="m-0 text-[13px] text-muted">لا روابط بعد. اربط المزوّد من إعدادات المدفوعات ثم أنشئ الرابط.</p>
             ) : (
-              <Table
+              <DataTable
                 rows={paymentLinks.data ?? []}
                 rowKey={(row) => row.id}
                 dense
@@ -779,7 +779,7 @@ export default function SalesInvoiceDetailPage() {
               {sent.data && sent.data.length > 0 ? (
                 <div className="mt-4">
                   <p className="m-0 mb-2 text-[12px] font-bold text-muted">سجل الإرسال</p>
-                  <Table
+                  <DataTable
                     rows={sent.data}
                     rowKey={(row) => row.id}
                     dense

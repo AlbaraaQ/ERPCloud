@@ -19,11 +19,11 @@ import { Button } from '@erp/ui';
 import { EmptyState } from '@erp/ui';
 import { Kpi } from '@erp/ui';
 import { SkeletonCard } from '@erp/ui';
+import { DataTable, type SortState } from '@erp/ui';
 
 import { BarCardChart, LineCardChart } from '../../../components/ui/chart';
 import { Reveal } from '../../../components/ui/count-up';
 import { Labeled } from '../../../components/ui/input';
-import { Table, type SortState } from '../../../components/ui/table';
 import {
   arabicName,
   itemLabel,
@@ -429,7 +429,7 @@ function SortableReportTable({ result }: { result: ReportResult }) {
   );
 
   return (
-    <Table
+    <DataTable
       rows={rows}
       rowKey={(_row, index) => `${result.key}-${index}`}
       sortable
