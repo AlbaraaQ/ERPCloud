@@ -1,4 +1,4 @@
-import { generateKeyPairSync } from 'node:crypto';
+import { generateKeyPairSync, randomBytes } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 import swc from 'unplugin-swc';
@@ -68,6 +68,12 @@ export default defineConfig({
       JWT_PRIVATE_KEY: privateKey,
       JWT_PUBLIC_KEY: publicKey,
       JWT_KEY_ID: 'test-key-1',
+      // `artifact-store` يرفض تشفير نسخة احتياطيّة بلا مفتاح، ولا يملك بديلاً
+      // تطويريًّا مثبتًا في الكود — بخلاف `einvoicing` و`salla` و`payments` التي
+      // تشتقّ من نصّ ثابت. ذلك الرفض صحيح أمنيًّا (نسخة احتياطيّة مشفّرة بمفتاح
+      // معروف ثقبٌ مفتوح)، فالاختبارات تحتاج مفتاحها المحقون كما تُحقن أزواج RS256:
+      // قيمة لمرّة واحدة لا تمسّ سرًّا حقيقيًّا.
+      DATA_ENC_KEY: randomBytes(32).toString('hex'),
     },
   },
 });
