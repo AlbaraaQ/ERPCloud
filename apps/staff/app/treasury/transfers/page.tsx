@@ -1,10 +1,11 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { FilterBar, Tabs } from '@erp/ui';
 
 import { DataTable, Notice } from '../../../components/data-view';
 import { Screen } from '../../../components/screen';
-import { FilterBar, StatTile, StatTiles, Tabs } from '../../../components/ui';
+import { StatTile, StatTiles } from '../../../components/ui';
 import { ApiError, apiList, apiPost } from '../../../lib/api';
 import {
   branchOptions,
@@ -224,7 +225,7 @@ export default function CashTransfersPage() {
         />
       </StatTiles>
 
-      <Tabs items={TABS.map((entry) => ({ id: entry.id, label: entry.label }))} value={tab} onChange={setTab} />
+      <Tabs items={TABS.map((entry) => ({ key: entry.id, label: entry.label }))} value={tab} onChange={setTab} />
 
       {tab === 'send' ? (
         <div className="card">

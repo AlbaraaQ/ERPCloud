@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { FilterBar } from '@erp/ui';
 
 import { DataTable, QueryView } from '../../../components/data-view';
 import { Screen } from '../../../components/screen';
-import { FilterBar, StatTile, StatTiles } from '../../../components/ui';
+import { StatTile, StatTiles } from '../../../components/ui';
 import {
   ItemPicker,
   PeriodPicker,
@@ -72,7 +73,7 @@ export default function MovementsPage() {
       </StatTiles>
 
       <FilterBar
-        actions={<span className="small muted">{rows.length === 0 ? 'لا حركات' : `${rows.length} حركة`}</span>}
+        summary={<span className="small muted">{rows.length === 0 ? 'لا حركات' : `${rows.length} حركة`}</span>}
       >
         <ItemPicker value={itemId} onChange={setItemId} />
         <WarehousePicker value={warehouseId} onChange={setWarehouseId} includeAll />

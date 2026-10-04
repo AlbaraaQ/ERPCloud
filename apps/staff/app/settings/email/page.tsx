@@ -12,10 +12,10 @@ import {
   type EmailTemplate,
   type EmailTemplateListResponse,
 } from '@erp/contracts';
+import { Tabs } from '@erp/ui';
 
 import { Notice } from '../../../components/data-view';
 import { Empty, ErrorBox, Forbidden, Loading, Screen } from '../../../components/screen';
-import { Tabs } from '../../../components/ui';
 import { ApiError, apiData } from '../../../lib/api';
 import { useQuery } from '../../../lib/use-query';
 import { useSession } from '../../../lib/session';
@@ -72,9 +72,9 @@ export default function EmailSettingsPage() {
         value={tab}
         onChange={setTab}
         items={[
-          ...(canEdit ? [{ id: 'templates' as const, label: 'قوالبي' }] : []),
-          ...(canViewLog ? [{ id: 'messages' as const, label: 'سجلّي' }] : []),
-          ...(canViewLog ? [{ id: 'settings' as const, label: 'هوية المُرسِل' }] : []),
+          ...(canEdit ? [{ key: 'templates' as const, label: 'قوالبي' }] : []),
+          ...(canViewLog ? [{ key: 'messages' as const, label: 'سجلّي' }] : []),
+          ...(canViewLog ? [{ key: 'settings' as const, label: 'هوية المُرسِل' }] : []),
         ]}
       />
       {tab === 'templates' && canEdit && <TemplatesTab />}

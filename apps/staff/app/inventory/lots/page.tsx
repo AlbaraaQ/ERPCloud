@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { FilterBar } from '@erp/ui';
 
 import { Directory } from '../../../components/directory';
 import { Notice } from '../../../components/data-view';
-import { FilterBar } from '../../../components/ui';
 import { ApiError, apiPost } from '../../../lib/api';
 import { deleteLot, itemLabel, listItems, listLots, shortDate, type Item, type Lot } from '../../../lib/lookups';
 import { useSession } from '../../../lib/session';

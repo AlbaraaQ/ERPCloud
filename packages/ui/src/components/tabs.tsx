@@ -13,18 +13,30 @@ import { cn } from '../lib/cn';
  * automatically cancelled under `prefers-reduced-motion` by the tokens.
  */
 
-export type TabItem = { key: string; label: ReactNode; badge?: ReactNode; disabled?: boolean };
+/**
+ * `Tabs` is generic over the key type so a screen whose tabs are a union —
+ * `'available' | 'sold'` — keeps that union in `onChange`. Without it the
+ * handler receives a bare `string` and every caller has to narrow again,
+ * which is how a typo in a tab id stops being a compile error. The default
+ * `string` keeps every existing call site valid.
+ */
+export type TabItem<T extends string = string> = {
+  key: T;
+  label: ReactNode;
+  badge?: ReactNode;
+  disabled?: boolean;
+};
 
-export type TabsProps = {
-  items: TabItem[];
-  value: string;
-  onChange: (key: string) => void;
+export type TabsProps<T extends string = string> = {
+  items: Array<TabItem<T>>;
+  value: T;
+  onChange: (key: T) => void;
   className?: string;
   /** Accessible name for the tab list. */
   label?: string;
 };
 
-export function Tabs({ items, value, onChange, className = '', label = 'أقسام' }: TabsProps) {
+export function Tabs<T extends string>({ items, value, onChange, className = '', label = 'أقسام' }: TabsProps<T>) {
   return (
     <div
       role="tablist"

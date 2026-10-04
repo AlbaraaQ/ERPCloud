@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { FilterBar, Tabs } from '@erp/ui';
 
 import { DataTable, Notice, QueryView } from '../../../components/data-view';
 import { Screen } from '../../../components/screen';
-import { DocField, DocHead, FilterBar, StatTile, StatTiles, Tabs, Totals } from '../../../components/ui';
+import { DocField, DocHead, StatTile, StatTiles, Totals } from '../../../components/ui';
 import { ApiError, apiDelete, apiList, apiPatch, apiPost } from '../../../lib/api';
 import {
   arabicName,
@@ -34,11 +35,11 @@ import { useQuery } from '../../../lib/use-query';
 /** The four tabs of the item card, exactly as `frmItems.xaml` lays them out. */
 type CardTab = 'general' | 'units' | 'opening' | 'components';
 
-const CARD_TABS: Array<{ id: CardTab; label: string }> = [
-  { id: 'general', label: 'عام' },
-  { id: 'units', label: 'وحدات' },
-  { id: 'opening', label: 'بضاعة أول المدة' },
-  { id: 'components', label: 'المكونات' },
+const CARD_TABS: Array<{ key: CardTab; label: string }> = [
+  { key: 'general', label: 'عام' },
+  { key: 'units', label: 'وحدات' },
+  { key: 'opening', label: 'بضاعة أول المدة' },
+  { key: 'components', label: 'المكونات' },
 ];
 
 type Level = { itemId: string; warehouseId: string; quantity: string; value: string; averageCost: string };
@@ -496,7 +497,7 @@ export default function ItemsPage() {
       </StatTiles>
 
       <FilterBar
-        actions={<span className="small muted">{applied ? `نتيجة البحث عن «${applied}»` : `${rows.length} مادة`}</span>}
+        summary={<span className="small muted">{applied ? `نتيجة البحث عن «${applied}»` : `${rows.length} مادة`}</span>}
       >
         <label className="field">
           <span>بحث</span>

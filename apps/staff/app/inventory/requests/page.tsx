@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { Tabs } from '@erp/ui';
 
 import { DataTable, Notice, QueryView } from '../../../components/data-view';
 import { Screen } from '../../../components/screen';
-import { StatTile, StatTiles, Tabs } from '../../../components/ui';
+import { StatTile, StatTiles } from '../../../components/ui';
 import { ApiError, apiList, apiPost } from '../../../lib/api';
 import {
   arabicName,
@@ -365,7 +366,7 @@ export default function GoodsRequestsPage() {
       </StatTiles>
 
       <Tabs
-        items={FILTERS.map((filter) => ({ id: filter.value, label: filter.label }))}
+        items={FILTERS.map((filter) => ({ key: filter.value, label: filter.label }))}
         value={status}
         onChange={setStatus}
       />

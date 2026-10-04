@@ -2,11 +2,12 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { FilterBar } from '@erp/ui';
 
 import { QueryView } from '../../../components/data-view';
 import { WarehousePicker } from '../../../components/inventory-filters';
 import { Screen } from '../../../components/screen';
-import { FilterBar, StatTile, StatTiles } from '../../../components/ui';
+import { StatTile, StatTiles } from '../../../components/ui';
 import { apiList } from '../../../lib/api';
 import {
   expiryReport,
@@ -78,7 +79,7 @@ export default function InventoryOverviewPage() {
       crumbs={['المستودعات', 'نظرة عامة']}
     >
       <FilterBar
-        actions={
+        summary={
           <span className="small muted">{warehouseId ? (warehouseName ?? 'مستودع محدد') : 'كل المستودعات'}</span>
         }
       >

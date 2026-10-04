@@ -3,10 +3,11 @@
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
+import { FilterBar } from '@erp/ui';
 
 import { DataTable, Notice, QueryView } from '../../../components/data-view';
 import { Screen } from '../../../components/screen';
-import { DocField, DocHead, FilterBar, StatTile, StatTiles } from '../../../components/ui';
+import { DocField, DocHead, StatTile, StatTiles } from '../../../components/ui';
 import { apiData, apiDelete, apiList, apiPost } from '../../../lib/api';
 import { today } from '../../../lib/lookups';
 import { useSession } from '../../../lib/session';
@@ -114,11 +115,11 @@ export default function BankReconciliationPage() {
       title="⚖️ التسوية البنكية"
       subtitle="كشف البنك في اليسار، وما تم ربطه من دفترنا في اليمين. المطابقة association فقط ولا ترحّل قيداً جديداً."
       crumbs={['الخزينة', 'التغذية البنكية']}
-      actions={<><Link className="btn sm" href="/treasury/bank-statements">كشوف الحساب</Link><button className="btn sm" type="button" onClick={() => window.print()}>🖨️ طباعة / PDF</button></>}
+      actions={<><Link className="btn sm" href="/treasury/bank-statements">كشوف الحساب</Link><button className="btn primary" disabled={!manage || !effectiveStatementId || busy} type="button" onClick={() => void run(() => apiPost(`/treasury/bank-statements/${effectiveStatementId}/auto-match`, {}), 'اكتملت المطابقة التلقائية.')}>تشغيل المطابقة التلقائية</button><button className="btn sm" type="button" onClick={() => window.print()}>🖨️ طباعة / PDF</button></>}
     >
       <Notice notice={notice} />
       <div className="card mb-4">
-        <FilterBar actions={<button className="btn primary" disabled={!manage || !effectiveStatementId || busy} type="button" onClick={() => void run(() => apiPost(`/treasury/bank-statements/${effectiveStatementId}/auto-match`, {}), 'اكتملت المطابقة التلقائية.')}>تشغيل المطابقة التلقائية</button>}>
+        <FilterBar>
           <label className="field"><span>الحساب البنكي</span><select value={bankAccountId} onChange={(event) => chooseAccount(event.target.value)}><option value="">اختر الحساب</option>{(accounts.data ?? []).map((account) => <option key={account.id} value={account.id}>{account.bankName} — {account.accountNo ?? account.iban ?? account.id.slice(0, 8)}</option>)}</select></label>
           <label className="field"><span>الكشف</span><select value={effectiveStatementId} onChange={(event) => setStatementId(event.target.value)}><option value="">اختر الكشف</option>{(statements.data ?? []).map((statement) => <option key={statement.id} value={statement.id}>{statement.periodFrom} — {statement.periodTo} ({statement.rowCount} حركة)</option>)}</select></label>
           <label className="field"><span>من تاريخ، اختياري</span><input type="date" value={from} onChange={(event) => setFrom(event.target.value)} /></label>

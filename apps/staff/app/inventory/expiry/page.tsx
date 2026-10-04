@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { FilterBar, Tabs } from '@erp/ui';
 
 import { DataTable, QueryView } from '../../../components/data-view';
 import { Screen } from '../../../components/screen';
-import { FilterBar, StatTile, StatTiles, Tabs } from '../../../components/ui';
+import { StatTile, StatTiles } from '../../../components/ui';
 import { expiryReport, quantity, shortDate, type ExpiryRow } from '../../../lib/lookups';
 import { useQuery } from '../../../lib/use-query';
 
@@ -26,12 +27,12 @@ const HORIZONS = [
 
 type Bucket = 'all' | 'expired' | 'week' | 'month' | 'rest';
 
-const BUCKETS: Array<{ id: Bucket; label: string }> = [
-  { id: 'all', label: 'الكل' },
-  { id: 'expired', label: 'منتهية' },
-  { id: 'week', label: 'خلال أسبوع' },
-  { id: 'month', label: 'خلال شهر' },
-  { id: 'rest', label: 'أبعد من شهر' },
+const BUCKETS: Array<{ key: Bucket; label: string }> = [
+  { key: 'all', label: 'الكل' },
+  { key: 'expired', label: 'منتهية' },
+  { key: 'week', label: 'خلال أسبوع' },
+  { key: 'month', label: 'خلال شهر' },
+  { key: 'rest', label: 'أبعد من شهر' },
 ];
 
 function bucketOf(row: ExpiryRow): Bucket {
@@ -82,7 +83,7 @@ export default function ExpiryPage() {
       </StatTiles>
 
       <FilterBar
-        actions={<span className="small muted">{data.length === 0 ? 'لا دفعات في هذه المدة' : `${data.length} دفعة`}</span>}
+        summary={<span className="small muted">{data.length === 0 ? 'لا دفعات في هذه المدة' : `${data.length} دفعة`}</span>}
       >
         <label className="field">
           <span>خلال</span>

@@ -3,10 +3,10 @@
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
+import { FilterBar } from '@erp/ui';
 
 import { DataTable, Notice, QueryView } from '../../../components/data-view';
 import { Screen } from '../../../components/screen';
-import { FilterBar } from '../../../components/ui';
 import { apiList, apiPost } from '../../../lib/api';
 import { useSession } from '../../../lib/session';
 import { useQuery } from '../../../lib/use-query';

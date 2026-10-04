@@ -4,19 +4,12 @@ import Link from 'next/link';
 import Decimal from 'decimal.js';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useMemo, useState } from 'react';
+import { Tabs } from '@erp/ui';
 
 import { BankChooser } from '../../../components/bank-chooser';
 import { DataTable, Notice, QueryView } from '../../../components/data-view';
 import { Screen } from '../../../components/screen';
-import {
-  ActionBar,
-  DocField,
-  DocHead,
-  StatTile,
-  StatTiles,
-  StatusTrack,
-  Tabs,
-} from '../../../components/ui';
+import { ActionBar, DocField, DocHead, StatTile, StatTiles, StatusTrack } from '../../../components/ui';
 import { accountLabel, listAccounts, postableOf, type Account } from '../../../lib/accounts';
 import { ApiError, apiDelete, apiFetch, apiList, apiPost, apiData } from '../../../lib/api';
 import {
@@ -314,8 +307,8 @@ function VouchersScreen() {
       <div className="card toolbar">
         <Tabs
           items={[
-            { id: 'receipt' as const, label: '📥 سند قبض' },
-            { id: 'payment' as const, label: '📤 سند صرف' },
+            { key: 'receipt' as const, label: '📥 سند قبض' },
+            { key: 'payment' as const, label: '📤 سند صرف' },
           ]}
           value={kind}
           onChange={(next) => {

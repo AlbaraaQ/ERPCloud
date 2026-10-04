@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { Tabs } from '@erp/ui';
 
 import { DataTable, Notice, QueryView } from '../../../components/data-view';
 import { Screen } from '../../../components/screen';
-import { ActionBar, DocField, DocHead, StatTile, StatTiles, StatusTrack, Tabs, Totals } from '../../../components/ui';
+import { ActionBar, DocField, DocHead, StatTile, StatTiles, StatusTrack, Totals } from '../../../components/ui';
 import { ApiError, apiData, apiList, apiPost } from '../../../lib/api';
 import {
   arabicName,
@@ -60,10 +61,10 @@ type AdjustmentLine = {
 
 type Bucket = 'all' | 'draft' | 'posted';
 
-const BUCKETS: Array<{ id: Bucket; label: string }> = [
-  { id: 'all', label: 'الكل' },
-  { id: 'draft', label: 'مسودة' },
-  { id: 'posted', label: 'مُرحَّل' },
+const BUCKETS: Array<{ key: Bucket; label: string }> = [
+  { key: 'all', label: 'الكل' },
+  { key: 'draft', label: 'مسودة' },
+  { key: 'posted', label: 'مُرحَّل' },
 ];
 
 const STEPS = ['مسودة', 'مُعتمد', 'مُرحَّل'];

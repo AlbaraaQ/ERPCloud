@@ -2,10 +2,11 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
+import { Tabs } from '@erp/ui';
 
 import { DataTable, Notice, QueryView } from '../../../components/data-view';
 import { Screen } from '../../../components/screen';
-import { ActionBar, DocField, DocHead, StatTile, StatTiles, StatusTrack, Tabs, Totals } from '../../../components/ui';
+import { ActionBar, DocField, DocHead, StatTile, StatTiles, StatusTrack, Totals } from '../../../components/ui';
 import { accountLabel, listAccounts, postableOf, type Account } from '../../../lib/accounts';
 import { ApiError, apiData, apiList, apiPost } from '../../../lib/api';
 import {
@@ -368,7 +369,7 @@ export default function VouchersPage() {
       }
     >
       <Tabs
-        items={KINDS.map((option) => ({ id: option.id, label: option.label }))}
+        items={KINDS.map((option) => ({ key: option.id, label: option.label }))}
         value={kind}
         onChange={(next) => {
           setKind(next);

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { FilterBar } from '@erp/ui';
 
 import { DataTable, QueryView } from '../../../components/data-view';
 import {
@@ -10,7 +11,7 @@ import {
   docTypeLabel,
 } from '../../../components/inventory-filters';
 import { Screen } from '../../../components/screen';
-import { DocField, DocHead, FilterBar, StatTile, StatTiles, Totals } from '../../../components/ui';
+import { DocField, DocHead, StatTile, StatTiles, Totals } from '../../../components/ui';
 import { itemCard, money, quantity, shortDate, type ItemCardRow } from '../../../lib/lookups';
 import { useQuery } from '../../../lib/use-query';
 
@@ -51,34 +52,24 @@ export default function ItemCardPage() {
       title="بطاقة الصنف"
       subtitle="حركة الصنف خلال فترة: رصيد افتتاحي، كل حركة ورصيدها المتحرك، والرصيد الختامي وقيمته."
       crumbs={['المستودعات', 'التقارير']}
+      actions={
+        applied ? (
+          <button className="btn sm" type="button" onClick={() => window.print()}>
+            طباعة
+          </button>
+        ) : undefined
+      }
     >
       <FilterBar
-        actions={
-          <>
-            <button
-              className="btn primary"
-              type="button"
-              disabled={!itemId}
-              onClick={() => setApplied({ itemId, warehouseId, from, to })}
-            >
-              عرض البطاقة
-            </button>
-            {applied && (
-              <button className="btn" type="button" onClick={() => setApplied(undefined)}>
-                تفريغ
-              </button>
-            )}
-            {applied && (
-              <button className="btn" type="button" onClick={() => window.print()}>
-                طباعة
-              </button>
-            )}
-          </>
-        }
+        onClear={applied ? () => setApplied(undefined) : undefined}
+        clearLabel="تفريغ"
       >
         <ItemPicker value={itemId} onChange={setItemId} />
         <WarehousePicker value={warehouseId} onChange={setWarehouseId} includeAll />
         <PeriodPicker from={from} to={to} onFrom={setFrom} onTo={setTo} />
+        <button className="btn primary" type="button" disabled={!itemId} onClick={() => setApplied({ itemId, warehouseId, from, to })}>
+          عرض البطاقة
+        </button>
       </FilterBar>
 
       {!applied ? (

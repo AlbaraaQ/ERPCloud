@@ -1,20 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { FilterBar, Tabs } from '@erp/ui';
 
 import { DataTable, Notice, QueryView } from '../../../components/data-view';
 import { Screen } from '../../../components/screen';
-import {
-  ActionBar,
-  DocField,
-  DocHead,
-  FilterBar,
-  StatTile,
-  StatTiles,
-  StatusTrack,
-  Tabs,
-  Totals,
-} from '../../../components/ui';
+import { ActionBar, DocField, DocHead, StatTile, StatTiles, StatusTrack, Totals } from '../../../components/ui';
 import { ApiError, apiList, apiPost } from '../../../lib/api';
 import {
   arabicName,
@@ -85,13 +76,13 @@ const STEPS = ['مسودة', 'في الطريق', 'مُستلمة', 'مُغلق�
 
 type Bucket = 'open' | 'draft' | 'in_transit' | 'partially_received' | 'received' | 'cancelled';
 
-const BUCKETS: Array<{ id: Bucket; label: string }> = [
-  { id: 'open', label: 'قيد التنفيذ' },
-  { id: 'draft', label: 'مسودة' },
-  { id: 'in_transit', label: 'في الطريق' },
-  { id: 'partially_received', label: 'مستلم جزئياً' },
-  { id: 'received', label: 'مستلم' },
-  { id: 'cancelled', label: 'ملغاة' },
+const BUCKETS: Array<{ key: Bucket; label: string }> = [
+  { key: 'open', label: 'قيد التنفيذ' },
+  { key: 'draft', label: 'مسودة' },
+  { key: 'in_transit', label: 'في الطريق' },
+  { key: 'partially_received', label: 'مستلم جزئياً' },
+  { key: 'received', label: 'مستلم' },
+  { key: 'cancelled', label: 'ملغاة' },
 ];
 
 const lineValue = (line: TransferLine) => Number(line.qty) * Number(line.unitCost ?? 0);
@@ -557,20 +548,8 @@ export default function TransfersPage() {
       </StatTiles>
 
       <FilterBar
-        actions={
-          <>
-            <button
-              className="btn"
-              type="button"
-              onClick={() => setSearch({ number: '', from: '', to: '' })}
-            >
-              📋 كل الفترة
-            </button>
-            <button className="btn primary" type="button" onClick={() => transfers.reload()}>
-              🔍 بحث
-            </button>
-          </>
-        }
+        onClear={() => setSearch({ number: '', from: '', to: '' })}
+        clearLabel="📋 كل الفترة"
       >
         <label className="field">
           <span>🔢 رقم التحويل</span>
@@ -597,6 +576,9 @@ export default function TransfersPage() {
             onChange={(event) => setSearch((current) => ({ ...current, to: event.target.value }))}
           />
         </label>
+        <button className="btn primary" type="button" onClick={() => transfers.reload()}>
+          🔍 بحث
+        </button>
       </FilterBar>
 
       <Tabs items={BUCKETS} value={bucket} onChange={setBucket} />

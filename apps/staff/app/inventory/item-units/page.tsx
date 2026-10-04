@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { FilterBar } from '@erp/ui';
 
 import { DataTable, Notice, QueryView } from '../../../components/data-view';
 import { Screen } from '../../../components/screen';
-import { FilterBar, StatTile, StatTiles } from '../../../components/ui';
+import { StatTile, StatTiles } from '../../../components/ui';
 import { ApiError } from '../../../lib/api';
 import {
   addItemBarcode,
@@ -151,7 +152,7 @@ export default function ItemUnitsPage() {
       crumbs={['المستودعات', 'التعاريف']}
     >
       <FilterBar
-        actions={
+        summary={
           selected ? (
             <span className="small muted">
               الوحدة الأساسية: <strong>{unitName(selected.baseUnitId ?? selected.base_unit_id)}</strong>

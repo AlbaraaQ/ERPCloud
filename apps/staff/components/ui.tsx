@@ -8,8 +8,12 @@ import type { ReactNode } from 'react';
  * Before part four every inventory screen was the same shape: a `Screen` title, a
  * couple of cards and a `DataTable`. The pieces below are the vocabulary that was
  * missing — tiles for the numbers that matter, a step track for the document
- * lifecycle, tabs, a filter bar, and states that explain themselves — so a screen
- * can be laid out from the desktop form instead of being improvised per page.
+ * lifecycle, and states that explain themselves — so a screen can be laid out
+ * from the desktop form instead of being improvised per page.
+ *
+ * Tabs and FilterBar used to live here too, but both are design-system controls
+ * and now come from `@erp/ui` (ADR-030). What remains are the patterns that only
+ * a document screen has: a tile row, a lifecycle track, and a totals strip.
  */
 
 export type Tone = 'default' | 'ok' | 'warn' | 'danger' | 'brand';
@@ -88,46 +92,6 @@ export function StatusTrack({
           </span>
         );
       })}
-    </div>
-  );
-}
-
-// -------------------------------------------------------------------------- tabs
-
-export function Tabs<T extends string>({
-  items,
-  value,
-  onChange,
-}: {
-  items: Array<{ id: T; label: string }>;
-  value: T;
-  onChange: (next: T) => void;
-}) {
-  return (
-    <div className="tabs">
-      {items.map((item) => (
-        <button
-          key={item.id}
-          type="button"
-          className={`tab${item.id === value ? ' active' : ''}`}
-          onClick={() => onChange(item.id)}
-          aria-current={item.id === value}
-        >
-          {item.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------- filters
-
-/** Sticky-ish filter row. Fields keep their own labels; actions sit at the end. */
-export function FilterBar({ children, actions }: { children: ReactNode; actions?: ReactNode }) {
-  return (
-    <div className="filters no-print">
-      {children}
-      {actions ? <div className="filters-actions">{actions}</div> : null}
     </div>
   );
 }
