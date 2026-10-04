@@ -61,6 +61,26 @@ export const STRINGS: Record<string, DictEntry> = {
   'login.error.rateLimited': { ar: 'محاولات كثيرة. انتظر دقيقة ثم أعد المحاولة.', en: 'Too many attempts. Wait a minute and try again.' },
   'login.error.unreachable': { ar: 'تعذر الاتصال بالخادم. تأكد من تشغيل الـ API وضبط API_PROXY_TARGET في ملف .env', en: 'Could not reach the server. Make sure the API is running and API_PROXY_TARGET is set in .env' },
 
+  // P-R1 — استعادة كلمة السر. ثلاثة مفاتيح فقط لأن الشاشة خطوتان: طلب الرابط، ثم
+  // تعيين كلمة جديدة. والرسالة بعد الطلب **مُبهمة عن قصد** — الخادم لا يفصح whether
+  // كان العنوان موجوداً، والواجهة لا تفصح أيضاً: قول «أُرسل الرابط» لعنوان غير مسجّل
+  // يُفشل الحماية نفسها التي بُني الـ endpoint عليها.
+  'login.forgot': { ar: 'نسيت كلمة المرور؟', en: 'Forgot your password?' },
+  'recover.title': { ar: 'استعادة كلمة المرور', en: 'Password recovery' },
+  'recover.subtitle': { ar: 'أدخل رمز المنشأة وبريدك الإلكتروني، وسنرسل رابط إعادة التعيين إلى بريدك.', en: 'Enter your tenant code and e-mail, and we will send a reset link to your inbox.' },
+  'recover.submit': { ar: 'أرسل رابط الاستعادة', en: 'Send the reset link' },
+  'recover.busy': { ar: 'جارٍ الإرسال…', en: 'Sending…' },
+  'recover.back': { ar: 'رجوع إلى تسجيل الدخول', en: 'Back to sign in' },
+  'recover.sent': { ar: 'إن كان هذا البريد مسجّلاً في المنشأة، فستصلك رسالة تحتوي رابط إعادة التعيين خلال دقائق. الرابط صالح ثلاثين دقيقة ويُستعمل مرّة واحدة.', en: 'If that address is registered with the tenant, a reset link will arrive within minutes. It is valid for thirty minutes and can be used once.' },
+  'recover.error.rateLimited': { ar: 'طلبات كثيرة. انتظر قليلاً ثم أعد المحاولة.', en: 'Too many requests. Wait a moment and try again.' },
+  'recover.reset.title': { ar: 'تعيين كلمة مرور جديدة', en: 'Set a new password' },
+  'recover.reset.subtitle': { ar: 'الرابط الذي فتحته صالح. اختر كلمة مرور جديدة — وسيُخرَج كل جهازٍ مسجّل حالياً.', en: 'The link you opened is still valid. Choose a new password — every signed-in device will be signed out.' },
+  'recover.reset.submit': { ar: 'تعيين كلمة المرور', en: 'Set the password' },
+  'recover.reset.busy': { ar: 'جارٍ التعيين…', en: 'Setting…' },
+  'recover.reset.done': { ar: 'تم تغيير كلمة المرور. سجّل الدخول بكلمة المرور الجديدة.', en: 'Your password has been changed. Sign in with the new password.' },
+  'recover.reset.error.invalid': { ar: 'الرابط غير صالح أو منتهي الصلاحية أو مُستعمل. اطلب رابطاً جديداً.', en: 'The link is invalid, expired, or already used. Request a new one.' },
+  'recover.reset.error.weak': { ar: 'كلمة المرور لا تستوفي سياسة الأمان (١٢ حرفاً على الأقل).', en: 'The password does not satisfy the security policy (at least 12 characters).' },
+
   'mfa.title': { ar: 'رمز التحقق', en: 'Verification code' },
   'mfa.hint': { ar: 'أدخل الرمز المكوَّن من 6 أرقام من تطبيق المصادقة، أو رمز استرداد لم يُستخدم من قبل.', en: 'Enter the 6-digit code from your authenticator app, or an unused recovery code.' },
   'mfa.code': { ar: 'رمز التحقق', en: 'Verification code' },

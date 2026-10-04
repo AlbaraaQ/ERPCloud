@@ -62,10 +62,29 @@ const envSchema = z.object({
   AUTH_LOGIN_MAX_FAILURES: z.coerce.number().int().positive().default(5),
   AUTH_LOCKOUT_MINUTES: z.coerce.number().int().positive().default(15),
 
+  /**
+   * Password recovery (P-R1). The TTL is a *bearer credential* lifetime, so it is
+   * deliberately short: the longer a reset link lives, the longer a stolen mailbox is
+   * an account takeover. Thirty minutes is enough for a person to reach their phone.
+   */
+  AUTH_PASSWORD_RESET_TTL_MINUTES: z.coerce.number().int().positive().default(30),
+  /**
+   * Where the recovery link points — the staff app, not the API. Empty by default
+   * because there is no safe default: guessing an origin and mailing a link built from
+   * it is worse than mailing nothing, so an operator must set it deliberately.
+   */
+  AUTH_PASSWORD_RESET_URL_BASE: z.string().trim().default(''),
+
   /** SECURITY_ARCHITECTURE §8 — token buckets. */
   RATE_LIMIT_DEFAULT_PER_MINUTE: z.coerce.number().int().positive().default(600),
   RATE_LIMIT_LOGIN_PER_MINUTE: z.coerce.number().int().positive().default(10),
   RATE_LIMIT_REGISTER_PER_MINUTE: z.coerce.number().int().positive().default(5),
+  /**
+   * P-R1 — استعادة كلمة السر. أدنىّ من حدّ الدخول نفسه (١٠/دقيقة) لأن كل نداءٍ مُقبول
+   * يجعل النظام يُرسل بريداً باسم المنصّة إلى عنوانٍ لا نتحكّم به: الرقم المنخفض هو ما
+   * يمنعEndpoint الاستعادة من أن يكون وسيلة إحراق حصّة بريد منشأةٍ كاملة.
+   */
+  RATE_LIMIT_PASSWORD_RESET_PER_MINUTE: z.coerce.number().int().positive().default(3),
   /**
    * P-M6 — استمارات الموقع العامّة (تواصل · طلب عرض · نشرة). دلوٌ خاصٌّ بها لا دلو الدخول:
    * حدُّ الدخول (١٠/دقيقة) يخصّ محاولات كلمة المرور، وحدُّ الاستمارة يخصّ **عدد الرسائل التي

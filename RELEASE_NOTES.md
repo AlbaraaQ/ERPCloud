@@ -1,3 +1,90 @@
+# Release Notes — Password recovery (Wave 2)
+
+Date: 2026-10-04
+Scope: `apps/api`, `packages/database`, `packages/contracts`, `packages/config`, `apps/staff`.
+Records: CR-014, ADR-032.
+
+## Why this release exists
+
+A user who forgot their password had no way back into the system. There was no
+route for it in `AuthController` — not a broken one, none. This release adds the
+whole path, verified against a running stack (embedded PostgreSQL 16, 113
+migrations, API on `:3000`).
+
+## What was added
+
+| | Decision |
+|---|---|
+| **`password_reset_tokens`** (migration 0113) | stores `token_hash` (SHA-256 of a 256-bit random token), `expires_at`, `consumed_at`, `attempts`. The token itself is never written to the database, so a leaked table is not an account takeover |
+| **`POST /api/v1/auth/forgot-password`** | body `{tenantCode,email}` → always **204**. It does not disclose whether the address exists |
+| **`POST /api/v1/auth/reset-password`** | body `{tenantCode,token,new}` → **204**. Single-use: a second call with the same token is **400 `VALIDATION_FAILED` "Reset link is invalid or has expired"** |
+| **Rate limit** | 3/min on the recovery route, so the tenant's own limit contains the quota risk |
+| **`RecoverScreen`** | reached from `LoginScreen` through a `recovering` flag — no new public route. `step` is a derived const, not state |
+| **Config** | `AUTH_PASSWORD_RESET_URL_BASE`, `AUTH_PASSWORD_RESET_TTL_MINUTES` (default 30) |
+
+## The correction that mattered
+
+The `password.reset` e-mail event was **already declared** in
+`packages/contracts/src/platform/email.ts` — `scope: 'tenant'`,
+`variables: ['name','link','expires']`, with ar/en templates seeded. What was
+missing was only the endpoint that emits it.
+
+This is recorded because it nearly went the other way: an initial attempt *added*
+a second `password.reset` entry with a `company` variable the catalogue never
+declared, which produced a 24-length/23-unique mismatch in the registry freeze test
+and a `{{company}}` failure at render time. The fix was to `git checkout` the file
+whole. `sendResetEmail` now sends exactly the three declared variables and nothing
+else, because the template plane rejects any `{{var}}` outside the list.
+
+## The proof
+
+One full cycle against the rebuilt binary, harvesting the token from the newest
+`email_messages` row:
+
+```
+forgot-password                204   → status=sent, fresh token
+reset-password (weak, <12)     400   "String must contain at least 12 character(s)"
+reset-password (same token)    204   ← the link survived the rejection
+reset-password (replay)        400   "Reset link is invalid or has expired"
+login  (old password)          401
+login  (new password)          200
+```
+
+The third and fourth lines are the ones that matter. A password the tenant policy
+rejects — `owner-owner-1234`, long enough for the schema but containing the owner's
+own name — answers `400 "Password does not satisfy the tenant password policy"`, and
+**the same link then still works**. That is the ordering fix from CR-014 §6 proving
+itself: the token is not consumed until every other reason to reject has been ruled
+out. Before the fix, that rejected attempt had already marked the link used, so the
+retry would have answered `400 "Reset link is invalid or has expired"` and the user
+would have had to wait for a whole new e-mail.
+
+The demo owner credential was then restored through `POST /auth/change-password`
+(200 → 401 on the recovered password).
+
+## Gates
+
+`@erp/contracts` **232/232** · `recovery.spec.ts` **15/15** · `pnpm -r run lint` 0
+errors · `pnpm --filter @erp/api run build` 0 TS errors · `test:smoke` passed ·
+`openapi:export` clean.
+
+## Known-red, not caused by this release
+
+Four files in the wider `@erp/api` suite fail, and all four were confirmed to fail
+**identically with this release's changes stashed**, so none of them is caused by
+it. They are recorded here so the red is not mistaken for a regression:
+
+| File | Nature |
+|---|---|
+| `test/isolation.spec.ts` | snapshot drift — the protected-table allowlist is 60 entries while the schema now has 81; the test's own name says "for later phases to extend" |
+| `src/modules/ai/ai-help.spec.ts` | snapshot drift — the navigation snapshot expects 261 routes, the app now has 273 |
+| `test/platform-backups.spec.ts` | environmental — backup runs answer 404/500 and report `failed`; no object store is configured in this sandbox |
+| `test/platform-usage.spec.ts` | environmental — the storage upload endpoint answers 503 instead of 201, same missing object store |
+
+The first two need a snapshot refresh; the last two need an S3-compatible store
+configured before they can run at all. None is in scope for this release, and each
+deserves its own change request rather than being quietly swept in here.
+
 # Release Notes — Production readiness, Wave 1: remove the blockers
 
 Date: 2026-10-04

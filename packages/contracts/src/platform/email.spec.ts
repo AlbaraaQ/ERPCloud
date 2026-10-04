@@ -37,6 +37,14 @@ describe('email event registry (P-C6)', () => {
     expect(emailEventRegistry.find((entry) => entry.event === 'report.weekly')?.scope).toBe('platform');
     // وكذلك رمز التسجيل: الزائر ليس عميلاً بعد، فلا حصّة عميلٍ تُحتسب عليه.
     expect(emailEventRegistry.find((entry) => entry.event === 'signup.verify')?.scope).toBe('platform');
+    // P-R1 — `password.reset` موجودٌ منذ الخطة الأصلية، فلم يُضَف هنا شيء. ما جرى هو أن
+    // الـendpoint الذي يُطلقه أخيرًا بُني: الحدث كان معرَّفًا بلا مُطلِق. نطاقه `tenant`
+    // كما صُمِم، والحماية من إحراق الحصّة هي حدُّ المعدل (٣/دقيقة) لا النطاق.
+    expect(emailEventRegistry.find((entry) => entry.event === 'password.reset')?.variables).toEqual([
+      'name',
+      'link',
+      'expires',
+    ]);
     // وكذلك حدثا P-M6: الزائر لم يُصبح عميلاً بعد، فلا حصّة عميلٍ تُحتسب عليهما.
     expect(emailEventRegistry.find((entry) => entry.event === 'lead.received')?.scope).toBe('platform');
     expect(

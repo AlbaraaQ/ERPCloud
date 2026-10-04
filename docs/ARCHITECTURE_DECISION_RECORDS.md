@@ -152,3 +152,28 @@ the root `tsconfig.base.json` NodeNext server sweep, exactly as the apps' `.tsx`
 already is — the sweep would otherwise report `window`/`document` as unknown and demand
 `.js` extensions a bundler must not carry. The exclusion is recorded as CR-007 and
 verified: the sweep's error count returns to its base-commit value.
+
+## ADR-032 Password reset stores only a hash, and the reset link carries the token alone
+D: `password_reset_tokens.token_hash` holds SHA-256 of a 256-bit random token; the
+mailed link is `${AUTH_PASSWORD_RESET_URL_BASE}?reset=<token>` with no tenant code.
+`POST /auth/forgot-password` `{tenantCode,email}` → always 204;
+`POST /auth/reset-password` `{tenantCode,token,new}` → 204, and the token is
+single-use. Rate limit 3/min on the route.
+C: A locked-out user has no other path back in, and the previous code had none —
+no route existed. The reset token is a bearer credential for the whole tenant
+plane, so its storage and its transport are both security boundaries, not details.
+Alt: (a) store the token in plaintext and index on it — rejected, a database read
+becomes an account takeover; (b) put `&tenant=<code>` in the link — rejected, one
+person can hold memberships in several tenants and a link that silently picked one
+would log them into the wrong one, and it also writes a tenant identifier into
+browser history; (c) scope the `password.reset` e-mail event to `platform` — rejected,
+it is a tenant-scoped event and the tenant's own rate limit is what contains the
+quota risk.
+Why: hashing makes a leaked table useless without breaking the lookup (the hash is
+the index); single-use with an explicit `consumed_at` makes replay a 400 rather than
+a silent second reset; and omitting the tenant from the URL keeps the link valid for
+a user who cannot remember which tenant they are in.
+Cons: an incorrect-token lookup costs a hash computation, and the reset e-mail can
+only be delivered to an address already on file — there is deliberately no
+"which tenants do I belong to" disclosure on this route, so a user with several
+memberships must remember the e-mail they registered.

@@ -47,6 +47,43 @@ export const changePasswordRequestSchema = z
 
 export type ChangePasswordRequest = z.infer<typeof changePasswordRequestSchema>;
 
+/**
+ * Password recovery, step 1 — "I forgot my password".
+ *
+ * API_CONTRACT §1. Deliberately **always answers the same way**: `204`, whatever the
+ * caller sent. Telling an unauthenticated caller whether an address belongs to a real
+ * account is account enumeration, and it is the single most common way a recovery
+ * feature becomes an account-discovery oracle. The endpoint is also rate-limited far
+ * harder than `login`, because a recovery request sends an email — without that limit
+ * the endpoint is a way to burn somebody else's mail quota, or to flood a mailbox.
+ */
+export const forgotPasswordRequestSchema = z
+  .object({
+    tenantCode: z.string().trim().min(1).max(64),
+    email: z.string().trim().email().max(320),
+  })
+  .strict();
+
+export type ForgotPasswordRequest = z.infer<typeof forgotPasswordRequestSchema>;
+
+/**
+ * Password recovery, step 2 — consume the emailed token and set a new password.
+ *
+ * The token is the emailed secret itself, not its digest: the server hashes it on
+ * arrival to look it up, so what travels over the wire is the only copy that exists.
+ * `MIN_PASSWORD_LENGTH` applies exactly as it does to `change-password` — a recovery
+ * link is not a reason to accept a weaker password.
+ */
+export const resetPasswordRequestSchema = z
+  .object({
+    tenantCode: z.string().trim().min(1).max(64),
+    token: z.string().trim().min(20).max(512),
+    new: z.string().min(MIN_PASSWORD_LENGTH).max(MAX_PASSWORD_LENGTH),
+  })
+  .strict();
+
+export type ResetPasswordRequest = z.infer<typeof resetPasswordRequestSchema>;
+
 export const userStatusSchema = z.enum(['active', 'invited', 'suspended']);
 export type UserStatus = z.infer<typeof userStatusSchema>;
 
