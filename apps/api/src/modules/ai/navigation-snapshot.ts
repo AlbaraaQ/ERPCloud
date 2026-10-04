@@ -4736,44 +4736,6 @@ export const NAVIGATION_SNAPSHOT: readonly HelpArticle[] = [
     "source": "navigation"
   },
   {
-    "id": "nav:update",
-    "title": "تحديث البرنامج",
-    "href": "/support/about#updates",
-    "keywords": [
-      "تحديث",
-      "البرنامج",
-      "Update",
-      "support",
-      "about",
-      "updates"
-    ],
-    "steps": [
-      "افتح «تحديث البرنامج» من قائمة النظام.",
-      "أدخل البيانات ثم احفظ. أي ترحيل يتم من الشاشة بعد المراجعة، لا من المساعد."
-    ],
-    "source": "navigation"
-  },
-  {
-    "id": "nav:report-designer",
-    "title": "فتح المصمم لتصميم التقارير",
-    "href": "/support/report-designer",
-    "keywords": [
-      "فتح",
-      "المصمم",
-      "لتصميم",
-      "التقارير",
-      "Report",
-      "designer",
-      "support",
-      "report"
-    ],
-    "steps": [
-      "افتح «فتح المصمم لتصميم التقارير» من قائمة النظام.",
-      "أدخل البيانات ثم احفظ. أي ترحيل يتم من الشاشة بعد المراجعة، لا من المساعد."
-    ],
-    "source": "navigation"
-  },
-  {
     "id": "nav:help",
     "title": "🆘 إطلب المساعدة",
     "href": "/support/help",

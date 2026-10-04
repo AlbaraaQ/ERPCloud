@@ -3,7 +3,7 @@ import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { sql } from 'drizzle-orm';
 import {
   backupAuditActions,
@@ -307,6 +307,14 @@ describe('platform backups and data requests (P-C10)', () => {
   // ─────────────────────────────────────────────────────────── التخزين والصيغة
 
   describe('منفذ التخزين والصيغة', () => {
+    // `vi.stubGlobal('fetch', …)` يُستبدل فيه الـ`fetch` العامّ لكل ما يجري بعد ذلك في
+    // هذا العامل. كان التنظيف في آخر كل اختبار، فإن سقط assertionٌ قبله بقي البديل
+    // موضعاً — فأي جنيسٍ لاحق يستعمل `fetch` (مثل `ResendMailer`) يتلقّى 503 من اختبار
+    // آخر. النقل إلى `afterEach` يجعل التنظيف غير مشروط.
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
     it('S3ArtifactStore يرفع WithPUT ويُنزّل بقية البايتات نفسها', async () => {
       const uploaded = new Map<string, Buffer>();
       vi.stubGlobal('fetch', async (url: string | URL, init?: { method?: string; body?: unknown }) => {
@@ -343,8 +351,6 @@ describe('platform backups and data requests (P-C10)', () => {
       expect(fetched.toString('utf8')).not.toBe('hello platform');
       expect(openArtifact(fetched).toString('utf8')).toBe('hello platform');
       expect(await store.remove('backups/k.dump.enc')).toBe(true);
-
-      vi.unstubAllGlobals();
     });
 
     it('فشل الرفع يُعلَن (502) ولا يُحوَّل إلى نجاح', async () => {
@@ -361,7 +367,6 @@ describe('platform backups and data requests (P-C10)', () => {
         deleteObject: async () => true,
       });
       await expect(store.put('k', Buffer.from('x'))).rejects.toThrow(/refused the artifact upload/i);
-      vi.unstubAllGlobals();
     });
 
     it('الاختيار يُفضّل التخزين حين يكون مُهيّأً، وإلا فنظام الملفات', () => {

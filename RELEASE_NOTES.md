@@ -1,3 +1,73 @@
+# Release Notes — Wave 3, the deletions (RC-7, RC-9, item 13)
+
+Date: 2026-10-04
+Scope: `apps/staff`, `apps/api`.
+Records: RC-7, RC-9, item 13. Decisions by the owner.
+
+## What was removed, and why removal needed more than deleting a file
+
+Three screens promised something the code could not deliver. The owner chose deletion for
+two and a real form for the third.
+
+**«عن البرنامج»** kept its first section (version, stack, API address, docs link) and
+lost the other two: «حالة التنفيذ», which counted screens from the navigation tree and
+told the operator nothing they could act on, and «تحديث البرنامج», which said "reload the
+page" — a restatement of the word "cloud", not a feature.
+
+**`report-designer`** (368 lines) made **zero** API calls. Every field lived in
+`useState`, so it looked like a report designer and saved nothing. The four sibling
+settings screens (`backup`, `restore`, `data-rotation`, `invoice-maintenance`) all call
+the API and stay.
+
+**Deleting is three edits, not one.** Both screens were entries in the navigation tree,
+and the AI assistant keeps a *generated snapshot* of that tree — 272 help articles, each
+pointing at a real screen. Removing the routes but leaving the snapshot would have made
+the assistant open screens that no longer exist. And the "Update" nav entry was not a
+route at all: it was an anchor to `#updates` inside the About page itself, so removing
+the section without removing the entry would have left a menu item pointing at nothing.
+
+## «طلب المساعدة» is now a form that actually sends
+
+The page showed session details, a "copy" button and quick steps — and called no route.
+Anyone reading "attach this information when contacting support" assumed a form or an
+address existed behind it. There was neither.
+
+It now posts to **`POST /public/leads`**, the door the marketing site already uses, which
+is protected by three visible layers (honeypot · rate limit · a unique constraint on the
+address) and writes the request into the platform console's leads list where it is
+triaged.
+
+**No new endpoint.** A support-specific route would have meant a table, its own
+protection and another list in the console — all to do work `leads` already does.
+
+The screen states plainly what happens: a `202` with a short reference, an
+acknowledgement e-mail to the sender, and **no e-mail to the platform team**. The
+request is read from the leads list. That is the honest version, and it replaces a
+promise the old page never kept.
+
+## A test-isolation defect that this work exposed
+
+`platform-backups.spec.ts` replaced the global `fetch` with a stub and un-stubbed it at
+the *end of each test*. When an assertion failed before that line, the stub survived into
+whatever spec ran next in the same worker — so `ResendMailer`'s tests began failing with
+`resend: 503 — nope`, a 503 invented by a different suite.
+
+The fix is one `afterEach(() => vi.unstubAllGlobals())`: cleanup that only runs on
+success is not cleanup. **The assertions in that file were not touched** — it fails on
+exactly 9 tests / 16 passing both before and after this change, the same numbers as the
+parent commit, and it is recorded as a known failure in
+`docs/production-readiness/README.md`.
+
+## Verification
+
+lint exit 0 · staff/platform-admin/marketing builds clean · contracts 233/233 · staff
+70/70 · `test:smoke` passed · `openapi:export` regenerated (596 → **769 paths**, the
+parent artifact having been produced by a partial boot; the export is deterministic
+across runs) · api **1538/1547**, the 9 failures confined to `platform-backups.spec.ts`
+and identical to the parent commit.
+
+---
+
 # Release Notes — Mail provider and the AI key (Wave 3)
 
 Date: 2026-10-04

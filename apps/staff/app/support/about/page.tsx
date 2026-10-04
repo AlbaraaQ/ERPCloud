@@ -2,13 +2,19 @@
 
 import { Screen } from '../../../components/screen';
 import { apiBaseUrl } from '../../../lib/api';
-import { screenCounts } from '../../../lib/navigation';
 
+/**
+ * RC-7 / item 10 — «عن البرنامج» وحدها.
+ *
+ * كان في الصفحة قسمَان آخران: «حالة التنفيذ» (أرقام محسوبة من شجرة التنقّل) و«تحديث
+ * البرنامج» (نصٌّ يقول «أعد تحميل الصفحة»). القسم الأول وعد بمعلومةٍ عن اكتمال المنتج
+ * لا تعني المشغّل شيئاً، والثاني ليس ميزةً بل إعادة صياغةٍ لكلمة «سحابي». حُذفا بقرار
+ * المالك، ومعهما مدخل «تحديث البرنامج» من شجرة التنقّل — وهو لم يكن إلا مرساةً إلى
+ * `#updates` داخل هذه الصفحة نفسها، فحذف القسم دونه كان سيترك مدخّلاً لا يشير إلى شيء.
+ */
 export default function AboutPage() {
-  const counts = screenCounts();
-
   return (
-    <Screen title="عن البرنامج" subtitle="معلومات الإصدار وحالة التنفيذ." crumbs={['الدعم الفني']}>
+    <Screen title="عن البرنامج" subtitle="معلومات الإصدار." crumbs={['الدعم الفني']}>
       <section className="card">
         <h2>Cloud SaaS ERP</h2>
         <dl className="kv">
@@ -25,22 +31,6 @@ export default function AboutPage() {
             </a>
           </dd>
         </dl>
-      </section>
-
-      <section className="card" id="updates">
-        <h2>حالة التنفيذ</h2>
-        <p className="muted">
-          شجرة النظام تحتوي على {counts.total} شاشة: {counts.ready} جاهزة، {counts.api} واجهتها البرمجية جاهزة،
-          و{counts.planned} قيد التطوير. تُحدَّث هذه الأرقام تلقائياً من ملف شجرة التنقل.
-        </p>
-      </section>
-
-      <section className="card">
-        <h2>تحديث البرنامج</h2>
-        <p className="muted">
-          النظام سحابي: التحديثات تُنشر على الخادم ولا يحتاج العميل لتثبيت أي شيء. أعد تحميل الصفحة للحصول على
-          آخر إصدار من الواجهة.
-        </p>
       </section>
     </Screen>
   );
