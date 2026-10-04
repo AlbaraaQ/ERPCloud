@@ -6,12 +6,12 @@
 ## إعداد بيئة الإنتاج (مرة واحدة)
 
 ```bash
-pnpm env:setup          # يكتب .env بمفاتيح RS256 و AES-256-GCM وكلمات البذرة
-pnpm db:local           # PostgreSQL 16 مضمّن بلا Docker — يبقى يعمل في المقدّمة
-pnpm db:roles           # ينشئ erp_api / erp_migrator
-pnpm db:migrate         # 112 ترحيلًا
-pnpm db:seed            # ينشئ المستأجر demo والمستخدمين
-pnpm --dir apps/api run start    # الـ API على :3000
+pnpm env:setup # يكتب .env بمفاتيح RS256 و AES-256-GCM وكلمات البذرة
+pnpm db:local # PostgreSQL 16 مضمّن بلا Docker — يبقى يعمل في المقدّمة
+pnpm db:roles # ينشئ erp_api / erp_migrator
+pnpm db:migrate # 112 ترحيلًا
+pnpm db:seed # ينشئ المستأجر demo والمستخدمين
+pnpm --dir apps/api run start # الـ API على :3000
 ```
 
 > `pnpm db:local` هو الطريق الصحيح في بيئة بلا Docker. الـ API يتطلّب Redis أيضًا
@@ -25,12 +25,12 @@ pnpm --dir apps/api run start    # الـ API على :3000
 **الدليل:**
 
 ```
-GET /api/v1/billing/subscription  → 200 {"data":null}
-GET /api/v1/settings              → 200 ... "feature.pos": false
-                                        "feature.projects": false
-                                        "feature.hrm": false
-                                        "feature.niche": false
-GET /api/v1/pos/settings          → 404 "POS pack is disabled for this tenant"
+GET /api/v1/billing/subscription → 200 {"data":null}
+GET /api/v1/settings → 200 ... "feature.pos": false
+ "feature.projects": false
+ "feature.hrm": false
+ "feature.niche": false
+GET /api/v1/pos/settings → 404 "POS pack is disabled for this tenant"
 ```
 
 **السبب التقني:** `packages/database/src/seed-demo.ts:219` يضع `feature.pos: true`
@@ -50,7 +50,7 @@ GET /api/v1/pos/settings          → 404 "POS pack is disabled for this tenant"
 ```json
 {"level":50,"context":"AllExceptionsFilter","code":"INTERNAL",
  "err":{"message":"Platform administrator access required",
-        "stack":"Error: Platform administrator access required\n    at BillingService.listActivationRequests (.../billing.service.ts:47:15)"},
+ "stack":"Error: Platform administrator access required\n at BillingService.listActivationRequests (.../billing.service.ts:47:15)"},
  "statusCode":500}
 ```
 
@@ -120,8 +120,32 @@ const profile: 'standard' | 'simplified' = buyer?.vatNo ? 'standard' : 'simplifi
 
 **الدليل:** `GET /api/v1/notifications?limit=5 → 200 {"data":[]}`
 
-**الإصلاح:** البذرة تكتب إشعارات للمستخدمين (ترحيب، تنبيه ميزانية، إعلان). وإذا كان
-الانهيار متصفحيًًا فيُفحص بـ DevTools على `/notifications`.
+**السبب الحقيقي:** `packages/database/src/seed-demo.ts` لم يكن يكتب **أي** إشعار —
+لا بتمريرة، ولا بسطر. الوحدة نفسها (`apps/api/src/modules/platform-services/notifications/`)
+سليمة وتكتب الصفوف عبر `createInTx`؛ الصندوق كان فارغًا لأن لا شيء يبذره. فالعيب في
+**البذرة** لا في المشترك.
+
+**الإصلاح:** `seedNotifications(client, tenantId)` في `seed-demo.ts`، تُستدعى بعد
+`seedUsers` (الصندوق يتبع عضوية، ولا عضوية قبل وجود المستخدمين). القيود التي فرضها
+المنتج على الشكل المزروع:
+
+- **`type: 'announcement'` حصرًا.** `notification-bell.tsx` لا يرسم عنوانًا وجسمًا إلا
+  لهذا النوع (ولـ`comment.mention`)؛ وأي نوع آخر يُعرَض فيه **اسم النوع كعنوان** وبلا
+  جسم. الأنواع الحقيقية الأخرى في الشجرة (`settings.updated`، `payment.received`) كانت
+  ستُنتج صفوفًا قبيحة لا إشعارات.
+- **الحمولة تحاكي `announcements.service.ts` بالضبط:** `titleAr`/`titleEn`/`bodyAr`/
+  `bodyEn` + `href`.
+- **إشعاران لا واحد:** أحدهما غير مقروء (فتظهر الشارة رقمًا) والآخر مقروء (فيكون وسم
+  المقروء مرئيًّا).
+- **التكرار محميّ بعلامة `payload->>'seed'`** (`rc-8-welcome` / `rc-8-inbox`) — الجدول
+  بلا قيد وحيد، فإعادة `db:seed` كانت ستُضاعِف الصناديق.
+- **الهدف هو العضويات النشطة** لا المستخدمين (`notifications` محصورةٌ بالعضوية).
+
+**مُتحقَّق:** `db:seed` → `6 new across 3 membership(s)` (لكل عضوية 1 غير مقروء + 1
+مقروء)؛ وإعادة التشغيل → `0 new`.
+
+**يبقى مفتوحًا:** إذا كان المالك يرى انهيارًا متصفحيًّا على `/notifications` فيُفحص بـ
+DevTools (4.2) — وهذه البيئة بلا متصفح.
 
 ## RC-9 — «طلب المساعدة» صفحة ثابتة بلا endpoint
 
@@ -207,17 +231,17 @@ const profile: 'standard' | 'simplified' = buyer?.vatNo ? 'standard' : 'simplifi
 حقيقية واحدة:
 
 ```
-POST /api/v1/pos/checkout  →  201
+POST /api/v1/pos/checkout → 201
 {
-  "number": "SI-000001",
-  "subtotal": "130.0000",
-  "taxTotal": "19.5000",
-  "total": "149.5000",
-  "paidTotal": "149.5000",
-  "paymentStatus": "paid",
-  "method": "cash",
-  "change": "50.5000",
-  "tendered": "200.0000"
+ "number": "SI-000001",
+ "subtotal": "130.0000",
+ "taxTotal": "19.5000",
+ "total": "149.5000",
+ "paidTotal": "149.5000",
+ "paymentStatus": "paid",
+ "method": "cash",
+ "change": "50.5000",
+ "tendered": "200.0000"
 }
 ```
 

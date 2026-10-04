@@ -139,7 +139,8 @@ async function main(): Promise<void> {
   console.log(
     `seed  demo — ${demo.accounts} accounts, ${demo.costCenters} cost centers, ${demo.periods} periods, ` +
       `subscription ${demo.subscription}` +
-      (demo.openingEntryNumber ? `, opening entry ${demo.openingEntryNumber}` : ''),
+      (demo.openingEntryNumber ? `, opening entry ${demo.openingEntryNumber}` : '') +
+      `, ${demo.notifications.inserted} notification(s) across ${demo.notifications.memberships} inbox(es)`,
   );
 
   printCredentials({

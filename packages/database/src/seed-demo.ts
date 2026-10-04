@@ -65,6 +65,8 @@ export type DemoSeedReport = {
   fiscalYearId: string;
   periods: number;
   openingEntryNumber?: string;
+  /** RC-8 — how many inbox rows the seed wrote, and for how many memberships. */
+  notifications: { memberships: number; inserted: number };
   users: Array<{ email: string; role: string; status: string }>;
 };
 
@@ -339,6 +341,13 @@ export async function seedDemoData(
     const users = await seedUsers(client, tenantId, options.users ?? []);
     for (const user of users) log(`seed  user: ${user.email} (${user.role}, ${user.status})`);
 
+    // RC-8 — بعد المستخدمين لا قبلهم: الصندوق للعضويّة، ولا عضويّة قبلهم.
+    const notifications = await seedNotifications(client, tenantId);
+    log(
+      `seed  notifications: ${notifications.inserted} new across ` +
+        `${notifications.memberships} membership(s) (welcome unread + a read one)`,
+    );
+
     return {
       tenantId,
       tenantCode,
@@ -356,6 +365,7 @@ export async function seedDemoData(
       periods: calendar.periods,
       openingEntryNumber,
       users,
+      notifications,
     };
   } finally {
     await client.end();
@@ -1162,6 +1172,115 @@ async function seedUsers(
   }
 
   return created;
+}
+
+// -------------------------------------------------------------------- notifications
+
+/**
+ * RC-8 — بذرة صندوق الإشعارات.
+ *
+ * `/notifications` كان يُعيد `data: []` دائماً في البذرة: مركز إشعارات فارغ وجرسٌ بلا
+ * رقم، فلا شيء يُظهر أن الميزة تعمل. والشاشة نفسها (`NotificationInbox`) تعرض العنوان
+ * والنصّ من `payload` حين يكون `type = 'announcement'`، وتسقط غير ذلك على اسم النوع
+ * كعنوانٍ — فالبذرة التي تكتب نوعاً آخر تُظهر صفوفاً قبيحة لا إشعارات.
+ *
+ * فالبذرة هنا تحاكي **ما يُنتجه التطبيق فعلاً**: النوع `announcement` وحمولته
+ * (`titleAr`/`titleEn`/`bodyAr`/`bodyEn`) بحيث يظهرها المصمّم كما يظهرها إعلانٌ حقيقي،
+ * ومعهما `href` لأن `NotificationInbox` يرسم «فتح المستند» حين يجدها.
+ *
+ * **اثنان لا واحد**: واحدٌ غير مقروء (حتى يظهر رقم الجرس) وواحدٌ مقروء (حتى يظهر وسم
+ * المقروء نفسه). إشعارٌ واحدٌ يُظهر القائمة ولا يُظهر العلامة.
+ *
+ * **الاستقامة**: الجدول بلا قيدٍ فريد على (عضويّة، نوع، حمولة)، فلا شيء يمنع التكرار
+ * عند إعادة تشغيل البذرة. فالحلّ علامة `seed` في الحمولة تُفحَص قبل كل كتابة — وهي
+ * مفتاحٌ زائد لا يقرأه المصمّم، ولا يضرّ: هو ما يجعل «شغّل البذرة مرّتين» لا يملأ
+ * الصندوق بأربعة إشعارات.
+ */
+const NOTIFICATION_SEEDS: Array<{
+  /** علامة الاستقامة — تُكتب في الحمولة وتُفحَص قبل الإدراج. */
+  seed: string;
+  titleAr: string;
+  titleEn: string;
+  bodyAr: string;
+  bodyEn: string;
+  href: string;
+  /** مقروءٌ أم لا — الثاني يُظهر وسم «قُرئ» في الشاشة. */
+  read: boolean;
+}> = [
+  {
+    seed: 'rc-8-welcome',
+    titleAr: 'مرحباً بك في نظامك',
+    titleEn: 'Welcome to your system',
+    bodyAr:
+      'هذه منشأتك التجريبية ومليئة بالبيانات: دليل حسابات، سنة مالية، أصناف وأرصدة، وفواتير. ' +
+      'ابدأ من نقطة البيع أو من شاشة الفواتير، وكل ما تراه هنا بيانات حقيقية لا عيّنات.',
+    bodyEn:
+      'This is your demo tenant, filled with data: a chart of accounts, a fiscal year, items and ' +
+      'balances, and invoices. Start at the point of sale or the invoices screen — everything here ' +
+      'is real data, not placeholders.',
+    href: '/',
+    read: false,
+  },
+  {
+    seed: 'rc-8-inbox',
+    titleAr: 'مركز الإشعارات يعمل',
+    titleEn: 'The notification centre works',
+    bodyAr:
+      'هذا الصندوق يستقبل إعلانات المنصة وإشعارات النظام. علّم الرسالة كمقروءة من هنا، ' +
+      'والرقم في الجرس أعلى الشاشة هو عدد غير المقروء في هذه الصفحة نفسها.',
+    bodyEn:
+      'This inbox receives platform announcements and system notifications. Mark a message read ' +
+      'from here; the number on the bell is the unread count on this very page.',
+    href: '/notifications',
+    read: true,
+  },
+];
+
+export async function seedNotifications(
+  client: Client,
+  tenantId: string,
+): Promise<{ memberships: number; inserted: number }> {
+  // العضو هو صاحب الصندوق لا المستخدم: الجدول موجَّه للعضويّة (`0001`)، فعضوٌ محذوف
+  // يأخذ صندوقه معه ويبقي للمستخدم صندوقٌ في منشأةٍ أخرى.
+  const members = await client.query<{ id: string }>(
+    `SELECT id FROM memberships WHERE tenant_id = $1 AND status = 'active' AND deleted_at IS NULL`,
+    [tenantId],
+  );
+
+  let inserted = 0;
+  for (const member of members.rows) {
+    for (const notification of NOTIFICATION_SEEDS) {
+      const existing = await client.query<{ id: string }>(
+        `SELECT id FROM notifications
+         WHERE tenant_id = $1 AND membership_id = $2 AND payload->>'seed' = $3
+         LIMIT 1`,
+        [tenantId, member.id, notification.seed],
+      );
+      if (existing.rows[0]) continue;
+
+      await client.query(
+        `INSERT INTO notifications (id, tenant_id, membership_id, type, payload, read_at)
+         VALUES ($1, $2, $3, 'announcement', $4::jsonb, $5)`,
+        [
+          newId(),
+          tenantId,
+          member.id,
+          JSON.stringify({
+            seed: notification.seed,
+            titleAr: notification.titleAr,
+            titleEn: notification.titleEn,
+            bodyAr: notification.bodyAr,
+            bodyEn: notification.bodyEn,
+            href: notification.href,
+          }),
+          notification.read ? new Date().toISOString() : null,
+        ],
+      );
+      inserted += 1;
+    }
+  }
+
+  return { memberships: members.rows.length, inserted };
 }
 
 // --------------------------------------------------------------------------- helpers

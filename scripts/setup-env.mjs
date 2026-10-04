@@ -86,7 +86,12 @@ const replacements = {
 
 for (const [key, value] of Object.entries(replacements)) {
   const pattern = new RegExp(`^${key}=.*$`, 'm');
-  content = pattern.test(content) ? content.replace(pattern, `${key}=${value}`) : `${content}\n${key}=${value}\n`;
+  // A replacer FUNCTION, not a string: generated secrets legitimately contain `$`
+  // (`!@#$%^&*?-_+=` includes it), and `String.replace` would expand `$&`, `$'`,
+  // `` $` `` and `$$` into parts of the matched text — silently corrupting the
+  // written value (e.g. a `$&` password used to splice `KEY=` into its own line).
+  const write = () => `${key}=${value}`;
+  content = pattern.test(content) ? content.replace(pattern, write) : `${content}\n${key}=${value}\n`;
 }
 
 writeFileSync(target, content, { mode: 0o600 });
