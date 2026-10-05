@@ -3,6 +3,15 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useMemo, useState } from 'react';
+import {
+  ChevronDown,
+  ChevronLeft,
+  Home,
+  LogOut,
+  Menu,
+  ShieldCheck,
+  User,
+} from 'lucide-react';
 
 import { useLang, type Lang } from '../lib/i18n';
 import { useSession } from '../lib/session';
@@ -73,7 +82,7 @@ function ModuleBlock({
           <small>{lang === 'ar' ? module.labelEn : module.labelAr}</small>
         </span>
         <span className="chev" aria-hidden>
-          {expanded ? '▾' : '◂'}
+          {expanded ? <ChevronDown size={14} /> : <ChevronLeft size={14} />}
         </span>
       </button>
       {expanded && (
@@ -135,16 +144,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <Link href="/" className={pathname === '/' ? 'nav-link home active' : 'nav-link home'}>
-          🏠 <span>{t('nav.home')}</span>
+          <Home size={16} className="text-brand-600" />
+          <span>{t('nav.home')}</span>
         </Link>
 
-        <input
-          className="nav-search"
-          value={filter}
-          onChange={(event) => setFilter(event.target.value)}
-          placeholder={t('nav.searchPlaceholder')}
-          aria-label={t('nav.searchPlaceholder')}
-        />
+        <div className="relative">
+          <input
+            className="nav-search"
+            value={filter}
+            onChange={(event) => setFilter(event.target.value)}
+            placeholder={t('nav.searchPlaceholder')}
+            aria-label={t('nav.searchPlaceholder')}
+          />
+        </div>
 
         <nav className="nav" aria-label={t('nav.searchPlaceholder')}>
           {tree.map((module) => (
@@ -166,7 +178,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       <main className="main">
-        {/* P-C8: لافتةٌ حمراء تسبق كل شاشة ما دام الرمز رمزَ دخولٍ مؤقّت. */}
+        {/* P-C8: Impersonation banner */}
         <ImpersonationBanner impersonation={me?.impersonation} lang={lang} />
         <header className="topbar">
           <div className="row" style={{ alignItems: 'center' }}>
@@ -176,24 +188,32 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               onClick={() => setMobileOpen(!mobileOpen)}
               aria-label={t('nav.searchPlaceholder')}
             >
-              ☰
+              <Menu size={16} />
             </button>
-            <div>
-              <strong>{me?.membership.tenantName ?? '—'}</strong>
-              <p className="muted" style={{ margin: 0 }}>
-                {me?.membership.tenantCode
-                  ? lang === 'ar'
-                    ? `رمز المنشأة: ${me.membership.tenantCode}`
-                    : `Tenant code: ${me.membership.tenantCode}`
-                  : '—'}
-                {me?.membership.isOwner ? (lang === 'ar' ? ' · مالك' : ' · Owner') : ''}
-                {isPlatformAdmin ? (lang === 'ar' ? ' · مدير منصة' : ' · Platform admin') : ''}
-              </p>
+            <div className="flex items-center gap-3">
+              <span className="grid place-items-center size-9 rounded-xl bg-brand-50 text-brand-600 font-bold text-[13px]">
+                {me?.membership.tenantCode?.slice(0, 2).toUpperCase() ?? 'ERP'}
+              </span>
+              <div>
+                <strong className="text-[14px] font-bold text-slate-900">{me?.membership.tenantName ?? '—'}</strong>
+                <p className="muted text-[12px]" style={{ margin: 0 }}>
+                  {me?.membership.tenantCode
+                    ? lang === 'ar'
+                      ? `رمز المنشأة: ${me.membership.tenantCode}`
+                      : `Tenant code: ${me.membership.tenantCode}`
+                    : '—'}
+                  {me?.membership.isOwner ? (lang === 'ar' ? ' · مالك' : ' · Owner') : ''}
+                  {isPlatformAdmin ? (lang === 'ar' ? ' · مدير منصة' : ' · Platform admin') : ''}
+                </p>
+              </div>
             </div>
           </div>
           <div className="row" style={{ alignItems: 'center' }}>
-            <span className="muted">{me?.user.fullName}</span>
-            {/* P-C7: جرسٌ يقود إلى مركز الإشعارات — الرقم إشعاراتٌ غير مقروءة للعضويّة الحالية. */}
+            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-full px-3 py-1">
+              <User size={14} className="text-slate-500" />
+              <span className="text-[13px] font-semibold text-slate-800">{me?.user.fullName}</span>
+            </div>
+            {/* Notification bell */}
             <NotificationBell label={lang === 'ar' ? 'الإشعارات' : 'Notifications'} />
             <Link className="btn" href="/settings/change-password">
               {lang === 'ar' ? 'كلمة المرور' : 'Password'}
@@ -203,9 +223,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               href="/settings/two-factor"
               title={lang === 'ar' ? 'التحقق بخطوتين' : 'Two-factor authentication'}
             >
-              🔐
+              <ShieldCheck size={16} className="text-emerald-600" />
             </Link>
             <button className="btn danger" type="button" onClick={() => void signOut()}>
+              <LogOut size={14} />
               {t('nav.logout')}
             </button>
           </div>
