@@ -368,7 +368,11 @@ export default function PosPage() {
       if (method === 'credit' && customerMode !== 'account')
         throw new ApiError(422, 'VALIDATION_FAILED', 'البيع الآجل يحتاج حساب عميل.');
 
-      const response = await apiPost<{ data: Receipt }>('/pos/checkout', {
+      // `apiPost` يفكّ غلاف `{ data: … }` بنفسه (`unwrap` في `lib/api.ts`)، فالنوع هنا
+      // هو `Receipt` لا `{ data: Receipt }`. قراءة `response.data.number` كانت تقابل
+      // `undefined` لأنّ الكائن يحمل `number` في مستواه الأعلى — وهذا بالضبط
+      // `TypeError: Cannot read properties of undefined (reading 'number')`.
+      const receipt = await apiPost<Receipt>('/pos/checkout', {
         branchId,
         warehouseId: effectiveWarehouse,
         priceIncludesVat,
@@ -411,10 +415,10 @@ export default function PosPage() {
             : undefined,
       });
 
-      setReceipt(response.data);
+      setReceipt(receipt);
       setNotice({
         kind: 'ok',
-        text: `تم البيع — الفاتورة ${response.data.number ?? ''} بمبلغ ${money(response.data.total)}.`,
+        text: `تم البيع — الفاتورة ${receipt.number ?? ''} بمبلغ ${money(receipt.total)}.`,
       });
       setTicket([]);
       setTendered('');

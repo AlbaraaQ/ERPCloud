@@ -34,8 +34,9 @@ export default function SyncDevicesPage() {
     setNotice(undefined);
     setIssuedKey(null);
     try {
-      const created = await apiPost<{ data: { apiKey: string } }>('/compat/devices', { name: String(values.name), branchId: String(values.branchId) });
-      setIssuedKey(created.data.apiKey);
+      // `apiPost` يفكّ غلاف `{ data: … }` بنفسه، فالنوع هو الحمولة لا الغلاف.
+      const created = await apiPost<{ apiKey: string }>('/compat/devices', { name: String(values.name), branchId: String(values.branchId) });
+      setIssuedKey(created.apiKey);
       setValues({ name: '', branchId: String(values.branchId) });
       setNotice({ kind: 'ok', text: 'تم إنشاء الجهاز. انسخ المفتاح الآن — لن يُعرض مرة أخرى.' });
       devices.reload();

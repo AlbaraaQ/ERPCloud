@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Screen } from '../../../components/screen';
 import { Notice } from '../../../components/data-view';
 import { ApiError } from '../../../lib/api';
+import { decimalValue } from '../../../lib/format';
 import {
   getOrCreateDeviceId,
   listOfflineInvoices,
@@ -29,10 +30,7 @@ const formatMoney = (raw: Decimal.Value) =>
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
-const decimalValue = (raw: string | number | null | undefined) => {
-  const parsed = new Decimal(raw ?? 0);
-  return parsed.isFinite() ? parsed : new Decimal(0);
-};
+
 
 type CartLine = { item: OfflineCatalogItem; quantity: string };
 type ReceiptPreview = {
@@ -210,7 +208,7 @@ export default function OfflinePosPage() {
   }, [catalog, categoryId, search]);
 
   const subtotal = cart.reduce(
-    (sum, line) => sum.plus(new Decimal(defaultPrice(catalog, line.item)).times(line.quantity)),
+    (sum, line) => sum.plus(decimalValue(defaultPrice(catalog, line.item)).times(decimalValue(line.quantity))),
     new Decimal(0),
   );
   const cash = decimalValue(tendered);
@@ -227,7 +225,7 @@ export default function OfflinePosPage() {
       if (existing)
         return current.map((line) =>
           line.item.id === item.id
-            ? { ...line, quantity: new Decimal(line.quantity).plus(1).toFixed(4) }
+            ? { ...line, quantity: decimalValue(line.quantity).plus(1).toFixed(4) }
             : line,
         );
       return [...current, { item, quantity: '1' }];
@@ -522,7 +520,7 @@ export default function OfflinePosPage() {
                         </td>
                         <td>{formatMoney(defaultPrice(catalog, line.item))}</td>
                         <td>
-                          {formatMoney(new Decimal(defaultPrice(catalog, line.item)).times(line.quantity))}
+                          {formatMoney(decimalValue(defaultPrice(catalog, line.item)).times(decimalValue(line.quantity)))}
                         </td>
                         <td>
                           <button
@@ -622,7 +620,7 @@ export default function OfflinePosPage() {
         {lastReceipt?.lines.map((line) => (
           <p key={line.item.id}>
             {line.item.nameAr ?? line.item.sku} × {line.quantity} —{' '}
-            {formatMoney(new Decimal(defaultPrice(catalog, line.item)).times(line.quantity))}
+            {formatMoney(decimalValue(defaultPrice(catalog, line.item)).times(decimalValue(line.quantity)))}
           </p>
         ))}
         <hr />
