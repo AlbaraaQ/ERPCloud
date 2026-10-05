@@ -45,7 +45,7 @@ export const siteModules: readonly SiteModule[] = [
     staffHref: '/treasury/movements',
     blurbAr: 'مقبوضات ومدفوعات، تحويلات بين الصدوق والبنوك، وإقفال يومٍ بأرصدته.',
     blurbEn: 'Receipts, payments, transfers between tills and banks, and a day close with balances.',
-    source: 'apps/staff/lib/navigation.ts:1834',
+    source: 'apps/staff/lib/navigation.ts:2018',
   },
   {
     key: 'inventory',

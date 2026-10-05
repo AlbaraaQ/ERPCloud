@@ -1656,7 +1656,9 @@ const settings: ModuleNode = {
       labelEn: 'Organisation',
       items: [
         screen('company-card', 'بطاقة المنشأة', 'Company card', '/settings/company', 'ready', {
-          permission: 'tenant.profile.view',
+          // tenant.view — the registry code for reading the own tenant record.
+          // It was spelled tenant.profile.view, which exists in no registry.
+          permission: 'tenant.view',
           endpoint: '/company-profile',
         }),
         screen('branch-card', 'بطاقة فرع', 'Branch card', '/settings/branches', 'ready', {
@@ -1838,11 +1840,17 @@ const settings: ModuleNode = {
       labelEn: 'Users',
       items: [
         screen('user-card', 'بطاقة مستخدم', 'User card', '/settings/users', 'ready', {
-          permission: 'tenant.users.manage',
+          // tenant.membership.manage — the canonical code in the @erp/contracts
+          // registry, and what memberships.controller.ts actually requires. The code
+          // written here before (tenant.users.manage) exists in no registry, so no role
+          // could hold it and the screen was hidden from everyone, owner included.
+          permission: 'tenant.membership.manage',
           endpoint: '/memberships',
         }),
         screen('user-permissions', 'صلاحيات المستخدمين', 'User permissions', '/settings/roles', 'ready', {
-          permission: 'tenant.roles.manage',
+          // tenant.role.manage, singular — what roles.controller.ts requires. It was
+          // written plural, one letter off, which hid the screen from every role.
+          permission: 'tenant.role.manage',
           endpoint: '/roles',
         }),
         screen(

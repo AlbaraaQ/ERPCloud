@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { permissionAliases as CONTRACT_PERMISSION_ALIASES } from '@erp/contracts';
 
 import {
   ApiError,
@@ -30,24 +31,20 @@ type SessionContextValue = SessionState & {
 const SessionContext = createContext<SessionContextValue | undefined>(undefined);
 
 /**
- * Canonical ↔ legacy permission alias pairs, mirrored from
- * `@erp/contracts` (`permission-aliases.ts`). The API now emits canonical
- * `tenant.*` codes, but `can()` still honours the old `platform.*` spellings
- * (and vice versa) so web clients keep working across mixed-version deploys.
+ * Canonical ↔ legacy permission alias pairs.
+ *
+ * Imported from `@erp/contracts` rather than re-declared here. This table was
+ * previously hand-mirrored, and the copy had drifted: 9 of its 11 pairs named
+ * canonical codes that do not exist (`tenant.profile.view`,
+ * `tenant.billing.view`, `tenant.users.view`, `tenant.roles.view`, …), while
+ * 5 real codes were missing entirely. That drift is what made `can()` answer
+ * "no" for codes the API does enforce, so screens gated on them silently
+ * disappeared from the sidebar.
+ *
+ * `resolveAlias` below is unchanged; only the source of truth for the pairs
+ * moved. `permissionAliases` is `as const`, hence the widening copy.
  */
-const PERMISSION_ALIASES: Record<string, string> = {
-  'platform.tenant.view': 'tenant.profile.view',
-  'platform.tenant.manage': 'tenant.profile.manage',
-  'platform.billing.view': 'tenant.billing.view',
-  'platform.billing.manage': 'tenant.subscription.manage',
-  'platform.users.view': 'tenant.users.view',
-  'platform.users.manage': 'tenant.users.manage',
-  'platform.roles.view': 'tenant.roles.view',
-  'platform.roles.manage': 'tenant.roles.manage',
-  'platform.devices.view': 'tenant.devices.view',
-  'platform.devices.manage': 'tenant.devices.manage',
-  'platform.audit.view': 'tenant.audit.view',
-};
+const PERMISSION_ALIASES: Record<string, string> = { ...CONTRACT_PERMISSION_ALIASES };
 
 function resolveAlias(permission: string): string | undefined {
   const direct = PERMISSION_ALIASES[permission];
