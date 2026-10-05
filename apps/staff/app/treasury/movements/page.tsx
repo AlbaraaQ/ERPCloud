@@ -3,6 +3,7 @@
 import Decimal from 'decimal.js';
 import { useMemo, useState } from 'react';
 
+import { decimalValue } from '../../../lib/format';
 import { Notice } from '../../../components/data-view';
 import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
@@ -144,7 +145,7 @@ export default function MovementsPage() {
           label="⚖️ الرصيد الإجمالي"
           value={money(statement.data?.totalAll ?? '0', currency)}
           hint={allPeriod ? 'رصيد الصندوق حتى آخر حركة' : `حتى ${to} ${toTime}`}
-          tone={new Decimal(statement.data?.totalAll ?? '0').lt(0) ? 'danger' : 'ok'}
+          tone={decimalValue(statement.data?.totalAll).lt(0) ? 'danger' : 'ok'}
         />
         <StatTile
           label="📅 رصيد الفترة المحددة"
@@ -277,20 +278,20 @@ export default function MovementsPage() {
                 key: 'income',
                 header: '📥 وارد',
                 align: 'num',
-                cell: (row) => (new Decimal(row.income || '0').isZero() ? '—' : money(row.income)),
+                cell: (row) => (decimalValue(row.income).isZero() ? '—' : money(row.income)),
               },
               {
                 key: 'outcome',
                 header: '📤 صادر',
                 align: 'num',
-                cell: (row) => (new Decimal(row.outcome || '0').isZero() ? '—' : money(row.outcome)),
+                cell: (row) => (decimalValue(row.outcome).isZero() ? '—' : money(row.outcome)),
               },
               {
                 key: 'balance',
                 header: '⚖️ الرصيد',
                 align: 'num',
                 cell: (row) => (
-                  <strong style={new Decimal(row.balance || '0').lt(0) ? { color: 'var(--danger)' } : undefined}>
+                  <strong style={decimalValue(row.balance).lt(0) ? { color: 'var(--danger)' } : undefined}>
                     {money(row.balance)}
                   </strong>
                 ),

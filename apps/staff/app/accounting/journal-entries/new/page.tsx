@@ -4,6 +4,7 @@ import { Decimal } from 'decimal.js';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useMemo, useState } from 'react';
 
+import { decimalValue } from '../../../../lib/format';
 import { ErrorBox, Forbidden, Loading, Screen } from '../../../../components/screen';
 import { ApiError, apiData, apiPost } from '../../../../lib/api';
 import { nameOf, postableOf, type Account } from '../../../../lib/accounts';
@@ -61,7 +62,7 @@ const emptyLine = (key: number): Line => ({
 
 function decimal(value: string): Decimal {
   try {
-    return new Decimal(value || '0');
+    return decimalValue(value);
   } catch {
     return new Decimal(0);
   }

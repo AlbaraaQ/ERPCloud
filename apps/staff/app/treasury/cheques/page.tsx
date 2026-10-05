@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Decimal from 'decimal.js';
 import { useMemo, useState } from 'react';
 
+import { decimalValue } from '../../../lib/format';
 import { Notice, QueryView } from '../../../components/data-view';
 import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
@@ -80,7 +81,7 @@ export default function ChequesPage() {
     const pending = rows.filter((r) => r.chequeState === 'pending');
     const collected = rows.filter((r) => r.chequeState === 'collected' || r.chequeState === 'cleared');
     const bounced = rows.filter((r) => r.chequeState === 'bounced');
-    const sum = (list: Voucher[]) => list.reduce((s, r) => s.plus(r.amount ?? '0'), new Decimal('0'));
+    const sum = (list: Voucher[]) => list.reduce((s, r) => s.plus(decimalValue(r.amount)), new Decimal('0'));
     return {
       count: rows.length,
       pending: pending.length,
@@ -165,7 +166,7 @@ export default function ChequesPage() {
               '',
               '',
               '',
-              money(rows.reduce((s, r) => s.plus(r.amount ?? '0'), new Decimal('0')).toFixed(4)),
+              money(rows.reduce((s, r) => s.plus(decimalValue(r.amount)), new Decimal('0')).toFixed(4)),
               '',
               '',
             ]}

@@ -3,6 +3,7 @@
 import Decimal from 'decimal.js';
 import { useMemo, useState } from 'react';
 
+import { decimalValue } from '../../../lib/format';
 import { Notice } from '../../../components/data-view';
 import { Table } from '../../../components/table';
 import { Screen } from '../../../components/screen';
@@ -265,7 +266,7 @@ export default function DayClosePage() {
               </dd>
               <dt>📉 الفرق</dt>
               <dd>
-                <strong>{money(new Decimal(countedValue).minus(new Decimal(opened.expected || '0')).toFixed(4))}</strong>
+                <strong>{money(decimalValue(countedValue).minus(decimalValue(opened.expected)).toFixed(4))}</strong>
               </dd>
             </dl>
 
@@ -452,7 +453,7 @@ export default function DayClosePage() {
                 header: '📉 الفرق',
                 align: 'num',
                 cell: (row) => (
-                  <strong style={new Decimal(row.diff || '0').abs().gt(0) ? { color: 'var(--danger)' } : undefined}>
+                  <strong style={decimalValue(row.diff).abs().gt(0) ? { color: 'var(--danger)' } : undefined}>
                     {money(row.diff)}
                   </strong>
                 ),

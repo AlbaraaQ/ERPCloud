@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense, useMemo, useState } from 'react';
 import { Tabs } from '@erp/ui';
 
+import { decimalValue } from '../../../lib/format';
 import { BankChooser } from '../../../components/bank-chooser';
 import { Notice, QueryView } from '../../../components/data-view';
 import { Table } from '../../../components/table';
@@ -195,7 +196,7 @@ function VouchersScreen() {
     const posted = rows.filter((row) => row.status === 'posted');
     // Money is summed as text and only rendered — a float here would round someone's cash.
     const addUp = (list: Voucher[]) =>
-      list.reduce((running, row) => running.plus(row.amount ?? '0'), new Decimal('0'));
+      list.reduce((running, row) => running.plus(decimalValue(row.amount)), new Decimal('0'));
     return {
       count: rows.length,
       drafts: rows.filter((row) => row.status === 'draft').length,
@@ -617,7 +618,7 @@ function VouchersScreen() {
               '',
               money(
                 rows
-                  .reduce((running, row) => running.plus(row.amount ?? '0'), new Decimal('0'))
+                  .reduce((running, row) => running.plus(decimalValue(row.amount)), new Decimal('0'))
                   .toFixed(4),
               ),
               '',
