@@ -111,7 +111,7 @@ describe('platform console routes', () => {
    */
   it('links every customer row to its card', () => {
     const list = readFileSync(join(appDir, 'tenants', 'page.tsx'), 'utf8');
-    expect(list).toContain('href={`/tenants/${tenant.id}`}');
+    expect(list).toContain('href={`/tenants/${row.id}`}');
   });
 
   it('renders the card with the plan’s tab names, in order', () => {
